@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App/Http/Controllers/
 use Illuminate\Database\Eloquent\Model;
 
 class Hostel extends Model
@@ -12,14 +13,10 @@ class Hostel extends Model
         'name',
         'location',
         'address',
-        'price_per_semester',
+        'email',
         'description',
-        'price_per_semester',
+        'phone',
         'description',
-        'room_type',
-        'total_rooms',
-        'available_rooms',
-        'amenities',
         'rating',
         'manager_id',
         'is_approved',
