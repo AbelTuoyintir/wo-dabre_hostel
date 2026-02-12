@@ -78,20 +78,6 @@
                         @endforeach
                     </select>
                 </div>
-
-                <!-- Latitude -->
-                <div>
-                    <label class="block text-sm font-medium mb-1">Latitude</label>
-                    <input type="text" name="latitude" value="{{ old('latitude') }}"
-                        class="w-full border rounded-md px-3 py-2">
-                </div>
-
-                <!-- Longitude -->
-                <div>
-                    <label class="block text-sm font-medium mb-1">Longitude</label>
-                    <input type="text" name="longitude" value="{{ old('longitude') }}"
-                        class="w-full border rounded-md px-3 py-2">
-                </div>
             </div>
         </div>
 
@@ -102,18 +88,7 @@
                 class="w-full border rounded-md px-3 py-2">{{ old('description') }}</textarea>
         </div>
 
-        <!-- Rules -->
-        <div class="bg-white rounded-lg shadow border p-6">
-            <label class="block text-sm font-medium mb-2">House Rules</label>
-
-            <div class="space-y-2">
-                @foreach(old('rules', ['']) as $rule)
-                    <input type="text" name="rules[]" value="{{ $rule }}"
-                        class="w-full border rounded-md px-3 py-2"
-                        placeholder="e.g. No smoking">
-                @endforeach
-            </div>
-        </div>
+        
 
         <!-- Submit -->
         <div class="flex justify-end">

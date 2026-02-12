@@ -27,6 +27,10 @@ return new class extends Migration
         $table->enum('gender', ['male', 'female', 'any'])
               ->default('any');
 
+        $table->enum('room_type', ['single_room', 'shared_2', 'shared_4', 'executive']);
+
+        $table->decimal('price_per_semester', 10, 2)->nullable();
+
         $table->enum('status', ['full', 'available', 'unavailable', 'inactive'])
               ->default('available');
 

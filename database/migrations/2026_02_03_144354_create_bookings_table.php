@@ -14,7 +14,7 @@ class CreateBookingsTable extends Migration
             $table->string('booking_number')->unique();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('hostel_id')->constrained()->onDelete('cascade');
-            $table->integer('room_number');
+            $table->foreignId('room_id')->constrained()->onDelete('cascade');
             $table->date('check_in_date');
             $table->date('check_out_date');
             $table->decimal('total_amount', 10, 2);

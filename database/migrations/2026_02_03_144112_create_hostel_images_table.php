@@ -13,6 +13,7 @@ class CreateHostelImagesTable extends Migration
             $table->id();
             $table->foreignId('hostel_id')->constrained()->onDelete('cascade');
             $table->string('image_path');
+            $table->enum('type',['hostel','room'])->default('hostel');
             $table->boolean('is_primary')->default(false);
             $table->integer('order')->default(0);
             $table->timestamps();

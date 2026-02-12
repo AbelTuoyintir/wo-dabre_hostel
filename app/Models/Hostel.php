@@ -11,11 +11,19 @@ class Hostel extends Model
     protected $fillable = [
         'name',
         'location',
-        'location_name',
         'address',
         'price_per_semester',
         'description',
-        'user_id',
+        'price_per_semester',
+        'description',
+        'room_type',
+        'total_rooms',
+        'available_rooms',
+        'amenities',
+        'rating',
+        'manager_id',
+        'is_approved',
+        'is_featured'
     ];
 
     public function rooms()
