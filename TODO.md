@@ -1,0 +1,4 @@
+- [ ] Add routes for admin.users.edit (GET) and admin.users.toggle-status (PATCH) in routes/web.php
+- [ ] Add edit(User $user) and toggleStatus(User $user) methods in AdminController
+- [ ] Create resources/views/admin/users-edit.blade.php for editing user details
+- [ ] Test the application to ensure routes work and edit functionality is accessible
