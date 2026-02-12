@@ -57,13 +57,12 @@
                 </div>
 
                 <div class="flex items-center space-x-4">
-                    <div class="hidden md:flex items-center space-x-2 bg-blue-800 px-4 py-2 rounded-lg">
+                    <a href="{{route('register')}}" class="hidden md:flex items-center space-x-2 bg-blue-800 px-4 py-2 rounded-lg">
                         <i class="fas fa-user-graduate"></i>
                         <span>Create Account</span>
-                    </div>
+                    </a>
                     <a href="{{route('login')}}" class="bg-white text-blue-900 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition">
-                        <i class="fas fa-sign-in-alt mr-2"></i>Student Login
-                    </button>
+                        <i class="fas fa-sign-in-alt mr-2"></i>Student Login</a>
                 </div>
             </div>
         </div>
