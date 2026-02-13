@@ -1,190 +1,233 @@
 @extends('layouts.app')
 
-@section('title', 'Bookings')
-@section('page-title', 'Manage Bookings')
+@section('title', 'My Bookings')
+@section('page-title', 'My Booking History')
 
 @section('content')
-<div class="bookings-container">
-    <!-- Stats Overview -->
-    <div class="stats-grid mb-4">
+<div class="bookings-dashboard">
+    <!-- Stats Cards -->
+    <div class="stats-grid">
         <div class="stat-card">
-            <div class="stat-icon bg-primary-soft">
-                <i class="fas fa-calendar-check text-primary"></i>
+            <div class="stat-icon active-booking">
+                <i class="fas fa-calendar-check"></i>
             </div>
             <div class="stat-content">
-                <span class="stat-value">{{ $bookings->where('booking_status', 'approved')->count() }}</span>
+                <span class="stat-value">{{ $bookings->where('booking_status', 'confirmed')->count() }}</span>
                 <span class="stat-label">Active Bookings</span>
             </div>
         </div>
         <div class="stat-card">
-            <div class="stat-icon bg-warning-soft">
-                <i class="fas fa-clock text-warning"></i>
+            <div class="stat-icon pending-booking">
+                <i class="fas fa-clock"></i>
             </div>
             <div class="stat-content">
                 <span class="stat-value">{{ $bookings->where('booking_status', 'pending')->count() }}</span>
-                <span class="stat-label">Pending Approval</span>
+                <span class="stat-label">Pending</span>
             </div>
         </div>
         <div class="stat-card">
-            <div class="stat-icon bg-success-soft">
-                <i class="fas fa-naira-sign text-success"></i>
+            <div class="stat-icon completed-booking">
+                <i class="fas fa-check-circle"></i>
             </div>
             <div class="stat-content">
-                <span class="stat-value">¢{{ number_format($bookings->where('payment_status', 'paid')->sum('total_amount'), 0) }}</span>
-                <span class="stat-label">Revenue This Month</span>
+                <span class="stat-value">{{ $bookings->where('booking_status', 'checked_out')->count() }}</span>
+                <span class="stat-label">Completed</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon total-spent">
+                <i class="fas fa-coins"></i>
+            </div>
+            <div class="stat-content">
+                <span class="stat-value">¢{{ number_format($bookings->sum('total_amount'), 2) }}</span>
+                <span class="stat-label">Total Spent</span>
             </div>
         </div>
     </div>
 
-    <!-- Main Card -->
-    <div class="modern-card">
-        <div class="card-header-modern">
+    <!-- Main Content -->
+    <div class="content-card">
+        <div class="card-header">
             <div class="header-left">
-                <h5 class="card-title">
-                    <i class="fas fa-list-check me-2"></i>All Bookings
-                </h5>
-                <span class="booking-count">{{ $bookings->total() }} records found</span>
+                <h4 class="card-title">
+                    <i class="fas fa-list-alt me-2"></i>Your Bookings
+                </h4>
+                <p class="card-subtitle">Manage and track all your hostel bookings</p>
             </div>
-
-            <div class="header-actions">
-                <div class="search-filter-group">
-                    <form method="GET" class="filter-form">
-                        <div class="filter-wrapper">
-                            <select name="status" class="modern-select" onchange="this.form.submit()">
-                                <option value="">All Statuses</option>
-                                <option value="pending" {{ request('status')=='pending' ? 'selected' : '' }}>⏳ Pending</option>
-                                <option value="approved" {{ request('status')=='approved' ? 'selected' : '' }}>✅ Approved</option>
-                                <option value="rejected" {{ request('status')=='rejected' ? 'selected' : '' }}>❌ Rejected</option>
-                            </select>
-                            <button class="btn-filter" type="submit">
-                                <i class="fas fa-filter"></i>
-                            </button>
-                        </div>
-                    </form>
-
-                    <button class="btn-export" onclick="exportBookings()">
-                        <i class="fas fa-download"></i>
-                        <span>Export</span>
-                    </button>
-
-                    <!-- New Add Booking Button -->
-                    <a href="{{ route('admin.bookings.create') }}" class="btn-add-booking">
-                        <i class="fas fa-plus-circle"></i>
-                        <span>Add Booking</span>
-                    </a>
-                </div>
+            <div class="header-right">
+                <a href="{{ route('admin.bookings.create') }}" class="btn-primary">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>New Booking</span>
+                </a>
             </div>
         </div>
 
-        <div class="table-container">
-            <table class="modern-table">
-                <thead>
-                    <tr>
-                        <th class="th-booking">Booking ID</th>
-                        <th class="th-user">User</th>
-                        <th class="th-hostel">Hostel</th>
-                        <th class="th-status">Status</th>
-                        <th class="th-payment">Payment</th>
-                        <th class="th-amount">Amount</th>
-                        <th class="th-date">Created</th>
-                        <th class="th-actions">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse ($bookings as $booking)
-                        <tr class="booking-row" data-booking-id="{{ $booking->id }}">
-                            <td>
-                                <span class="booking-id">#{{ str_pad($booking->id, 4, '0', STR_PAD_LEFT) }}</span>
-                            </td>
-                            <td>
-                                <div class="user-cell">
-                                    <div class="user-avatar">
-                                        {{ substr($booking->user->name ?? 'U', 0, 1) }}
+        <!-- Filters -->
+        <div class="filters-section">
+            <div class="filter-tabs">
+                <button class="filter-tab active" data-filter="all">All</button>
+                <button class="filter-tab" data-filter="pending">Pending</button>
+                <button class="filter-tab" data-filter="confirmed">Confirmed</button>
+                <button class="filter-tab" data-filter="checked_in">Checked In</button>
+                <button class="filter-tab" data-filter="checked_out">Checked Out</button>
+                <button class="filter-tab" data-filter="cancelled">Cancelled</button>
+            </div>
+            <div class="search-box">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="searchInput" placeholder="Search by booking ID or hostel...">
+            </div>
+        </div>
+
+        <!-- Bookings List -->
+        <div class="bookings-list">
+            @forelse($bookings as $booking)
+                <div class="booking-item" data-status="{{ $booking->booking_status }}">
+                    <div class="booking-header">
+                        <div class="booking-id">
+                            <span class="id-label">Booking ID</span>
+                            <span class="id-value">{{ $booking->booking_number }}</span>
+                        </div>
+                        <div class="booking-status">
+                            @php
+                                $statusClasses = [
+                                    'pending' => 'status-pending',
+                                    'confirmed' => 'status-confirmed',
+                                    'checked_in' => 'status-checkedin',
+                                    'checked_out' => 'status-checkedout',
+                                    'cancelled' => 'status-cancelled'
+                                ];
+                                $statusIcons = [
+                                    'pending' => 'clock',
+                                    'confirmed' => 'check-circle',
+                                    'checked_in' => 'door-open',
+                                    'checked_out' => 'check-double',
+                                    'cancelled' => 'times-circle'
+                                ];
+                            @endphp
+                            <span class="status-badge {{ $statusClasses[$booking->booking_status] ?? 'status-pending' }}">
+                                <i class="fas fa-{{ $statusIcons[$booking->booking_status] ?? 'clock' }}"></i>
+                                {{ ucfirst(str_replace('_', ' ', $booking->booking_status)) }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="booking-body">
+                        <div class="hostel-info">
+                            <div class="hostel-avatar">
+                                @if($booking->hostel->image)
+                                    <img src="{{ Storage::url($booking->hostel->image) }}" alt="{{ $booking->hostel->name }}">
+                                @else
+                                    <div class="avatar-placeholder">
+                                        <i class="fas fa-building"></i>
                                     </div>
-                                    <div class="user-info">
-                                        <span class="user-name">{{ $booking->user->name ?? 'Unknown User' }}</span>
-                                        <span class="user-email">{{ $booking->user->email ?? '-' }}</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="hostel-cell">
-                                    <i class="fas fa-building text-muted"></i>
-                                    <span>{{ $booking->hostel->name ?? 'N/A' }}</span>
-                                </div>
-                            </td>
-                            <td>
-                                @php
-                                    $statusConfig = [
-                                        'approved' => ['class' => 'status-approved', 'icon' => 'check-circle', 'label' => 'Approved'],
-                                        'pending' => ['class' => 'status-pending', 'icon' => 'clock', 'label' => 'Pending'],
-                                        'rejected' => ['class' => 'status-rejected', 'icon' => 'x-circle', 'label' => 'Rejected']
-                                    ];
-                                    $config = $statusConfig[$booking->booking_status] ?? $statusConfig['pending'];
-                                @endphp
-                                <span class="status-badge {{ $config['class'] }}">
-                                    <i class="fas fa-{{ $config['icon'] }}"></i>
-                                    {{ $config['label'] }}
-                                </span>
-                            </td>
-                            <td>
+                                @endif
+                            </div>
+                            <div class="hostel-details">
+                                <h5 class="hostel-name">{{ $booking->hostel->name }}</h5>
+                                <p class="hostel-location">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    {{ $booking->hostel->location }}
+                                </p>
+                                <p class="room-info">
+                                    <i class="fas fa-door-open"></i>
+                                    Room {{ $booking->room_number }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="booking-dates">
+                            <div class="date-box">
+                                <span class="date-label">Check In</span>
+                                <span class="date-value">{{ $booking->check_in_date->format('d M Y') }}</span>
+                                <span class="date-time">{{ $booking->check_in_date->format('h:i A') }}</span>
+                            </div>
+                            <div class="date-arrow">
+                                <i class="fas fa-long-arrow-alt-right"></i>
+                            </div>
+                            <div class="date-box">
+                                <span class="date-label">Check Out</span>
+                                <span class="date-value">{{ $booking->check_out_date->format('d M Y') }}</span>
+                                <span class="date-time">{{ $booking->check_out_date->format('h:i A') }}</span>
+                            </div>
+                        </div>
+
+                        <div class="payment-info">
+                            <div class="amount">
+                                <span class="amount-label">Total Amount</span>
+                                <span class="amount-value">¢{{ number_format($booking->total_amount, 2) }}</span>
+                            </div>
+                            <div class="payment-status">
                                 @if($booking->payment_status === 'paid')
                                     <span class="payment-badge paid">
-                                        <i class="fas fa-check"></i> Paid
+                                        <i class="fas fa-check-circle"></i> Paid
+                                    </span>
+                                @elseif($booking->payment_status === 'partial')
+                                    <span class="payment-badge partial">
+                                        <i class="fas fa-adjust"></i> Partial
                                     </span>
                                 @else
-                                    <span class="payment-badge unpaid">
-                                        <i class="fas fa-hourglass-half"></i> Pending
+                                    <span class="payment-badge pending">
+                                        <i class="fas fa-hourglass"></i> Pending
                                     </span>
                                 @endif
-                            </td>
-                            <td>
-                                <span class="amount">¢{{ number_format($booking->total_amount, 2) }}</span>
-                            </td>
-                            <td>
-                                <div class="date-cell">
-                                    <span class="date-main">{{ $booking->created_at->format('d M Y') }}</span>
-                                    <span class="date-sub">{{ $booking->created_at->format('h:i A') }}</span>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="action-buttons">
-                                    <button class="btn-action view" title="View Details" onclick="viewBooking({{ $booking->id }})">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                    @if($booking->booking_status === 'pending')
-                                        <button class="btn-action approve" title="Approve" onclick="approveBooking({{ $booking->id }})">
-                                            <i class="fas fa-check"></i>
-                                        </button>
-                                        <button class="btn-action reject" title="Reject" onclick="rejectBooking({{ $booking->id }})">
-                                            <i class="fas fa-times"></i>
-                                        </button>
-                                    @endif
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="8">
-                                <div class="empty-state">
-                                    <div class="empty-icon">
-                                        <i class="fas fa-inbox"></i>
-                                    </div>
-                                    <h6>No bookings found</h6>
-                                    <p>Try adjusting your filters or check back later</p>
-                                    <a href="{{ route('admin.bookings.create') }}" class="empty-state-btn">
-                                        <i class="fas fa-plus-circle"></i> Create New Booking
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="booking-footer">
+                        <div class="booking-actions">
+                            <a href="{{ route('bookings.show', $booking) }}" class="action-btn view-btn">
+                                <i class="fas fa-eye"></i>
+                                <span>View Details</span>
+                            </a>
+
+                            @if($booking->booking_status === 'pending' && $booking->payment_status === 'pending')
+                                <a href="{{ route('payment.process', $booking) }}" class="action-btn pay-btn">
+                                    <i class="fas fa-credit-card"></i>
+                                    <span>Pay Now</span>
+                                </a>
+                            @endif
+
+                            @if(in_array($booking->booking_status, ['pending', 'confirmed']))
+                                <button class="action-btn cancel-btn" onclick="cancelBooking({{ $booking->id }})">
+                                    <i class="fas fa-times"></i>
+                                    <span>Cancel</span>
+                                </button>
+                            @endif
+
+                            @if($booking->booking_status === 'confirmed' && $booking->check_in_date->isToday())
+                                <button class="action-btn checkin-btn" onclick="checkIn({{ $booking->id }})">
+                                    <i class="fas fa-sign-in-alt"></i>
+                                    <span>Check In</span>
+                                </button>
+                            @endif
+                        </div>
+
+                        <div class="booking-meta">
+                            <span class="created-at">
+                                <i class="far fa-clock"></i>
+                                Booked {{ $booking->created_at->diffForHumans() }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            @empty
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-calendar-times"></i>
+                    </div>
+                    <h4>No Bookings Found</h4>
+                    <p>You haven't made any bookings yet. Start by exploring available hostels.</p>
+                    <a href="{{ route('hostels.index') }}" class="btn-primary">
+                        <i class="fas fa-search"></i> Browse Hostels
+                    </a>
+                </div>
+            @endforelse
         </div>
 
-        @if ($bookings->hasPages())
-            <div class="pagination-modern">
+        <!-- Pagination -->
+        @if($bookings->hasPages())
+            <div class="pagination-wrapper">
                 {{ $bookings->withQueryString()->links() }}
             </div>
         @endif
@@ -194,13 +237,16 @@
 <style>
 :root {
     --primary: #4f46e5;
-    --primary-soft: rgba(79, 70, 229, 0.1);
+    --primary-dark: #4338ca;
+    --primary-soft: #e0e7ff;
     --success: #10b981;
-    --success-soft: rgba(16, 185, 129, 0.1);
+    --success-soft: #d1fae5;
     --warning: #f59e0b;
-    --warning-soft: rgba(245, 158, 11, 0.1);
+    --warning-soft: #fef3c7;
     --danger: #ef4444;
-    --danger-soft: rgba(239, 68, 68, 0.1);
+    --danger-soft: #fee2e2;
+    --info: #3b82f6;
+    --info-soft: #dbeafe;
     --gray-50: #f9fafb;
     --gray-100: #f3f4f6;
     --gray-200: #e5e7eb;
@@ -215,58 +261,73 @@
     --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
     --radius: 0.5rem;
     --radius-lg: 0.75rem;
     --radius-xl: 1rem;
+    --radius-2xl: 1.5rem;
 }
 
-.bookings-container {
+.bookings-dashboard {
     max-width: 1400px;
-    margin: 0 auto;
-    padding: 0 1rem;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
 }
 
 /* Stats Grid */
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 1.5rem;
+    margin-bottom: 2rem;
 }
 
 .stat-card {
     background: white;
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-xl);
     padding: 1.5rem;
     display: flex;
     align-items: center;
     gap: 1rem;
-    box-shadow: var(--shadow);
+    box-shadow: var(--shadow-md);
     border: 1px solid var(--gray-100);
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: all 0.3s ease;
 }
 
 .stat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
 }
 
 .stat-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: var(--radius);
+    width: 56px;
+    height: 56px;
+    border-radius: var(--radius-lg);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.25rem;
+    font-size: 1.5rem;
 }
 
-.bg-primary-soft { background: var(--primary-soft); }
-.bg-warning-soft { background: var(--warning-soft); }
-.bg-success-soft { background: var(--success-soft); }
+.stat-icon.active-booking {
+    background: linear-gradient(135deg, #4f46e5, #818cf8);
+    color: white;
+}
 
-.text-primary { color: var(--primary); }
-.text-warning { color: var(--warning); }
-.text-success { color: var(--success); }
+.stat-icon.pending-booking {
+    background: linear-gradient(135deg, #f59e0b, #fbbf24);
+    color: white;
+}
+
+.stat-icon.completed-booking {
+    background: linear-gradient(135deg, #10b981, #34d399);
+    color: white;
+}
+
+.stat-icon.total-spent {
+    background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+    color: white;
+}
 
 .stat-content {
     display: flex;
@@ -274,30 +335,31 @@
 }
 
 .stat-value {
-    font-size: 1.5rem;
-    font-weight: 700;
+    font-size: 2rem;
+    font-weight: 800;
     color: var(--gray-900);
-    line-height: 1;
+    line-height: 1.2;
 }
 
 .stat-label {
     font-size: 0.875rem;
     color: var(--gray-500);
-    margin-top: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
-/* Modern Card */
-.modern-card {
+/* Content Card */
+.content-card {
     background: white;
-    border-radius: var(--radius-xl);
+    border-radius: var(--radius-2xl);
     box-shadow: var(--shadow-lg);
     border: 1px solid var(--gray-100);
     overflow: hidden;
 }
 
-.card-header-modern {
+.card-header {
     padding: 1.5rem 2rem;
-    border-bottom: 1px solid var(--gray-100);
+    border-bottom: 1px solid var(--gray-200);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -306,245 +368,184 @@
     background: linear-gradient(to right, var(--gray-50), white);
 }
 
-.header-left {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
 .card-title {
-    font-size: 1.25rem;
+    font-size: 1.5rem;
     font-weight: 700;
     color: var(--gray-900);
-    margin: 0;
+    margin: 0 0 0.25rem 0;
     display: flex;
     align-items: center;
 }
 
-.booking-count {
-    font-size: 0.875rem;
+.card-subtitle {
     color: var(--gray-500);
+    margin: 0;
+    font-size: 0.875rem;
 }
 
-.header-actions {
-    display: flex;
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-lg);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.875rem;
+    display: inline-flex;
     align-items: center;
+    gap: 0.5rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-md);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-xl);
+}
+
+/* Filters Section */
+.filters-section {
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid var(--gray-200);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
     gap: 1rem;
+    background: var(--gray-50);
 }
 
-.search-filter-group {
+.filter-tabs {
     display: flex;
-    align-items: center;
-    gap: 0.75rem;
+    gap: 0.5rem;
     flex-wrap: wrap;
 }
 
-.filter-form {
-    margin: 0;
-}
-
-.filter-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: var(--gray-50);
-    padding: 0.25rem;
-    border-radius: var(--radius);
+.filter-tab {
+    padding: 0.5rem 1rem;
     border: 1px solid var(--gray-200);
-}
-
-.modern-select {
-    border: none;
-    background: transparent;
-    padding: 0.5rem 2rem 0.5rem 0.75rem;
-    font-size: 0.875rem;
-    color: var(--gray-700);
-    cursor: pointer;
-    outline: none;
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-    background-position: right 0.5rem center;
-    background-repeat: no-repeat;
-    background-size: 1.5em 1.5em;
-    min-width: 140px;
-}
-
-.btn-filter {
     background: white;
-    border: none;
-    padding: 0.5rem 0.75rem;
-    border-radius: calc(var(--radius) - 0.125rem);
-    color: var(--gray-600);
-    cursor: pointer;
-    transition: all 0.2s;
-    box-shadow: var(--shadow-sm);
-}
-
-.btn-filter:hover {
-    background: var(--primary);
-    color: white;
-    transform: translateY(-1px);
-}
-
-.btn-export {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.625rem 1rem;
-    background: white;
-    border: 1px solid var(--gray-200);
-    border-radius: var(--radius);
-    color: var(--gray-700);
+    border-radius: var(--radius-lg);
     font-size: 0.875rem;
     font-weight: 500;
+    color: var(--gray-600);
     cursor: pointer;
     transition: all 0.2s;
-    box-shadow: var(--shadow-sm);
 }
 
-.btn-export:hover {
+.filter-tab:hover {
     border-color: var(--primary);
     color: var(--primary);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow);
 }
 
-/* New Add Booking Button Styles */
-.btn-add-booking {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.625rem 1.25rem;
-    background: linear-gradient(135deg, var(--primary), #7c3aed);
-    border: none;
-    border-radius: var(--radius);
-    color: white;
-    font-size: 0.875rem;
-    font-weight: 600;
-    text-decoration: none;
-    cursor: pointer;
-    transition: all 0.3s;
-    box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
-}
-
-.btn-add-booking:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 10px -1px rgba(79, 70, 229, 0.3);
+.filter-tab.active {
+    background: var(--primary);
+    border-color: var(--primary);
     color: white;
 }
 
-.btn-add-booking i {
-    font-size: 1rem;
+.search-box {
+    position: relative;
+    min-width: 300px;
 }
 
-/* Table */
-.table-container {
-    overflow-x: auto;
-    padding: 0 1rem;
+.search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gray-400);
 }
 
-.modern-table {
+.search-box input {
     width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
+    padding: 0.75rem 1rem 0.75rem 2.75rem;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
     font-size: 0.875rem;
+    transition: all 0.2s;
 }
 
-.modern-table thead th {
-    padding: 1rem 1.25rem;
-    text-align: left;
-    font-weight: 600;
-    color: var(--gray-600);
-    text-transform: uppercase;
-    font-size: 0.75rem;
-    letter-spacing: 0.05em;
-    border-bottom: 2px solid var(--gray-100);
-    white-space: nowrap;
+.search-box input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-soft);
 }
 
-.modern-table tbody tr {
-    transition: background-color 0.2s;
+/* Bookings List */
+.bookings-list {
+    padding: 1.5rem;
 }
 
-.modern-table tbody tr:hover {
-    background-color: var(--gray-50);
+.booking-item {
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-xl);
+    margin-bottom: 1.5rem;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
 }
 
-.modern-table tbody td {
-    padding: 1.25rem;
-    border-bottom: 1px solid var(--gray-100);
-    vertical-align: middle;
+.booking-item:hover {
+    box-shadow: var(--shadow-lg);
+    border-color: transparent;
+}
+
+.booking-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--primary);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.booking-item:hover::before {
+    opacity: 1;
+}
+
+.booking-header {
+    padding: 1rem 1.5rem;
+    background: var(--gray-50);
+    border-bottom: 1px solid var(--gray-200);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .booking-id {
-    font-family: 'Courier New', monospace;
-    font-weight: 600;
-    color: var(--primary);
-    background: var(--primary-soft);
-    padding: 0.25rem 0.75rem;
-    border-radius: var(--radius);
-    font-size: 0.875rem;
-}
-
-/* User Cell */
-.user-cell {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-}
-
-.user-avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--primary), #7c3aed);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 600;
-    font-size: 0.875rem;
-    flex-shrink: 0;
-}
-
-.user-info {
     display: flex;
     flex-direction: column;
 }
 
-.user-name {
-    font-weight: 600;
-    color: var(--gray-900);
-}
-
-.user-email {
+.id-label {
     font-size: 0.75rem;
     color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
-/* Hostel Cell */
-.hostel-cell {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: var(--gray-700);
+.id-value {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--gray-900);
+    font-family: 'Courier New', monospace;
 }
 
-/* Status Badges */
 .status-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
+    font-size: 0.75rem;
+    font-weight: 600;
     display: inline-flex;
     align-items: center;
     gap: 0.375rem;
-    padding: 0.375rem 0.875rem;
-    border-radius: 9999px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: capitalize;
-}
-
-.status-approved {
-    background: var(--success-soft);
-    color: var(--success);
 }
 
 .status-pending {
@@ -552,20 +553,175 @@
     color: var(--warning);
 }
 
-.status-rejected {
+.status-confirmed {
+    background: var(--success-soft);
+    color: var(--success);
+}
+
+.status-checkedin {
+    background: var(--info-soft);
+    color: var(--info);
+}
+
+.status-checkedout {
+    background: var(--gray-200);
+    color: var(--gray-600);
+}
+
+.status-cancelled {
     background: var(--danger-soft);
     color: var(--danger);
 }
 
-/* Payment Badges */
-.payment-badge {
-    display: inline-flex;
+.booking-body {
+    padding: 1.5rem;
+    display: grid;
+    grid-template-columns: 2fr 2fr 1fr;
+    gap: 1.5rem;
     align-items: center;
-    gap: 0.375rem;
-    padding: 0.375rem 0.875rem;
-    border-radius: var(--radius);
+}
+
+@media (max-width: 1024px) {
+    .booking-body {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}
+
+.hostel-info {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.hostel-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.hostel-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+}
+
+.hostel-details {
+    flex: 1;
+}
+
+.hostel-name {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin: 0 0 0.25rem 0;
+}
+
+.hostel-location {
+    font-size: 0.875rem;
+    color: var(--gray-500);
+    margin: 0 0 0.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.room-info {
+    font-size: 0.875rem;
+    color: var(--gray-600);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.booking-dates {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: var(--gray-50);
+    padding: 1rem;
+    border-radius: var(--radius-lg);
+}
+
+.date-box {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+}
+
+.date-label {
+    font-size: 0.75rem;
+    color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.date-value {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--gray-900);
+}
+
+.date-time {
+    font-size: 0.75rem;
+    color: var(--gray-400);
+}
+
+.date-arrow {
+    color: var(--primary);
+    font-size: 1.25rem;
+}
+
+.payment-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: var(--gray-50);
+    border-radius: var(--radius-lg);
+}
+
+.amount {
+    display: flex;
+    flex-direction: column;
+}
+
+.amount-label {
+    font-size: 0.75rem;
+    color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.amount-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--primary);
+}
+
+.payment-badge {
+    padding: 0.375rem 0.75rem;
+    border-radius: 2rem;
     font-size: 0.75rem;
     font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    width: fit-content;
 }
 
 .payment-badge.paid {
@@ -573,271 +729,245 @@
     color: var(--success);
 }
 
-.payment-badge.unpaid {
-    background: var(--gray-100);
+.payment-badge.partial {
+    background: var(--warning-soft);
+    color: var(--warning);
+}
+
+.payment-badge.pending {
+    background: var(--gray-200);
     color: var(--gray-600);
 }
 
-/* Amount */
-.amount {
-    font-weight: 700;
-    color: var(--gray-900);
-    font-size: 0.9375rem;
-}
-
-/* Date Cell */
-.date-cell {
+.booking-footer {
+    padding: 1rem 1.5rem;
+    background: var(--gray-50);
+    border-top: 1px solid var(--gray-200);
     display: flex;
-    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
 }
 
-.date-main {
-    font-weight: 500;
-    color: var(--gray-900);
+.booking-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
 }
 
-.date-sub {
+.action-btn {
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-lg);
     font-size: 0.75rem;
-    color: var(--gray-500);
-    margin-top: 0.125rem;
-}
-
-/* Action Buttons */
-.action-buttons {
-    display: flex;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
     align-items: center;
     gap: 0.375rem;
-}
-
-.btn-action {
-    width: 32px;
-    height: 32px;
     border: none;
-    border-radius: var(--radius);
-    display: flex;
-    align-items: center;
-    justify-content: center;
     cursor: pointer;
     transition: all 0.2s;
-    font-size: 0.875rem;
 }
 
-.btn-action.view {
-    background: var(--primary-soft);
-    color: var(--primary);
+.view-btn {
+    background: var(--gray-200);
+    color: var(--gray-700);
 }
 
-.btn-action.view:hover {
-    background: var(--primary);
-    color: white;
-    transform: scale(1.1);
+.view-btn:hover {
+    background: var(--gray-300);
 }
 
-.btn-action.approve {
-    background: var(--success-soft);
-    color: var(--success);
-}
-
-.btn-action.approve:hover {
+.pay-btn {
     background: var(--success);
     color: white;
-    transform: scale(1.1);
 }
 
-.btn-action.reject {
+.pay-btn:hover {
+    background: var(--success);
+    filter: brightness(110%);
+}
+
+.cancel-btn {
     background: var(--danger-soft);
     color: var(--danger);
 }
 
-.btn-action.reject:hover {
+.cancel-btn:hover {
     background: var(--danger);
     color: white;
-    transform: scale(1.1);
+}
+
+.checkin-btn {
+    background: var(--info);
+    color: white;
+}
+
+.booking-meta {
+    color: var(--gray-500);
+    font-size: 0.75rem;
 }
 
 /* Empty State */
 .empty-state {
-    padding: 4rem 2rem;
     text-align: center;
-    color: var(--gray-500);
+    padding: 4rem 2rem;
 }
 
 .empty-icon {
-    width: 80px;
-    height: 80px;
+    width: 120px;
+    height: 120px;
     margin: 0 auto 1.5rem;
     background: var(--gray-100);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 2rem;
+    font-size: 3rem;
     color: var(--gray-400);
 }
 
-.empty-state h6 {
+.empty-state h4 {
     color: var(--gray-700);
     margin-bottom: 0.5rem;
-    font-size: 1rem;
+    font-size: 1.25rem;
 }
 
 .empty-state p {
-    margin: 0 0 1.5rem 0;
-    font-size: 0.875rem;
-}
-
-.empty-state-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
-    background: linear-gradient(135deg, var(--primary), #7c3aed);
-    border: none;
-    border-radius: var(--radius);
-    color: white;
-    font-size: 0.875rem;
-    font-weight: 600;
-    text-decoration: none;
-    cursor: pointer;
-    transition: all 0.3s;
-    box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
-}
-
-.empty-state-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 10px -1px rgba(79, 70, 229, 0.3);
-    color: white;
+    color: var(--gray-500);
+    margin-bottom: 2rem;
 }
 
 /* Pagination */
-.pagination-modern {
+.pagination-wrapper {
     padding: 1.5rem 2rem;
-    border-top: 1px solid var(--gray-100);
+    border-top: 1px solid var(--gray-200);
     display: flex;
     justify-content: center;
 }
 
-.pagination-modern .pagination {
-    display: flex;
-    gap: 0.25rem;
-    list-style: none;
-    margin: 0;
-    padding: 0;
+/* Animations */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-.pagination-modern .page-item .page-link {
-    padding: 0.5rem 1rem;
-    border: 1px solid var(--gray-200);
-    border-radius: var(--radius);
-    color: var(--gray-700);
-    text-decoration: none;
-    font-size: 0.875rem;
-    font-weight: 500;
-    transition: all 0.2s;
-    background: white;
-}
-
-.pagination-modern .page-item.active .page-link {
-    background: var(--primary);
-    border-color: var(--primary);
-    color: white;
-}
-
-.pagination-modern .page-item .page-link:hover:not(.active) {
-    background: var(--gray-50);
-    border-color: var(--gray-300);
+.booking-item {
+    animation: slideIn 0.3s ease-out;
 }
 
 /* Responsive */
 @media (max-width: 768px) {
-    .card-header-modern {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .header-actions {
-        width: 100%;
-    }
-
-    .search-filter-group {
-        width: 100%;
-        flex-direction: column;
-    }
-
-    .filter-form {
-        width: 100%;
-    }
-
-    .filter-wrapper {
-        width: 100%;
-    }
-
-    .modern-select {
-        flex: 1;
-    }
-
-    .btn-add-booking {
-        width: 100%;
-        justify-content: center;
-    }
-
     .stats-grid {
         grid-template-columns: 1fr;
     }
 
-    .modern-table {
-        font-size: 0.8125rem;
+    .filters-section {
+        flex-direction: column;
+        align-items: stretch;
     }
 
-    .modern-table tbody td {
-        padding: 1rem;
+    .search-box {
+        min-width: auto;
     }
 
-    .user-email, .date-sub {
-        display: none;
+    .booking-dates {
+        flex-direction: column;
+    }
+
+    .date-arrow {
+        transform: rotate(90deg);
     }
 }
 </style>
 
 <script>
-// View booking details
-function viewBooking(id) {
-    // Implement modal or navigation to detail view
-    console.log('View booking:', id);
-    // window.location.href = `/admin/bookings/${id}`;
-}
+// Filter bookings by status
+document.querySelectorAll('.filter-tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+        // Update active tab
+        document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
 
-// Approve booking
-function approveBooking(id) {
-    if(confirm('Are you sure you want to approve this booking?')) {
-        // Implement approval logic
-        console.log('Approve booking:', id);
-    }
-}
+        const filter = this.dataset.filter;
+        const bookings = document.querySelectorAll('.booking-item');
 
-// Reject booking
-function rejectBooking(id) {
-    if(confirm('Are you sure you want to reject this booking?')) {
-        // Implement rejection logic
-        console.log('Reject booking:', id);
-    }
-}
-
-// Export bookings
-function exportBookings() {
-    // Implement export functionality
-    console.log('Export bookings');
-    // window.location.href = '/admin/bookings/export';
-}
-
-// Add loading states for better UX
-document.querySelectorAll('.btn-action, .btn-add-booking, .btn-export, .btn-filter').forEach(btn => {
-    btn.addEventListener('click', function() {
-        this.style.transform = 'scale(0.95)';
-        setTimeout(() => {
-            this.style.transform = '';
-        }, 150);
+        bookings.forEach(booking => {
+            if (filter === 'all' || booking.dataset.status === filter) {
+                booking.style.display = 'block';
+            } else {
+                booking.style.display = 'none';
+            }
+        });
     });
 });
+
+// Search functionality
+document.getElementById('searchInput').addEventListener('keyup', function() {
+    const searchTerm = this.value.toLowerCase();
+    const bookings = document.querySelectorAll('.booking-item');
+
+    bookings.forEach(booking => {
+        const bookingId = booking.querySelector('.id-value').textContent.toLowerCase();
+        const hostelName = booking.querySelector('.hostel-name').textContent.toLowerCase();
+
+        if (bookingId.includes(searchTerm) || hostelName.includes(searchTerm)) {
+            booking.style.display = 'block';
+        } else {
+            booking.style.display = 'none';
+        }
+    });
+});
+
+// Cancel booking function
+function cancelBooking(bookingId) {
+    if (confirm('Are you sure you want to cancel this booking?')) {
+        // Submit cancel form
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/bookings/${bookingId}/cancel`;
+
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = '_token';
+        csrfInput.value = '{{ csrf_token() }}';
+
+        const methodInput = document.createElement('input');
+        methodInput.type = 'hidden';
+        methodInput.name = '_method';
+        methodInput.value = 'PATCH';
+
+        form.appendChild(csrfInput);
+        form.appendChild(methodInput);
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+// Check-in function
+function checkIn(bookingId) {
+    if (confirm('Proceed with check-in?')) {
+        // Submit check-in form
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/bookings/${bookingId}/checkin`;
+
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = '_token';
+        csrfInput.value = '{{ csrf_token() }}';
+
+        form.appendChild(csrfInput);
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
 </script>
 @endsection

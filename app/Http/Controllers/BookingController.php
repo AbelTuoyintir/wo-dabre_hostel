@@ -18,7 +18,7 @@ class BookingController extends Controller
             $booking->hostel = $hostels->get($booking->hostel_id);
             return $booking;
         });
-        return view('bookings.index', compact('bookings', 'fullBookings', 'hostels'));
+        return view('admin.bookings.booking', compact('bookings', 'fullBookings', 'hostels'));
     }
     public function store(Request $request)
     {
@@ -53,7 +53,7 @@ class BookingController extends Controller
         // Update hostel available rooms
         $hostel->decrement('available_rooms');
 
-        return redirect()->route('bookings.show', $booking)
+        return redirect()->route('admin.bookings.show', $booking)
             ->with('success', 'Booking created successfully. Please complete payment to confirm.');
     }
 
@@ -76,12 +76,12 @@ class BookingController extends Controller
         return view('bookings.show', compact('booking'));
     }
 
-    public function index()
-    {
-        $bookings = Booking::where('user_id', Auth::id())
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
+    // public function index()
+    // {
+    //     $bookings = Booking::where('user_id', Auth::id())
+    //         ->orderBy('created_at', 'desc')
+    //         ->paginate(10);
 
-        return view('bookings.index', compact('bookings'));
-    }
+    //     return view('bookings.index', compact('bookings'));
+    // }
 }

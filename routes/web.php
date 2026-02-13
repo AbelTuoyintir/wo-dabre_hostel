@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\HostelController as AdminHostelController;
 use App\Http\Controllers\HostelController;
 use App\Http\Controllers\RoomController;
+use App\Http\Controllers\BookingController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\HostelManagerDashboard;
 use App\Http\Controllers\StudentDashboard;
@@ -41,7 +42,7 @@ Route::middleware(['auth', 'admin'])
         Route::patch('/hostels/{hostel}/approve', [AdminHostelController::class, 'approve'])->name('hostels.approve');
         Route::patch('/hostels/{hostel}/assign-manager', [AdminController::class, 'assignManager'])->name('hostels.assign-manager');
 
-        // Hostel Images  
+        // Hostel Images
         Route::patch('/hostels/{hostel}/images/{image}/primary', [AdminHostelController::class, 'setPrimaryImage'])->name('hostels.image.primary');
         Route::delete('/hostels/{hostel}/images/{image}', [AdminHostelController::class, 'destroyImage'])->name('hostels.image.destroy');
 
@@ -54,6 +55,19 @@ Route::middleware(['auth', 'admin'])
         // Reports & Bookings
         Route::get('/bookings', [AdminController::class, 'bookings'])->name('bookings.index');
         Route::get('/reports', [AdminController::class, 'reports'])->name('reports.index');
+
+        Route::get('/bookings', [BookingController::class, 'index'])->name('bookings.index');
+        Route::get('/bookings/select-hostel', [BookingController::class, 'create'])->name('bookings.create');
+        Route::post('/bookings', [BookingController::class, 'store'])->name('bookings.store');
+        Route::get('/bookings/{booking}', [BookingController::class, 'show'])->name('bookings.show');
+        Route::post('/bookings/{booking}/cancel', [BookingController::class, 'cancel'])->name('bookings.cancel');
+
+        // AJAX route for fetching rooms
+        Route::get('/get-rooms', [BookingController::class, 'getRooms'])->name('get.rooms');
+
+        // Payment callback
+        Route::get('/payment/callback/{gateway}', [BookingController::class, 'handlePaymentCallback'])
+            ->name('payment.callback');
     });
 
 /*
