@@ -196,7 +196,7 @@ class AdminController extends Controller
     public function bookings(): View
     {
         $bookings = Booking::with(['user', 'hostel'])->latest()->paginate(15);
-        return view('admin.booking', compact('bookings'));
+        return view('admin.bookings.booking', compact('bookings'));
     }
 
     /**

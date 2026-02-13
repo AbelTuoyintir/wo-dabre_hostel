@@ -66,6 +66,12 @@
                         <i class="fas fa-download"></i>
                         <span>Export</span>
                     </button>
+
+                    <!-- New Add Booking Button -->
+                    <a href="{{ route('admin.bookings.create') }}" class="btn-add-booking">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>Add Booking</span>
+                    </a>
                 </div>
             </div>
         </div>
@@ -166,6 +172,9 @@
                                     </div>
                                     <h6>No bookings found</h6>
                                     <p>Try adjusting your filters or check back later</p>
+                                    <a href="{{ route('admin.bookings.create') }}" class="empty-state-btn">
+                                        <i class="fas fa-plus-circle"></i> Create New Booking
+                                    </a>
                                 </div>
                             </td>
                         </tr>
@@ -327,6 +336,7 @@
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    flex-wrap: wrap;
 }
 
 .filter-form {
@@ -397,6 +407,34 @@
     color: var(--primary);
     transform: translateY(-1px);
     box-shadow: var(--shadow);
+}
+
+/* New Add Booking Button Styles */
+.btn-add-booking {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.25rem;
+    background: linear-gradient(135deg, var(--primary), #7c3aed);
+    border: none;
+    border-radius: var(--radius);
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
+}
+
+.btn-add-booking:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 10px -1px rgba(79, 70, 229, 0.3);
+    color: white;
+}
+
+.btn-add-booking i {
+    font-size: 1rem;
 }
 
 /* Table */
@@ -644,8 +682,31 @@
 }
 
 .empty-state p {
-    margin: 0;
+    margin: 0 0 1.5rem 0;
     font-size: 0.875rem;
+}
+
+.empty-state-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, var(--primary), #7c3aed);
+    border: none;
+    border-radius: var(--radius);
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
+}
+
+.empty-state-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 10px -1px rgba(79, 70, 229, 0.3);
+    color: white;
 }
 
 /* Pagination */
@@ -715,6 +776,11 @@
         flex: 1;
     }
 
+    .btn-add-booking {
+        width: 100%;
+        justify-content: center;
+    }
+
     .stats-grid {
         grid-template-columns: 1fr;
     }
@@ -765,7 +831,7 @@ function exportBookings() {
 }
 
 // Add loading states for better UX
-document.querySelectorAll('.btn-action').forEach(btn => {
+document.querySelectorAll('.btn-action, .btn-add-booking, .btn-export, .btn-filter').forEach(btn => {
     btn.addEventListener('click', function() {
         this.style.transform = 'scale(0.95)';
         setTimeout(() => {
