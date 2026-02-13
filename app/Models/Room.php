@@ -36,6 +36,14 @@ class Room extends Model
     }
 
     /**
+     * Room has many Bookings
+     */
+    public function bookings()
+    {
+        return $this->hasMany(Booking::class);
+    }
+
+    /**
      * Status constants (avoid magic strings)
      */
     public const STATUS_FULL = 'full';

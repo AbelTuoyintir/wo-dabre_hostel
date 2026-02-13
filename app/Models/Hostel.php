@@ -2,7 +2,8 @@
 
 namespace App\Models;
 
-use App/Http/Controllers/
+use App\Models\Review;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 
 class Hostel extends Model
@@ -51,12 +52,12 @@ class Hostel extends Model
 
     public function primaryImage()
     {
-        return $this->hasOne(Image::class)->where('is_primary', true);
+        return $this->hasOne(HostelImage::class)->where('is_primary', true);
     }
 
     public function images()
     {
-        return $this->hasMany(Image::class);
+        return $this->hasMany(HostelImage::class);
     }
 
     public function scopeApproved($query)

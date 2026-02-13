@@ -12,5 +12,5 @@ class HostelImage extends Model
         'image_path',
         'is_primary',
         'order'
-    ]
+    ];
 }

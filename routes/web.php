@@ -41,7 +41,7 @@ Route::middleware(['auth', 'admin'])
         Route::patch('/hostels/{hostel}/approve', [AdminHostelController::class, 'approve'])->name('hostels.approve');
         Route::patch('/hostels/{hostel}/assign-manager', [AdminController::class, 'assignManager'])->name('hostels.assign-manager');
 
-        // Hostel Images
+        // Hostel Images  
         Route::patch('/hostels/{hostel}/images/{image}/primary', [AdminHostelController::class, 'setPrimaryImage'])->name('hostels.image.primary');
         Route::delete('/hostels/{hostel}/images/{image}', [AdminHostelController::class, 'destroyImage'])->name('hostels.image.destroy');
 
@@ -90,6 +90,7 @@ Route::middleware(['auth', 'hostel_manager'])
 | Student Routes
 |--------------------------------------------------------------------------
 */
+
 Route::middleware(['auth', 'student'])
     ->prefix('student')
     ->name('student.')

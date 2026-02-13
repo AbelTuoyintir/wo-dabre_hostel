@@ -55,15 +55,22 @@
                         <p class="text-blue-200">University of Cape Coast Student Accommodation</p>
                     </div>
                 </div>
-
                 <div class="flex items-center space-x-4">
-                    <a href="{{route('register')}}" class="hidden md:flex items-center space-x-2 bg-blue-800 px-4 py-2 rounded-lg">
-                        <i class="fas fa-user-graduate"></i>
-                        <span>Create Account</span>
-                    </a>
-                    <a href="{{route('login')}}" class="bg-white text-blue-900 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition">
-                        <i class="fas fa-sign-in-alt mr-2"></i>Student Login</a>
+
+                    <!-- Register -->
+                    <a href="{{ url('/register') }}"
+    class="hidden md:flex items-center space-x-2 bg-blue-800 text-white px-4 py-2 rounded-lg hover:bg-blue-900 transition">
+    <i class="fas fa-user-graduate"></i>
+    <span>Create Account</span>
+</a>
+<a href="{{ url('/login') }}"
+    class="bg-white text-blue-900 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition">
+    <i class="fas fa-sign-in-alt mr-2"></i>
+    Student Login
+</a>
+
                 </div>
+
             </div>
         </div>
     </header>
@@ -474,7 +481,6 @@
         const applyFilters = document.getElementById('applyFilters');
         const bookingModal = document.getElementById('bookingModal');
         const closeModal = document.getElementById('closeModal');
-        const loginModal = document.getElementById('loginModal');
         const closeLoginModal = document.getElementById('closeLoginModal');
         const confirmBooking = document.getElementById('confirmBooking');
 
@@ -695,11 +701,7 @@
                 }
             });
 
-            // Login button
-            loginBtn.addEventListener('click', function() {
-                loginModal.classList.remove('hidden');
-                document.body.style.overflow = 'hidden';
-            });
+          
 
             // Close login modal
             closeLoginModal.addEventListener('click', function() {

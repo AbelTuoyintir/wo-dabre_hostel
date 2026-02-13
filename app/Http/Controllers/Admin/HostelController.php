@@ -4,8 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Hostel;
-use App\Models\Image;
+use App\Models\HostelImage;
 use App\Models\User;
+use App\Models\Booking;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
@@ -133,7 +134,7 @@ class HostelController extends Controller
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $index => $image) {
                     $path = $image->store('hostels/' . $hostel->id, 'public');
-                    
+
                     Image::create([
                         'hostel_id' => $hostel->id,
                         'path' => $path,
@@ -150,7 +151,7 @@ class HostelController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             return redirect()
                 ->back()
                 ->withInput()
@@ -192,7 +193,7 @@ class HostelController extends Controller
     {
         $managers = User::where('role', 'manager')->get();
         $hostel->load('images');
-        
+
         return view('admin.hostels.edit', compact('hostel', 'managers'));
     }
 
@@ -233,16 +234,16 @@ class HostelController extends Controller
             // Handle new image uploads
             if ($request->hasFile('images')) {
                 $hasPrimary = $hostel->images()->where('is_primary', true)->exists();
-                
+
                 foreach ($request->file('images') as $image) {
                     $path = $image->store('hostels/' . $hostel->id, 'public');
-                    
+
                     HostelImage::create([
                         'hostel_id' => $hostel->id,
                         'path' => $path,
                         'is_primary' => !$hasPrimary,
                     ]);
-                    
+
                     $hasPrimary = true;
                 }
             }
@@ -255,7 +256,7 @@ class HostelController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             return redirect()
                 ->back()
                 ->withInput()
@@ -298,7 +299,7 @@ class HostelController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             return redirect()
                 ->back()
                 ->with('error', 'Failed to delete hostel. ' . $e->getMessage());
