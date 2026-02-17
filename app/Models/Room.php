@@ -18,6 +18,7 @@ class Room extends Model
         'hostel_id',
         'gender',
         'status',
+        'room_type',
     ];
 
     /**
@@ -57,4 +58,33 @@ class Room extends Model
     public const GENDER_MALE = 'male';
     public const GENDER_FEMALE = 'female';
     public const GENDER_ANY = 'any';
+
+    /**
+     * Calculate occupancy rate percentage
+     */
+    public function occupancyRate()
+    {
+        if (!$this->capacity || $this->capacity == 0) {
+            return 0;
+        }
+        return round(($this->current_occupancy ?? 0) / $this->capacity * 100);
+    }
+
+    /**
+     * Get available spaces in room
+     */
+    public function availableSpaces()
+    {
+        return max(0, ($this->capacity ?? 0) - ($this->current_occupancy ?? 0));
+    }
+
+    /**
+     * Get current booking query
+     */
+    public function currentBooking()
+    {
+        return $this->bookings()
+            ->whereIn('status', ['confirmed', 'checked_in'])
+            ->where('check_out_date', '>', now());
+    }
 }

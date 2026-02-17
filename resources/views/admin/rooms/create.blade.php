@@ -16,27 +16,45 @@
             </h3>
             <p class="mt-1 text-sm text-gray-600">Add a new room to your hostel system.</p>
         </div>
-        
+
         <form action="{{ route('admin.rooms.store') }}" method="POST" class="p-6">
             @csrf
-            
+
             <div class="space-y-6">
                 <!-- Hostel Selection -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        <span class="text-red-500">*</span> Select Hostel
-                    </label>
-                    <select name="hostel_id" class="w-full lg:w-1/2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 @error('hostel_id') border-red-500 @enderror" required>
-                        <option value="">Choose a hostel</option>
-                        @foreach($hostels as $hostel)
-                            <option value="{{ $hostel->id }}" {{ old('hostel_id') == $hostel->id ? 'selected' : '' }}>
-                                {{ $hostel->name }} - {{ $hostel->location }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('hostel_id')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <span class="text-red-500">*</span> Select Hostel
+                        </label>
+                        <select name="hostel_id" class="w-full  border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 @error('hostel_id') border-red-500 @enderror" required>
+                            <option value="">Choose a hostel</option>
+                            @foreach($hostels as $hostel)
+                                <option value="{{ $hostel->id }}" {{ old('hostel_id') == $hostel->id ? 'selected' : '' }}>
+                                    {{ $hostel->name }} - {{ $hostel->location }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('hostel_id')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <span class="text-red-500">*</span> room_type
+                            </label>
+                            <select name="room_type" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 @error('room_type') border-red-500 @enderror" required>
+                                <option value="single_room" {{ old('room_type') == 'single_room' ? 'selected' : '' }}>Single</option>
+                                <option value="shared_2" {{ old('room_type') == 'shared_2' ? 'selected' : '' }}>2 in room</option>
+                                <option value="shared_4" {{ old('room_type') == 'shared_4' ? 'selected' : '' }}>3 in room</option>
+                                <option value="executive" {{ old('room_type') == 'executive' ? 'selected' : '' }}>4 in room</option>
+                            </select>
+                            @error('room_type')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -45,19 +63,22 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             <span class="text-red-500">*</span> Room Number
                         </label>
-                        <input type="text" name="number" value="{{ old('number') }}" 
-                               class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 @error('number') border-red-500 @enderror" 
+                        <input type="text" name="number" value="{{ old('number') }}"
+                               class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 @error('number') border-red-500 @enderror"
                                placeholder="e.g., 101, A202" required>
                         @error('number')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
+
+
+
                     </div>
 
                     <!-- Floor -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Floor</label>
-                        <input type="number" name="floor" value="{{ old('floor') }}" 
-                               class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 @error('floor') border-red-500 @enderror" 
+                        <input type="number" name="floor" value="{{ old('floor') }}"
+                               class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 @error('floor') border-red-500 @enderror"
                                placeholder="e.g., 1, 2, 3">
                         @error('floor')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -69,8 +90,8 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             <span class="text-red-500">*</span> Capacity (persons)
                         </label>
-                        <input type="number" name="capacity" value="{{ old('capacity', 1) }}" min="1" 
-                               class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 @error('capacity') border-red-500 @enderror" 
+                        <input type="number" name="capacity" value="{{ old('capacity', 1) }}" min="1"
+                               class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 @error('capacity') border-red-500 @enderror"
                                placeholder="Maximum number of occupants" required>
                         @error('capacity')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -81,7 +102,7 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Size (sqm)</label>
                         <input type="number" name="size_sqm" value="{{ old('size_sqm') }}" step="0.01" min="1"
-                               class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 @error('size_sqm') border-red-500 @enderror" 
+                               class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 @error('size_sqm') border-red-500 @enderror"
                                placeholder="e.g., 25.5">
                         @error('size_sqm')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -96,7 +117,7 @@
                                 <span class="text-gray-500 sm:text-sm">$</span>
                             </div>
                             <input type="number" name="price_per_month" value="{{ old('price_per_month') }}" step="0.01" min="0"
-                                   class="w-full pl-7 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 @error('price_per_month') border-red-500 @enderror" 
+                                   class="w-full pl-7 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 @error('price_per_month') border-red-500 @enderror"
                                    placeholder="0.00">
                         </div>
                         @error('price_per_month')
@@ -163,7 +184,7 @@
                             </label>
                             <span class="text-xs text-gray-500">(Bed, desk, chair, wardrobe)</span>
                         </div>
-                        
+
                         <div class="flex items-center space-x-6">
                             <label class="inline-flex items-center">
                                 <input type="checkbox" name="private_bathroom" value="1" {{ old('private_bathroom') ? 'checked' : '' }}
@@ -178,8 +199,8 @@
                 <!-- Description -->
                 <div class="border-t border-gray-200 pt-6">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Room Description</label>
-                    <textarea name="description" rows="4" 
-                              class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 @error('description') border-red-500 @enderror" 
+                    <textarea name="description" rows="4"
+                              class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 @error('description') border-red-500 @enderror"
                               placeholder="Describe the room, its features, and any special notes...">{{ old('description') }}</textarea>
                     @error('description')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -190,18 +211,18 @@
 
             <!-- Form Actions -->
             <div class="mt-8 flex items-center justify-end space-x-3 border-t border-gray-200 pt-6">
-                <a href="{{ route('admin.rooms.index') }}" 
+                <a href="{{ route('admin.rooms.index') }}"
                    class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                     Cancel
                 </a>
-                <button type="submit" 
+                <button type="submit"
                         class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                     Create Room
                 </button>
             </div>
         </form>
     </div>
-    
+
     <!-- Help Card -->
     <div class="mt-6 bg-blue-50 rounded-lg p-4 border border-blue-200">
         <div class="flex">

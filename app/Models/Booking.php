@@ -2,15 +2,19 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Booking extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'booking_number',
         'user_id',
         'hostel_id',
-        'room_number',
+        'room_id',
         'check_in_date',
         'check_out_date',
         'total_amount',
@@ -26,23 +30,72 @@ class Booking extends Model
     protected $casts = [
         'check_in_date' => 'date',
         'check_out_date' => 'date',
+        'payment_date' => 'datetime',
         'total_amount' => 'decimal:2',
         'amount_paid' => 'decimal:2',
-        'payment_date' => 'datetime',
     ];
 
-    public function user()
+    /**
+     * Get the user that owns the booking
+     */
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function hostel()
+    /**
+     * Get the hostel that owns the booking
+     */
+    public function hostel(): BelongsTo
     {
         return $this->belongsTo(Hostel::class);
     }
 
-    public function room()
+    /**
+     * Get the room that owns the booking
+     */
+    public function room(): BelongsTo
     {
         return $this->belongsTo(Room::class);
+    }
+
+    /**
+     * Check if booking is active
+     */
+    public function isActive(): bool
+    {
+        return in_array($this->booking_status, ['confirmed', 'checked_in']);
+    }
+
+    /**
+     * Check if booking can be cancelled
+     */
+    public function canBeCancelled(): bool
+    {
+        return in_array($this->booking_status, ['pending', 'confirmed']);
+    }
+
+    /**
+     * Get the balance due
+     */
+    public function getBalanceDueAttribute(): float
+    {
+        return max(0, $this->total_amount - $this->amount_paid);
+    }
+
+    /**
+     * Check if payment is complete
+     */
+    public function isPaid(): bool
+    {
+        return $this->payment_status === 'paid';
+    }
+
+    /**
+     * Get the number of nights
+     */
+    public function getNightsAttribute(): int
+    {
+        return $this->check_in_date->diffInDays($this->check_out_date);
     }
 }

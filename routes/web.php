@@ -56,11 +56,34 @@ Route::middleware(['auth', 'admin'])
         Route::get('/bookings', [AdminController::class, 'bookings'])->name('bookings.index');
         Route::get('/reports', [AdminController::class, 'reports'])->name('reports.index');
 
-        Route::get('/bookings', [BookingController::class, 'index'])->name('bookings.index');
-        Route::get('/bookings/select-hostel', [BookingController::class, 'create'])->name('bookings.create');
-        Route::post('/bookings', [BookingController::class, 'store'])->name('bookings.store');
-        Route::get('/bookings/{booking}', [BookingController::class, 'show'])->name('bookings.show');
-        Route::post('/bookings/{booking}/cancel', [BookingController::class, 'cancel'])->name('bookings.cancel');
+        Route::prefix('bookings')->name('bookings.')->group(function () {
+        // Select hostel
+        Route::get('/select-hostel', [BookingController::class, 'selectHostel'])->name('hostel.select');
+        
+        // View rooms for a hostel
+        Route::get('/hostel/{hostel}/rooms', [BookingController::class, 'selectRoom'])->name('hostel.rooms');
+        
+        // Create booking for specific room
+        Route::get('/hostel/{hostel}/room/{room}/book', [BookingController::class, 'createBooking'])->name('create');
+        
+        // Store booking
+        Route::post('/', [BookingController::class, 'store'])->name('store');
+        
+        // List user bookings
+        Route::get('/', [BookingController::class, 'index'])->name('index');
+        
+        // View specific booking
+        Route::get('/{booking}', [BookingController::class, 'show'])->name('show');
+        
+        // Cancel booking
+        Route::patch('/{booking}/cancel', [BookingController::class, 'cancel'])->name('cancel');
+    });
+    
+    // Payment routes
+    Route::prefix('payment')->name('payment.')->group(function () {
+        // Payment callback
+        Route::get('/callback/{gateway}', [BookingController::class, 'handlePaymentCallback'])->name('callback');
+    });
 
         // AJAX route for fetching rooms
         Route::get('/get-rooms', [BookingController::class, 'getRooms'])->name('get.rooms');

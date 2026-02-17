@@ -85,46 +85,50 @@ class RoomController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'number' => 'required|string|max:255',
-            'capacity' => 'required|integer|min:1',
-            'hostel_id' => 'required|exists:hostels,id',
-            'gender' => 'required|in:male,female,any',
-            'status' => 'required|in:available,full,maintenance,inactive',
-            'price_per_month' => 'nullable|numeric|min:0',
-            'description' => 'nullable|string|max:1000',
-            'floor' => 'nullable|integer|min:0',
-            'size_sqm' => 'nullable|numeric|min:1',
-            'window_type' => 'nullable|in:street,courtyard,garden,none',
-            'furnished' => 'sometimes|boolean',
-            'private_bathroom' => 'sometimes|boolean',
-        ]);
+        try {
+            $validated = $request->validate([
+                'number' => 'required|string|max:255',
+                'capacity' => 'required|integer|min:1',
+                'hostel_id' => 'required|exists:hostels,id',
+                'gender' => 'required|in:male,female,any',
+                'room_type' => 'required|in:single_room,shared_2,shared_4,executive',
+                'status' => 'required|in:available,full,maintenance,inactive',
+                'price_per_month' => 'nullable|numeric|min:0',
+                'description' => 'nullable|string|max:1000',
+                'floor' => 'nullable|integer|min:0',
+                'size_sqm' => 'nullable|numeric|min:1',
+                'window_type' => 'nullable|in:street,courtyard,garden,none',
+                'furnished' => 'sometimes|boolean',
+                'private_bathroom' => 'sometimes|boolean',
+            ]);
 
-        // Handle boolean fields
-        $validated['furnished'] = $request->has('furnished');
-        $validated['private_bathroom'] = $request->has('private_bathroom');
-        
-        // Check if room number already exists in this hostel
-        $exists = Room::where('hostel_id', $validated['hostel_id'])
-            ->where('number', $validated['number'])
-            ->exists();
+            // Handle boolean fields
+            $validated['furnished'] = $request->has('furnished');
+            $validated['private_bathroom'] = $request->has('private_bathroom');
             
-        if ($exists) {
-            return back()
-                ->withInput()
-                ->with('error', 'Room number already exists in this hostel.');
+            // Check if room number already exists in this hostel
+            $exists = Room::where('hostel_id', $validated['hostel_id'])
+                ->where('number', $validated['number'])
+                ->exists();
+                
+            if ($exists) {
+                return back()
+                    ->withInput()
+                    ->with('error', 'Room number already exists in this hostel.');
+            }
+
+            $room = Room::create($validated);
+
+            return redirect()
+                ->route('admin.rooms.index')
+                ->with('success', "Room {$room->number} created successfully.");
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Room creation validation failed', ['errors' => $e->errors()]);
+            return back()->withErrors($e->validator)->withInput();
         }
-        
-        $room = Room::create($validated);
-        
-        // Update hostel available rooms count
-        $this->updateHostelRoomCount($room->hostel);
-
-        return redirect()
-            ->route('admin.rooms.index')
-            ->with('success', "Room {$room->number} created successfully.");
     }
-
+        
+        
     /**
      * Display a specific room
      */
@@ -140,7 +144,7 @@ class RoomController extends Controller
             'total_bookings' => $room->bookings()->count(),
             'active_bookings' => $room->bookings()
                 ->whereIn('status', ['confirmed', 'pending'])
-                ->where('check_out', '>', now())
+                ->where('check_out_date', '>', now())
                 ->count(),
             'occupancy_rate' => $room->occupancyRate(),
             'available_spaces' => $room->availableSpaces(),
@@ -172,6 +176,7 @@ class RoomController extends Controller
             'capacity' => 'required|integer|min:1',
             'hostel_id' => 'required|exists:hostels,id',
             'gender' => 'required|in:male,female,any',
+            'room_type' => 'required|in:single_room,shared_2,shared_4,executive',
             'status' => 'required|in:available,full,maintenance,inactive',
             'price_per_month' => 'nullable|numeric|min:0',
             'description' => 'nullable|string|max:1000',
@@ -213,16 +218,7 @@ class RoomController extends Controller
             }
         }
         
-        $oldHostelId = $room->hostel_id;
         $room->update($validated);
-        
-        // Update hostel room counts
-        if ($oldHostelId != $room->hostel_id) {
-            $this->updateHostelRoomCount(Hostel::find($oldHostelId));
-            $this->updateHostelRoomCount($room->hostel);
-        } else {
-            $this->updateHostelRoomCount($room->hostel);
-        }
 
         return redirect()
             ->route('admin.rooms.index')
@@ -244,31 +240,12 @@ class RoomController extends Controller
                 ->with('error', 'Cannot delete room with active bookings.');
         }
         
-        $hostel = $room->hostel;
         $roomNumber = $room->number;
         $room->delete();
-        
-        // Update hostel room count
-        if ($hostel) {
-            $this->updateHostelRoomCount($hostel);
-        }
 
         return redirect()
             ->route('admin.rooms.index')
             ->with('success', "Room {$roomNumber} deleted successfully.");
-    }
-
-    /**
-     * Update hostel available rooms count
-     */
-    private function updateHostelRoomCount(Hostel $hostel)
-    {
-        $hostel->total_rooms = $hostel->rooms()->count();
-        $hostel->available_rooms = $hostel->rooms()
-            ->where('status', 'available')
-            ->whereColumn('current_occupancy', '<', 'capacity')
-            ->count();
-        $hostel->save();
     }
 
     /**
@@ -281,9 +258,6 @@ class RoomController extends Controller
         ]);
         
         $room->update(['status' => $request->status]);
-        
-        // Update hostel available rooms
-        $this->updateHostelRoomCount($room->hostel);
         
         return response()->json([
             'success' => true,
@@ -339,14 +313,6 @@ class RoomController extends Controller
             $updatedHostels->push($room->hostel_id);
             if (isset($oldHostelId) && $oldHostelId != $room->hostel_id) {
                 $updatedHostels->push($oldHostelId);
-            }
-        }
-        
-        // Update room counts for affected hostels
-        foreach ($updatedHostels->unique() as $hostelId) {
-            $hostel = Hostel::find($hostelId);
-            if ($hostel) {
-                $this->updateHostelRoomCount($hostel);
             }
         }
         
