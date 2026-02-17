@@ -86,7 +86,7 @@ class HostelController extends Controller
    public function create()
     {
         // Get all managers (for the select dropdown)
-        $managers = User::where('role', 'manager')->get();
+        $managers = User::where('role', 'hostel_manager')->get();
 
         return view('admin.hostels.create', [
             'managers' => $managers
@@ -191,7 +191,7 @@ class HostelController extends Controller
      */
     public function edit(Hostel $hostel)
     {
-        $managers = User::where('role', 'manager')->get();
+        $managers = User::where('role', 'hostel_manager')->get();
         $hostel->load('images');
 
         return view('admin.hostels.edit', compact('hostel', 'managers'));

@@ -34,15 +34,23 @@ class HostelManagerMiddleware
             return redirect()->back()->with('error', 'Hostel manager access only.');
         }
 
-        // Optional: Check if hostel manager is assigned to a hostel
-        if (!$user->hostel_id) {
-            // Allow access but redirect to profile to complete setup
-            if ($request->route()->getName() !== 'hostel-manager.profile') {
+        if (!$user->managedHostel) {  // Using the relationship
+            // Allow access only to profile and settings pages
+            $allowedRoutes = [
+                'hostel-manager.profile',
+                'hostel-manager.profile.update',
+                'hostel-manager.settings',
+                'hostel-manager.settings.update',
+                'logout'
+            ];
+
+            if (!in_array($request->route()->getName(), $allowedRoutes)) {
                 return redirect()->route('hostel-manager.profile')
-                    ->with('warning', 'Please complete your profile and wait for hostel assignment.');
+                    ->with('warning', 'You have not been assigned to any hostel yet. Please wait for admin assignment.');
             }
         }
 
         return $next($request);
     }
 }
+

@@ -141,16 +141,18 @@ class AdminController extends Controller
      */
     public function show(Hostel $hostel): View
     {
+
         return view('admin.hostel-show', compact('hostel'));
     }
 
     /**
      * Show the form for editing the specified hostel.
      */
-    public function edit(Hostel $hostel): View
-    {
-        return view('admin.hostel-edit', compact('hostel'));
-    }
+    // public function edit(Hostel $hostel): View
+    // {
+
+    //     return view('admin.hostels.edit', compact('hostel'));
+    // }
 
     /**
      * Update the specified hostel.

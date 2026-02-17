@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Models\Users;
 
 class User extends Authenticatable
 {
@@ -37,9 +38,30 @@ class User extends Authenticatable
         'remember_token',
     ];
 
-    public function hostel()
+    // public function hostel()
+    // {
+    //     return $this->hasOne(Hostel::class);
+    // }
+
+     public function managedHostel()
     {
-        return $this->hasOne(Hostel::class);
+        return $this->hasOne(Hostel::class, 'manager_id');
+    }
+
+    /**
+     * If a manager can manage multiple hostels, use hasMany instead
+     */
+    public function managedHostels()
+    {
+        return $this->hasMany(Hostel::class, 'manager_id');
+    }
+
+    /**
+     * Check if user has been assigned to a hostel
+     */
+    public function hasAssignedHostel()
+    {
+        return $this->managedHostel()->exists();
     }
 
     public function payments()

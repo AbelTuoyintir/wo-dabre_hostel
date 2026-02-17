@@ -8,7 +8,7 @@
     <form action="{{ route('admin.hostels.update', $hostel) }}" method="POST" enctype="multipart/form-data" class="space-y-6">
         @csrf
         @method('PUT')
-        
+
         <!-- Basic Information Card -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
@@ -26,8 +26,8 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             <span class="text-red-500">*</span> Hostel Name
                         </label>
-                        <input type="text" name="name" value="{{ old('name', $hostel->name) }}" 
-                               class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 @error('name') border-red-500 @enderror" 
+                        <input type="text" name="name" value="{{ old('name', $hostel->name) }}"
+                               class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 @error('name') border-red-500 @enderror"
                                placeholder="e.g., Sunshine Hostel" required>
                         @error('name')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -39,8 +39,8 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             <span class="text-red-500">*</span> Location
                         </label>
-                        <input type="text" name="location" value="{{ old('location', $hostel->location) }}" 
-                               class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 @error('location') border-red-500 @enderror" 
+                        <input type="text" name="location" value="{{ old('location', $hostel->location) }}"
+                               class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 @error('location') border-red-500 @enderror"
                                placeholder="e.g., Downtown, City Center" required>
                         @error('location')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -52,8 +52,8 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             <span class="text-red-500">*</span> Full Address
                         </label>
-                        <input type="text" name="address" value="{{ old('address', $hostel->address) }}" 
-                               class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 @error('address') border-red-500 @enderror" 
+                        <input type="text" name="address" value="{{ old('address', $hostel->address) }}"
+                               class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 @error('address') border-red-500 @enderror"
                                placeholder="Street, building number" required>
                         @error('address')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -65,8 +65,8 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             Contact Phone
                         </label>
-                        <input type="text" name="contact_phone" value="{{ old('contact_phone', $hostel->contact_phone) }}" 
-                               class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" 
+                        <input type="text" name="contact_phone" value="{{ old('contact_phone', $hostel->contact_phone) }}"
+                               class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                                placeholder="e.g., +1234567890">
                     </div>
 
@@ -75,8 +75,8 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             Contact Email
                         </label>
-                        <input type="email" name="contact_email" value="{{ old('contact_email', $hostel->contact_email) }}" 
-                               class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" 
+                        <input type="email" name="contact_email" value="{{ old('contact_email', $hostel->contact_email) }}"
+                               class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                                placeholder="contact@hostel.com">
                     </div>
 
@@ -100,8 +100,8 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             Latitude
                         </label>
-                        <input type="text" name="latitude" value="{{ old('latitude', $hostel->latitude) }}" 
-                               class="w-full border-gray-300 rounded-md shadow-sm" 
+                        <input type="text" name="latitude" value="{{ old('latitude', $hostel->latitude) }}"
+                               class="w-full border-gray-300 rounded-md shadow-sm"
                                placeholder="e.g., 40.7128">
                     </div>
 
@@ -109,8 +109,8 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             Longitude
                         </label>
-                        <input type="text" name="longitude" value="{{ old('longitude', $hostel->longitude) }}" 
-                               class="w-full border-gray-300 rounded-md shadow-sm" 
+                        <input type="text" name="longitude" value="{{ old('longitude', $hostel->longitude) }}"
+                               class="w-full border-gray-300 rounded-md shadow-sm"
                                placeholder="e.g., -74.0060">
                     </div>
                 </div>
@@ -132,8 +132,8 @@
                     <!-- Description -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                        <textarea name="description" rows="5" 
-                                  class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" 
+                        <textarea name="description" rows="5"
+                                  class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                                   placeholder="Provide a detailed description of the hostel...">{{ old('description', $hostel->description) }}</textarea>
                     </div>
 
@@ -144,10 +144,10 @@
                             @if(old('rules', $hostel->rules))
                                 @foreach(old('rules', $hostel->rules ?? []) as $rule)
                                     <div class="flex items-center space-x-2">
-                                        <input type="text" name="rules[]" value="{{ $rule }}" 
-                                               class="flex-1 border-gray-300 rounded-md shadow-sm" 
+                                        <input type="text" name="rules[]" value="{{ $rule }}"
+                                               class="flex-1 border-gray-300 rounded-md shadow-sm"
                                                placeholder="e.g., No smoking inside">
-                                        <button type="button" onclick="this.parentElement.remove()" 
+                                        <button type="button" onclick="this.parentElement.remove()"
                                                 class="text-red-600 hover:text-red-900">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
@@ -157,9 +157,9 @@
                                 @endforeach
                             @else
                                 <div class="flex items-center space-x-2">
-                                    <input type="text" name="rules[]" class="flex-1 border-gray-300 rounded-md shadow-sm" 
+                                    <input type="text" name="rules[]" class="flex-1 border-gray-300 rounded-md shadow-sm"
                                            placeholder="e.g., No smoking inside">
-                                    <button type="button" onclick="this.parentElement.remove()" 
+                                    <button type="button" onclick="this.parentElement.remove()"
                                             class="text-red-600 hover:text-red-900">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
@@ -168,7 +168,7 @@
                                 </div>
                             @endif
                         </div>
-                        <button type="button" onclick="addRule()" 
+                        <button type="button" onclick="addRule()"
                                 class="mt-2 inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -181,12 +181,12 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Check-in Time</label>
-                            <input type="time" name="check_in_time" value="{{ old('check_in_time', optional($hostel->check_in_time)->format('H:i') ?? '14:00') }}" 
+                            <input type="time" name="check_in_time" value="{{ old('check_in_time', optional($hostel->check_in_time)->format('H:i') ?? '14:00') }}"
                                    class="w-full border-gray-300 rounded-md shadow-sm">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Check-out Time</label>
-                            <input type="time" name="check_out_time" value="{{ old('check_out_time', optional($hostel->check_out_time)->format('H:i') ?? '12:00') }}" 
+                            <input type="time" name="check_out_time" value="{{ old('check_out_time', optional($hostel->check_out_time)->format('H:i') ?? '12:00') }}"
                                    class="w-full border-gray-300 rounded-md shadow-sm">
                         </div>
                     </div>
@@ -222,7 +222,7 @@
                         </div>
                         @foreach($amenities as $key => $label)
                             <label class="inline-flex items-center">
-                                <input type="checkbox" name="amenities[]" value="{{ $key }}" 
+                                <input type="checkbox" name="amenities[]" value="{{ $key }}"
                                        {{ in_array($key, $hostelAmenities) ? 'checked' : '' }}
                                        class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500">
                                 <span class="ml-2 text-sm text-gray-700">{{ $label }}</span>
@@ -241,7 +241,7 @@
                                         <input type="checkbox" name="amenities[]" value="{{ $amenity }}" checked
                                                class="rounded border-gray-300 text-blue-600 shadow-sm">
                                         <span class="text-sm text-gray-700">{{ ucwords(str_replace('_', ' ', $amenity)) }}</span>
-                                        <button type="button" onclick="this.parentElement.remove()" 
+                                        <button type="button" onclick="this.parentElement.remove()"
                                                 class="text-red-600 hover:text-red-900">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -252,10 +252,10 @@
                             @endforeach
                         </div>
                         <div class="flex items-center space-x-2 mt-2">
-                            <input type="text" id="custom-amenity" 
-                                   class="flex-1 border-gray-300 rounded-md shadow-sm" 
+                            <input type="text" id="custom-amenity"
+                                   class="flex-1 border-gray-300 rounded-md shadow-sm"
                                    placeholder="e.g., Yoga Studio">
-                            <button type="button" onclick="addCustomAmenity()" 
+                            <button type="button" onclick="addCustomAmenity()"
                                     class="px-4 py-2 bg-gray-800 text-white text-sm rounded-md hover:bg-gray-900">
                                 Add
                             </button>
@@ -283,8 +283,8 @@
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                             @foreach($hostel->images as $image)
                                 <div class="relative group">
-                                    <img src="{{ Storage::url($image->path) }}" 
-                                         alt="{{ $hostel->name }}" 
+                                    <img src="{{ Storage::url($image->path) }}"
+                                         alt="{{ $hostel->name }}"
                                          class="w-full h-32 object-cover rounded-lg">
                                     <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-opacity rounded-lg flex items-center justify-center">
                                         <div class="opacity-0 group-hover:opacity-100 flex space-x-2">
@@ -325,7 +325,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-3">Add New Images</label>
                     <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 transition-colors">
-                        <input type="file" name="images[]" multiple accept="image/*" 
+                        <input type="file" name="images[]" multiple accept="image/*"
                                class="hidden" id="image-upload">
                         <label for="image-upload" class="cursor-pointer">
                             <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -405,17 +405,17 @@
         <!-- Form Actions -->
         <div class="flex items-center justify-between">
             <div>
-                <button type="button" onclick="confirmDelete()" 
+                <button type="button" onclick="confirmDelete()"
                         class="px-6 py-2.5 border border-red-300 rounded-md shadow-sm text-sm font-medium text-red-700 bg-white hover:bg-red-50">
                     Delete Hostel
                 </button>
             </div>
             <div class="flex items-center space-x-3">
-                <a href="{{ route('admin.hostels.show', $hostel) }}" 
+                <a href="{{ route('admin.hostels.show', $hostel) }}"
                    class="px-6 py-2.5 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                     Cancel
                 </a>
-                <button type="submit" 
+                <button type="submit"
                         class="px-6 py-2.5 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
                     Update Hostel
                 </button>
@@ -475,7 +475,7 @@ function addCustomAmenity() {
 document.getElementById('image-upload')?.addEventListener('change', function(e) {
     const preview = document.getElementById('image-preview');
     preview.innerHTML = '';
-    
+
     Array.from(e.target.files).forEach((file, index) => {
         const reader = new FileReader();
         reader.onload = function(e) {
@@ -483,7 +483,7 @@ document.getElementById('image-upload')?.addEventListener('change', function(e) 
             div.className = 'relative';
             div.innerHTML = `
                 <img src="${e.target.result}" class="w-full h-32 object-cover rounded-lg">
-                <button type="button" onclick="this.parentElement.remove()" 
+                <button type="button" onclick="this.parentElement.remove()"
                         class="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 hover:bg-red-700">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>

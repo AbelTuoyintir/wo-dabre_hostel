@@ -14,7 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
     $middleware->alias([
         'auth' => \Illuminate\Auth\Middleware\Authenticate::class,
         'admin' => \App\Http\Middleware\AdminMiddleware::class,
-        'hostel_manager' => \App\Http\Middleware\HostelManagerMiddleware::class,
+        'hostel.manager' => \App\Http\Middleware\HostelManagerMiddleware::class,
         'student' => \App\Http\Middleware\StudentMiddleware::class,
     ]);
 
