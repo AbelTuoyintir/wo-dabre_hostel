@@ -351,67 +351,6 @@ class HostelManagementController extends Controller
     /**
      * Display all rooms with live availability
      */
-    public function rooms(Request $request)
-    {
-        $user = Auth::user();
-        $hostelIds = $user->managedHostels()->pluck('hostels.id');
-
-        $query = Room::with('hostel')
-            ->whereIn('hostel_id', $hostelIds);
-
-        // Apply filters
-        if ($request->filled('hostel_id')) {
-            $query->where('hostel_id', $request->hostel_id);
-        }
-
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->filled('gender')) {
-            $query->whereIn('gender', [$request->gender, 'any']);
-        }
-
-        if ($request->filled('min_price')) {
-            $query->where('price_per_month', '>=', $request->min_price);
-        }
-
-        if ($request->filled('max_price')) {
-            $query->where('price_per_month', '<=', $request->max_price);
-        }
-
-        if ($request->filled('search')) {
-            $query->where(function($q) use ($request) {
-                $q->where('number', 'like', '%' . $request->search . '%')
-                  ->orWhereHas('hostel', function($hq) use ($request) {
-                      $hq->where('name', 'like', '%' . $request->search . '%');
-                  });
-            });
-        }
-
-        $rooms = $query->paginate(15)->withQueryString();
-
-        // Get summary statistics
-        $summary = [
-            'total' => Room::whereIn('hostel_id', $hostelIds)->count(),
-            'available' => Room::whereIn('hostel_id', $hostelIds)
-                ->where('status', 'available')
-                ->whereColumn('current_occupancy', '<', 'capacity')
-                ->count(),
-            'occupied' => Room::whereIn('hostel_id', $hostelIds)
-                ->where('current_occupancy', '>', 0)
-                ->count(),
-            'maintenance' => Room::whereIn('hostel_id', $hostelIds)
-                ->where('status', 'maintenance')
-                ->count(),
-            'total_capacity' => Room::whereIn('hostel_id', $hostelIds)->sum('capacity'),
-            'current_occupancy' => Room::whereIn('hostel_id', $hostelIds)->sum('current_occupancy'),
-        ];
-
-        $hostels = $user->managedHostels()->get();
-
-        return view('hostel-manager.rooms.index', compact('rooms', 'hostels', 'summary'));
-    }
 
     /**
      * Show room creation form

@@ -1,4 +1,4 @@
-@extends('hostel-manager.layouts.manager')
+@extends('layouts.hostelmanage')
 
 @section('title', 'Dashboard')
 @section('page-title', 'Dashboard')
@@ -496,7 +496,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-// Add this inside your @push('scripts') section
+ @push('scripts') section
 <script>
 // Auto-refresh dashboard every 30 seconds (for true "live" feel)
 let refreshInterval = setInterval(function() {

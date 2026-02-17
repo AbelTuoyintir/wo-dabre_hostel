@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\Users;
 
 class User extends Authenticatable
@@ -64,9 +65,22 @@ class User extends Authenticatable
         return $this->managedHostel()->exists();
     }
 
-    public function payments()
+    /**
+     * Get the bookings for this user
+     */
+    public function bookings(): HasMany
+    {
+        return $this->hasMany(Booking::class);
+    }
+
+    public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
+    }
+
+    public function complaints()
+    {
+        return $this->hasMany(Complaint::class);
     }
 
     public function isAdmin()

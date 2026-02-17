@@ -124,10 +124,12 @@ Route::middleware(['auth', 'hostel.manager'])->prefix('hostel-manager')->name('h
     Route::get('/rooms', [HostelManagerDashboard::class, 'rooms'])->name('rooms');
     Route::get('/rooms/create', [HostelManagerDashboard::class, 'createRoom'])->name('rooms.create');
     Route::post('/rooms', [HostelManagerDashboard::class, 'storeRoom'])->name('rooms.store');
+    Route::get('/rooms/{room}', [HostelManagerDashboard::class, 'showRoom'])->name('rooms.show');
     Route::get('/rooms/{room}/edit', [HostelManagerDashboard::class, 'editRoom'])->name('rooms.edit');
     Route::put('/rooms/{room}', [HostelManagerDashboard::class, 'updateRoom'])->name('rooms.update');
     Route::delete('/rooms/{room}', [HostelManagerDashboard::class, 'destroyRoom'])->name('rooms.destroy');
     Route::patch('/rooms/{room}/status', [HostelManagerDashboard::class, 'updateRoomStatus'])->name('rooms.status');
+    Route::get('/rooms/export', [HostelManagerDashboard::class, 'exportRooms'])->name('rooms.export');
 
     // Occupants (Students) Management
     Route::get('/occupants', [HostelManagerDashboard::class, 'occupants'])->name('occupants');

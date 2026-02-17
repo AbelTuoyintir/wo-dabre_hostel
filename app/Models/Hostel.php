@@ -60,6 +60,11 @@ class Hostel extends Model
         return $this->hasMany(HostelImage::class);
     }
 
+    public function complaints()
+    {
+        return $this->hasMany(Complaint::class);
+    }
+
     public function scopeApproved($query)
     {
         return $query->where('is_approved', true)
