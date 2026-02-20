@@ -19,6 +19,7 @@ class Room extends Model
         'gender',
         'status',
         'room_type',
+        'price_per_semester',
     ];
 
     /**

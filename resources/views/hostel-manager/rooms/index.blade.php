@@ -174,7 +174,7 @@
                     </td>
                     <td class="px-4 py-2 whitespace-nowrap">
                         <span class="text-xs font-medium text-gray-900">
-                            ₵{{ number_format($room->price_per_month ?? 0) }}
+                            ₵{{ number_format($room->price_per_semester ?? 0) }}
                         </span>
                     </td>
                     <td class="px-4 py-2 whitespace-nowrap">
