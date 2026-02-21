@@ -1,4 +1,4 @@
-@extends('hostel-manager.layouts.manager')
+@extends('layouts.hostelmanage')
 
 @section('title', 'Booking Details')
 @section('page-title', 'Booking #' . $booking->id)
