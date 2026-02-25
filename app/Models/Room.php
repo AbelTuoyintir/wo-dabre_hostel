@@ -74,9 +74,10 @@ class Room extends Model
     /**
      * Get available spaces in room
      */
-    public function availableSpaces()
+   public function isAvailable()
     {
-        return max(0, ($this->capacity ?? 0) - ($this->current_occupancy ?? 0));
+        return $this->status === 'available'
+            && $this->current_occupancy < $this->capacity;
     }
 
     /**

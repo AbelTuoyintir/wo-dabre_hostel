@@ -1,3 +1,4 @@
+@use('Illuminate\Support\Facades\Auth')
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>

@@ -34,6 +34,8 @@ Route::middleware(['auth', 'admin'])
 
         // Admin Bookings Management
         Route::get('/bookings', [AdminController::class, 'bookings'])->name('bookings.index');
+        Route::get('/bookings/export', [AdminController::class, 'exportBookings'])->name('bookings.export');
+        Route::get('/bookings/create', [AdminController::class, 'createBooking'])->name('bookings.create');
         Route::get('/bookings/{booking}', [AdminController::class, 'showBooking'])->name('bookings.show');
         Route::patch('/bookings/{booking}/status', [AdminController::class, 'updateBookingStatus'])->name('bookings.status');
 

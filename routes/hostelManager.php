@@ -53,15 +53,14 @@ Route::middleware(['auth', 'hostel.manager'])->prefix('hostel-manager')->name('h
     Route::get('/payments/export', [HostelManagerDashboard::class, 'exportPayments'])->name('payments.export');
 
     // Reports
-   // Reports
-Route::get('/reports', [HostelManagerDashboard::class, 'reports'])->name('reports');
-Route::get('/reports/occupancy', [HostelManagerDashboard::class, 'occupancyReport'])->name('reports.occupancy');
-Route::get('/reports/revenue', [HostelManagerDashboard::class, 'revenueReport'])->name('reports.revenue');
-Route::get('/reports/bookings', [HostelManagerDashboard::class, 'bookingsReport'])->name('reports.bookings');
-Route::get('/reports/demographics', [HostelManagerDashboard::class, 'demographicsReport'])->name('reports.demographics');
-Route::get('/reports/maintenance', [HostelManagerDashboard::class, 'maintenanceReport'])->name('reports.maintenance');
-Route::get('/reports/complaints', [HostelManagerDashboard::class, 'complaintsReport'])->name('reports.complaints');
-Route::get('/reports/export/{type}', [HostelManagerDashboard::class, 'exportReport'])->name('reports.export');
+    Route::get('/reports', [HostelManagerDashboard::class, 'reports'])->name('reports');
+    Route::get('/reports/occupancy', [HostelManagerDashboard::class, 'occupancyReport'])->name('reports.occupancy');
+    Route::get('/reports/revenue', [HostelManagerDashboard::class, 'revenueReport'])->name('reports.revenue');
+    Route::get('/reports/bookings', [HostelManagerDashboard::class, 'bookingsReport'])->name('reports.bookings');
+    Route::get('/reports/demographics', [HostelManagerDashboard::class, 'demographicsReport'])->name('reports.demographics');
+    Route::get('/reports/maintenance', [HostelManagerDashboard::class, 'maintenanceReport'])->name('reports.maintenance');
+    Route::get('/reports/complaints', [HostelManagerDashboard::class, 'complaintsReport'])->name('reports.complaints');
+    Route::get('/reports/export/{type}', [HostelManagerDashboard::class, 'exportReport'])->name('reports.export');
 
     // My Hostels
     Route::get('/hostels', [HostelManagerDashboard::class, 'myHostels'])->name('hostels');

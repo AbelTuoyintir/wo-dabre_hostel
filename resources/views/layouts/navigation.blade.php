@@ -1,4 +1,5 @@
 {{-- resources/views/layouts/navigation.blade.php --}}
+@use('Illuminate\Support\Facades\Auth')
 <aside x-data="{
         sidebarOpen: false,
         userMenuOpen: false

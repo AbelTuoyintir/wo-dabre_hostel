@@ -1,4 +1,11 @@
-- [ ] Add routes for admin.users.edit (GET) and admin.users.toggle-status (PATCH) in routes/web.php
-- [ ] Add edit(User $user) and toggleStatus(User $user) methods in AdminController
-- [ ] Create resources/views/admin/users-edit.blade.php for editing user details
-- [ ] Test the application to ensure routes work and edit functionality is accessible
+## Tasks
+- [x] Fix StudentMiddleware.php - broken logic that blocks non-admin users
+- [x] Fix AdminMiddleware.php - redundant match case
+=======
+# TODO List - Fix Middleware and Payment Issues
+
+## Tasks
+- [x] Fix StudentMiddleware.php - broken logic that blocks non-admin users
+- [x] Fix AdminMiddleware.php - redundant match case
+- [ ] Fix routes/payment.php - add all missing routes for PaymentController
+- [ ] Verify payment flow works end-to-end

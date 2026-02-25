@@ -19,10 +19,7 @@ class AdminMiddleware
 
         if ($user->role !== 'admin') {
             // ✅ FIX: Redirect to appropriate dashboard based on role
-            // NOT back to /admin/dashboard
             return match($user->role) {
-                'admin'=>redirect()->route('admin.dashboard')
-                    ->with('error', 'Admin access only.'),
                 'hostel_manager' => redirect()->route('hostel-manager.dashboard')
                     ->with('error', 'Admin access only. You are a Hostel Manager.'),
                 'student' => redirect()->route('student.dashboard')
