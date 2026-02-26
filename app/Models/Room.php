@@ -80,6 +80,11 @@ class Room extends Model
             && $this->current_occupancy < $this->capacity;
     }
 
+    public function availableSpaces()
+    {
+        return max(0, $this->capacity - ($this->current_occupancy ?? 0));
+    }
+
     /**
      * Get current booking query
      */

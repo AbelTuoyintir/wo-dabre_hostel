@@ -65,4 +65,7 @@ Route::middleware(['auth', 'hostel.manager'])->prefix('hostel-manager')->name('h
     // My Hostels
     Route::get('/hostels', [HostelManagerDashboard::class, 'myHostels'])->name('hostels');
     Route::get('/hostels/{hostel}', [HostelManagerDashboard::class, 'showHostel'])->name('hostels.show');
+    Route::get('/hostels/{hostel}/edit', [HostelManagerDashboard::class, 'editHostel'])->name('hostels.edit');
+    Route::put('/hostels/{hostel}', [HostelManagerDashboard::class, 'updateHostel'])->name('hostels.update');
+    Route::patch('/hostels/{hostel}/toggle-status', [HostelManagerDashboard::class, 'toggleHostelStatus'])->name('hostels.toggle-status');
 });

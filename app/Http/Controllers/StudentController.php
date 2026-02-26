@@ -17,37 +17,65 @@ class StudentController extends Controller
         $this->middleware(['auth', 'role:student']);
     }
 
-    public function dashboard()
-    {
-        $user = Auth::user();
+    /**
+ * Student Dashboard
+ */
+public function dashboard()
+{
+    $user = Auth::user();
 
-        $stats = [
-            'total_bookings' => $user->bookings()->count(),
-            'active_bookings' => $user->bookings()
-                ->whereIn('booking_status', ['confirmed', 'checked_in'])
-                ->count(),
-            'pending_bookings' => $user->bookings()
-                ->where('booking_status', 'pending')
-                ->count(),
-            'completed_bookings' => $user->bookings()
-                ->where('booking_status', 'checked_out')
-                ->count(),
-        ];
+    // Get user's stats
+    $stats = [
+        'total_bookings' => Booking::where('user_id', $user->id)->count(),
+        'active_bookings' => Booking::where('user_id', $user->id)
+            ->where('status', 'confirmed')
+            ->where('check_out', '>=', now())
+            ->count(),
+        'total_paid' => Payment::whereHas('booking', fn($q) => $q->where('user_id', $user->id))
+            ->where('status', 'completed')
+            ->sum('amount'),
+        'complaints' => Complaint::where('user_id', $user->id)->count(),
+        'pending_complaints' => Complaint::where('user_id', $user->id)
+            ->whereIn('status', ['pending', 'in_progress'])
+            ->count(),
+    ];
 
-        $recentBookings = $user->bookings()
-            ->with('hostel')
-            ->latest()
-            ->take(5)
-            ->get();
+    // Get active booking if any
+    $activeBooking = Booking::where('user_id', $user->id)
+        ->where('status', 'confirmed')
+        ->where('check_out', '>=', now())
+        ->with(['room.hostel'])
+        ->first();
 
-        $recommendedHostels = Hostel::where('is_approved', true)
-            ->where('is_featured', true)
-            ->with('primaryImage')
-            ->limit(3)
-            ->get();
+    // Get recent bookings
+    $recentBookings = Booking::where('user_id', $user->id)
+        ->with(['room.hostel'])
+        ->latest()
+        ->limit(5)
+        ->get();
 
-        return view('student.dashboard', compact('stats', 'recentBookings', 'recommendedHostels'));
-    }
+    // Get recommended hostels (featured or highly rated)
+    $recommendedHostels = Hostel::where('is_approved', true)
+        ->where('status', 'active')
+        ->whereHas('rooms', function($q) {
+            $q->where('status', 'available')
+              ->whereColumn('current_occupancy', '<', 'capacity');
+        })
+        ->with(['primaryImage'])
+        ->orderByDesc('is_featured')
+        ->orderByDesc('rating')
+        ->limit(4)
+        ->get()
+        ->map(function($hostel) {
+            $hostel->min_price = $hostel->rooms()
+                ->where('status', 'available')
+                ->whereColumn('current_occupancy', '<', 'capacity')
+                ->min('price_per_month');
+            return $hostel;
+        });
+
+    return view('student.dashboard', compact('stats', 'recentBookings', 'recommendedHostels', 'activeBooking'));
+}
 
     public function bookings()
     {
@@ -69,24 +97,91 @@ class StudentController extends Controller
         return view('student.bookings.show', compact('booking'));
     }
 
-    public function cancelBooking(Booking $booking)
-    {
-        // Check if user owns this booking
-        if ($booking->user_id !== Auth::id()) {
-            abort(403, 'Unauthorized action.');
+   public function cancelBooking(Request $request, Booking $booking)
+{
+    // Check if user owns this booking
+    if ($booking->user_id !== Auth::id()) {
+        abort(403, 'Unauthorized action.');
+    }
+
+    // Validate cancellation reason
+    $request->validate([
+        'cancellation_reason' => 'required|string|min:10|max:500',
+    ]);
+
+    // Determine which status column to use
+    $currentStatus = $booking->booking_status ?? $booking->status ?? 'pending';
+
+    // Only allow cancellation if booking is still pending or confirmed
+    if (!in_array($currentStatus, ['pending', 'confirmed'])) {
+        return back()->with('error', 'Cannot cancel booking at this stage.');
+    }
+
+    // Check if booking has a payment
+    if (!$booking->payment || $booking->payment->status !== 'completed') {
+        return back()->with('error', 'No payment found for this booking.');
+    }
+
+    DB::beginTransaction();
+
+    try {
+        // Calculate refund amount (full refund for pending, partial for confirmed)
+        $refundAmount = $booking->total_amount;
+
+        // Apply cancellation policy (optional)
+        if ($currentStatus == 'confirmed') {
+            // Deduct 10% cancellation fee for confirmed bookings
+            $refundAmount = $booking->total_amount * 0.9;
         }
 
-        // Only allow cancellation if booking is still pending or confirmed
-        if (!in_array($booking->booking_status, ['pending', 'confirmed'])) {
-            return back()->with('error', 'Cannot cancel booking at this stage.');
+        // Process refund through Paystack
+        $refund = Paystack::refund([
+            'transaction' => $booking->payment->transaction_id,
+            'amount' => round($refundAmount * 100), // Convert to pesewas
+            'currency' => 'GHS',
+            'reason' => $request->cancellation_reason
+        ]);
+
+        // Update booking status
+        if ($booking->booking_status) {
+            $booking->update([
+                'booking_status' => 'cancelled',
+                'cancellation_reason' => $request->cancellation_reason,
+                'cancelled_at' => now(),
+            ]);
+        } else {
+            $booking->update([
+                'status' => 'cancelled',
+                'cancellation_reason' => $request->cancellation_reason,
+                'cancelled_at' => now(),
+            ]);
         }
 
-        $booking->update(['booking_status' => 'cancelled']);
+        // Update payment record
+        $booking->payment->update([
+            'status' => 'refunded',
+            'refund_amount' => $refundAmount,
+            'refund_reference' => $refund['data']['reference'] ?? null,
+            'refunded_at' => now(),
+        ]);
 
-        // Increment available rooms
-        $booking->hostel->increment('available_rooms');
+        // Increment available rooms in hostel
+        if ($booking->hostel) {
+            $booking->hostel->increment('available_rooms');
+        }
 
-        return back()->with('success', 'Booking cancelled successfully.');
+        DB::commit();
+
+        return back()->with('success',
+            "Booking cancelled successfully. ₵" . number_format($refundAmount, 2) .
+            " will be refunded to your original payment method within 3-5 business days."
+        );
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        \Log::error('Booking cancellation failed: ' . $e->getMessage());
+
+        return back()->with('error', 'Failed to cancel booking. Please contact support.');
     }
 
     public function reviews()

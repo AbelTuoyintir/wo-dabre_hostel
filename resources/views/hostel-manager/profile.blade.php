@@ -1,5 +1,5 @@
 @extends('layouts.hostelmanage')
-
+@use('Illuminate\Support\Facades\Auth')
 @section('title', 'My Profile')
 @section('page-title', 'My Profile')
 

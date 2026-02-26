@@ -1,5 +1,6 @@
 @extends('layouts.hostelmanage')
-
+@use('Illuminate\Support\Facades\Auth')
+@use('Illuminate\Support\Str')
 @section('title', 'Dashboard')
 @section('page-title', 'Dashboard')
 

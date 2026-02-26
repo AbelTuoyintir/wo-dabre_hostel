@@ -962,12 +962,28 @@ class HostelManagerDashboard extends Controller
         return redirect()->back()->with('success', 'Payment status updated successfully.');
     }
 
-    public function myHostels(): View
-    {
-        $user = Auth::user();
-        $hostels = $user->managedHostels()->withCount(['rooms', 'bookings'])->get();
 
-        return view('hostel-manager.hostels.index', compact('hostels'));
+
+    // In your HostelManagerController
+    public function myHostels()
+    {
+        $hostels = Hostel::where('manager_id', Auth::id())
+            ->withCount(['rooms', 'bookings' => function($query) {
+                $query->whereIn('booking_status', ['confirmed', 'checked_in']);
+            }])
+            ->with(['rooms' => function($query) {
+                $query->where('is_available', true);
+            }])
+            ->paginate(10);
+
+        // Calculate stats
+        $totalRooms = $hostels->sum('rooms_count');
+        $availableRooms = $hostels->sum(function($hostel) {
+            return $hostel->rooms->count();
+        });
+        $activeBookings = $hostels->sum('bookings_count');
+
+        return view('hostel-manager.index', compact('hostels', 'totalRooms', 'availableRooms', 'activeBookings'));
     }
 
     public function showHostel(Hostel $hostel): View
@@ -997,6 +1013,56 @@ class HostelManagerDashboard extends Controller
 
         return view('hostel-manager.hostels.show', compact('hostel', 'stats'));
     }
+
+    public function editHostel(Hostel $hostel): View
+    {
+        $user = Auth::user();
+
+        if (!$user->managedHostels()->where('hostels.id', $hostel->id)->exists()) {
+            abort(403);
+        }
+
+        return view('hostel-manager.hostels.edit', compact('hostel'));
+    }
+
+    public function updateHostel(Request $request, Hostel $hostel)
+    {
+        $user = Auth::user();
+
+        if (!$user->managedHostels()->where('hostels.id', $hostel->id)->exists()) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'address' => 'nullable|string',
+            'city' => 'nullable|string',
+            'region' => 'nullable|string',
+        ]);
+
+        $hostel->update($validated);
+
+        return redirect()->route('hostel-manager.hostels.show', $hostel)
+            ->with('success', 'Hostel updated successfully.');
+    }
+
+    public function toggleHostelStatus(Hostel $hostel)
+    {
+        $user = Auth::user();
+
+        if (!$user->managedHostels()->where('hostels.id', $hostel->id)->exists()) {
+            abort(403);
+        }
+
+        $hostel->is_active = !$hostel->is_active;
+        $hostel->save();
+
+        $status = $hostel->is_active ? 'activated' : 'deactivated';
+
+        return redirect()->back()->with('success', "Hostel {$status} successfully.");
+    }
+
 
 /**
  * Display reports dashboard

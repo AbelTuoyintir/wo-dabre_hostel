@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AdminController;
-use App\Http\Controllers\Admin\AdminHostelController;
+use App\Http\Controllers\Admin\HostelController;
 use App\Http\Controllers\RoomController;
 
 Route::middleware(['auth', 'admin'])
@@ -18,13 +18,13 @@ Route::middleware(['auth', 'admin'])
         Route::patch('/users/{user}/toggle-status', [AdminController::class, 'toggleUserStatus'])->name('users.toggle-status');
 
         // Hostels (ADMIN)
-        Route::resource('hostels', AdminHostelController::class);
-        Route::patch('/hostels/{hostel}/approve', [AdminHostelController::class, 'approve'])->name('hostels.approve');
+        Route::resource('hostels', HostelController::class);
+        Route::patch('/hostels/{hostel}/approve', [HostelController::class, 'approve'])->name('hostels.approve');
         Route::patch('/hostels/{hostel}/assign-manager', [AdminController::class, 'assignManager'])->name('hostels.assign-manager');
 
         // Hostel Images
-        Route::patch('/hostels/{hostel}/images/{image}/primary', [AdminHostelController::class, 'setPrimaryImage'])->name('hostels.image.primary');
-        Route::delete('/hostels/{hostel}/images/{image}', [AdminHostelController::class, 'destroyImage'])->name('hostels.image.destroy');
+        Route::patch('/hostels/{hostel}/images/{image}/primary', [HostelController::class, 'setPrimaryImage'])->name('hostels.image.primary');
+        Route::delete('/hostels/{hostel}/images/{image}', [HostelController::class, 'destroyImage'])->name('hostels.image.destroy');
 
         // Rooms (Admin management)
         Route::resource('rooms', RoomController::class);
