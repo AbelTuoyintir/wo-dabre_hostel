@@ -342,4 +342,33 @@ class PaymentController extends Controller
 
         return view('bookings.confirmation', compact('booking'));
     }
+
+    public function handleRefundWebhook(Request $request)
+{
+    // Verify webhook signature
+    $signature = $request->header('x-paystack-signature');
+    $payload = $request->getContent();
+    
+    if (!$this->verifyPaystackSignature($signature, $payload)) {
+        return response()->json(['error' => 'Invalid signature'], 401);
+    }
+
+    $event = json_decode($payload, true);
+
+    if ($event['event'] === 'refund.processed') {
+        $data = $event['data'];
+        
+        // Find payment by transaction reference
+        $payment = Payment::where('transaction_id', $data['transaction']['reference'])->first();
+        
+        if ($payment) {
+            $payment->update([
+                'refund_status' => 'processed',
+                'refund_data' => json_encode($data)
+            ]);
+        }
+    }
+
+    return response()->json(['status' => 'success']);
+}
 }

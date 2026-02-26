@@ -36,7 +36,17 @@ class Hostel extends Model
 
     public function reviews()
     {
-        return $this->hasMany(Review::class);
+        return $this->hasMany(Review::class)->where('status', 'published');
+    }
+
+    public function averageRating()
+    {
+        return $this->reviews()->avg('rating') ?? 0;
+    }
+
+    public function reviewsCount()
+    {
+        return $this->reviews()->count();
     }
 
     public function manager()

@@ -30,18 +30,9 @@ Route::prefix('booking')->name('booking.')->group(function () {
 
     // Show booking confirmation (public)
     Route::get('/confirmation/{reference}', [PaymentController::class, 'showConfirmation'])->name('confirmation');
+    // Add this to your payment routes
+Route::post('/paystack/refund/webhook', [PaymentController::class, 'handleRefundWebhook'])->name('paystack.refund.webhook');
 });
 
-/*
-|--------------------------------------------------------------------------
-| Student Routes (Authenticated students only)
-|--------------------------------------------------------------------------
-*/
-Route::middleware(['auth', 'student'])->prefix('student')->name('student.')->group(function () {
-    Route::get('/dashboard', [StudentDashboard::class, 'dashboard'])->name('dashboard');
-    Route::get('/payment', [StudentDashboard::class, 'payment'])->name('payment');
-    Route::post('/payment', [StudentDashboard::class, 'processPayment'])->name('payment.process');
-    Route::get('/room', [StudentDashboard::class, 'room'])->name('room');
-    Route::get('/complaints', [StudentDashboard::class, 'complaints'])->name('complaints');
-    Route::post('/complaints', [StudentDashboard::class, 'submitComplaint'])->name('complaints.submit');
-});
+
+

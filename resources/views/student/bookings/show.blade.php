@@ -212,16 +212,194 @@
                         </h3>
 
                         <div class="space-y-3">
-                            <!-- Cancel Booking Button -->
-                            @if(in_array($currentStatus, ['pending', 'confirmed']))
+                            <!-- =========================================== -->
+                            <!-- CANCEL BOOKING SECTION WITH MODAL -->
+                            <!-- =========================================== -->
+                            @if(in_array($currentStatus, ['pending', 'confirmed']) && $booking->payment && $booking->payment->status == 'completed')
+                                <!-- Cancel Booking Modal Trigger -->
+                                <button onclick="openCancelModal()"
+                                        class="w-full px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition flex items-center justify-center">
+                                    <i class="fas fa-times-circle mr-2"></i>
+                                    Cancel Booking
+                                </button>
+
+                                <!-- Cancel Booking Modal -->
+                                <div id="cancelModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+                                    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
+                                        <div class="flex justify-between items-center mb-4 sticky top-0 bg-white pt-2">
+                                            <h3 class="text-xl font-bold text-gray-800">Cancel Booking</h3>
+                                            <button onclick="closeCancelModal()" class="text-gray-500 hover:text-gray-700">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+
+                                        <form action="{{ route('student.bookings.cancel', $booking) }}" method="POST" id="cancelForm">
+                                            @csrf
+                                            @method('PATCH')
+
+                                            <div class="mb-4">
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                    Reason for Cancellation <span class="text-red-500">*</span>
+                                                </label>
+                                                <textarea name="cancellation_reason"
+                                                          rows="4"
+                                                          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                          placeholder="Please tell us why you're cancelling this booking..."
+                                                          required></textarea>
+                                                <p class="text-xs text-gray-500 mt-1">Minimum 10 characters</p>
+                                            </div>
+
+                                            <!-- Fee Breakdown -->
+                                            <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                                                <h4 class="font-semibold text-red-800 mb-3 flex items-center">
+                                                    <i class="fas fa-exclamation-circle mr-2"></i>
+                                                    Cancellation Fee Policy
+                                                </h4>
+
+                                                @php
+                                                    $originalAmount = $booking->total_amount;
+                                                    $agentFee = $originalAmount * 0.05; // 5% agent fee
+                                                    $systemCharges = $originalAmount * 0.02; // 2% system charges
+                                                    $cancellationFee = $originalAmount * 0.10; // 10% cancellation fee
+                                                    $totalDeductions = $agentFee + $systemCharges + $cancellationFee;
+                                                    $refundAmount = $originalAmount - $totalDeductions;
+                                                @endphp
+
+                                                <div class="space-y-2 text-sm">
+                                                    <div class="flex justify-between text-gray-700">
+                                                        <span>Original Booking Amount:</span>
+                                                        <span class="font-medium">₵{{ number_format($originalAmount, 2) }}</span>
+                                                    </div>
+
+                                                    <div class="border-t border-red-200 my-2"></div>
+
+                                                    <div class="flex justify-between text-red-600">
+                                                        <span><i class="fas fa-percent mr-1"></i> 10% Cancellation Fee:</span>
+                                                        <span>- ₵{{ number_format($cancellationFee, 2) }}</span>
+                                                    </div>
+
+                                                    <div class="flex justify-between text-orange-600">
+                                                        <span><i class="fas fa-handshake mr-1"></i> 5% Agent Commission:</span>
+                                                        <span>- ₵{{ number_format($agentFee, 2) }}</span>
+                                                    </div>
+
+                                                    <div class="flex justify-between text-purple-600">
+                                                        <span><i class="fas fa-server mr-1"></i> 2% System Charges:</span>
+                                                        <span>- ₵{{ number_format($systemCharges, 2) }}</span>
+                                                    </div>
+
+                                                    <div class="border-t border-red-200 my-2"></div>
+
+                                                    <div class="flex justify-between font-bold text-lg">
+                                                        <span>Total Deductions:</span>
+                                                        <span class="text-red-600">₵{{ number_format($totalDeductions, 2) }}</span>
+                                                    </div>
+
+                                                    <div class="flex justify-between font-bold text-lg bg-green-50 p-2 rounded-lg mt-2">
+                                                        <span>Your Refund Amount:</span>
+                                                        <span class="text-green-600">₵{{ number_format($refundAmount, 2) }}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Important Disclaimer -->
+                                            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                                                <h4 class="font-semibold text-yellow-800 mb-2 flex items-center">
+                                                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                                                    Important: Please Read Carefully
+                                                </h4>
+
+                                                <div class="space-y-3 text-sm text-yellow-700">
+                                                    <p class="font-medium">
+                                                        ⚠️ By cancelling this booking, you acknowledge and agree to the following:
+                                                    </p>
+
+                                                    <ul class="list-disc list-inside space-y-2">
+                                                        <li class="flex items-start">
+                                                            <i class="fas fa-times-circle text-red-500 mr-2 mt-0.5"></i>
+                                                            <span>A <strong>10% cancellation fee (₵{{ number_format($cancellationFee, 2) }})</strong> will be deducted from your refund</span>
+                                                        </li>
+                                                        <li class="flex items-start">
+                                                            <i class="fas fa-times-circle text-red-500 mr-2 mt-0.5"></i>
+                                                            <span>The <strong>5% agent commission (₵{{ number_format($agentFee, 2) }})</strong> is non-refundable as it's already paid to the hostel agent</span>
+                                                        </li>
+                                                        <li class="flex items-start">
+                                                            <i class="fas fa-times-circle text-red-500 mr-2 mt-0.5"></i>
+                                                            <span><strong>2% system charges (₵{{ number_format($systemCharges, 2) }})</strong> cover payment processing fees incurred by the platform</span>
+                                                        </li>
+                                                        <li class="flex items-start">
+                                                            <i class="fas fa-times-circle text-red-500 mr-2 mt-0.5"></i>
+                                                            <span><strong>Total deductions: ₵{{ number_format($totalDeductions, 2) }} ({{ round(($totalDeductions/$originalAmount)*100) }}% of booking amount)</strong></span>
+                                                        </li>
+                                                        <li class="flex items-start">
+                                                            <i class="fas fa-check-circle text-green-500 mr-2 mt-0.5"></i>
+                                                            <span>You will receive <strong>₵{{ number_format($refundAmount, 2) }} ({{ round(($refundAmount/$originalAmount)*100) }}% refund)</strong></span>
+                                                        </li>
+                                                        <li class="flex items-start">
+                                                            <i class="fas fa-clock text-blue-500 mr-2 mt-0.5"></i>
+                                                            <span>Refund will be processed to your original payment method within 3-5 business days</span>
+                                                        </li>
+                                                        <li class="flex items-start">
+                                                            <i class="fas fa-ban text-red-500 mr-2 mt-0.5"></i>
+                                                            <span>This action is <strong>irreversible</strong> and the room will be made available for other students</span>
+                                                        </li>
+                                                    </ul>
+
+                                                    <div class="bg-red-100 p-3 rounded-lg mt-2">
+                                                        <p class="text-sm text-red-800 font-medium">
+                                                            <i class="fas fa-calculator mr-2"></i>
+                                                            Summary: You paid ₵{{ number_format($originalAmount, 2) }} |
+                                                            Deductions: ₵{{ number_format($totalDeductions, 2) }} |
+                                                            Refund: ₵{{ number_format($refundAmount, 2) }}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Confirmation Checkbox -->
+                                            <div class="mb-4">
+                                                <label class="flex items-start space-x-3">
+                                                    <input type="checkbox" id="confirmCheckbox" class="mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                                    <span class="text-sm text-gray-600">
+                                                        I understand and accept the <strong>10% cancellation fee</strong> and that <strong>agent commission (5%)</strong> and <strong>system charges (2%)</strong> are non-refundable. I acknowledge that I will receive <strong>₵{{ number_format($refundAmount, 2) }}</strong> as my refund.
+                                                    </span>
+                                                </label>
+                                            </div>
+
+                                            <div class="bg-gray-50 p-3 rounded-lg mb-4">
+                                                <p class="text-xs text-gray-500">
+                                                    <i class="fas fa-info-circle mr-1"></i>
+                                                    For questions about our cancellation policy, please contact support at support@ucchostels.com
+                                                </p>
+                                            </div>
+
+                                            <div class="flex justify-end space-x-3 sticky bottom-0 bg-white pt-3 border-t">
+                                                <button type="button"
+                                                        onclick="closeCancelModal()"
+                                                        class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                                                    Keep Booking
+                                                </button>
+                                                <button type="submit"
+                                                        id="confirmCancelBtn"
+                                                        class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                        disabled>
+                                                    Confirm Cancellation
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            @elseif(in_array($currentStatus, ['pending', 'confirmed']) && (!$booking->payment || $booking->payment->status != 'completed'))
+                                <!-- No payment yet - simple cancellation without refund -->
                                 <form action="{{ route('student.bookings.cancel', $booking) }}" method="POST"
-                                      onsubmit="return confirmCancel()">
+                                      onsubmit="return confirmSimpleCancel()">
                                     @csrf
                                     @method('PATCH')
+                                    <input type="hidden" name="cancellation_reason" value="Booking cancelled by user">
                                     <button type="submit"
                                             class="w-full px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition flex items-center justify-center">
                                         <i class="fas fa-times-circle mr-2"></i>
-                                        Cancel Booking
+                                        Cancel Booking (No Payment)
                                     </button>
                                 </form>
                             @endif
@@ -287,7 +465,90 @@
 
 @push('scripts')
 <script>
-function confirmCancel() {
+function openCancelModal() {
+    document.getElementById('cancelModal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeCancelModal() {
+    document.getElementById('cancelModal').classList.add('hidden');
+    document.body.style.overflow = 'auto';
+}
+
+// Enable confirm button only when checkbox is checked and reason is valid
+document.addEventListener('DOMContentLoaded', function() {
+    const reasonTextarea = document.querySelector('textarea[name="cancellation_reason"]');
+    const confirmCheckbox = document.getElementById('confirmCheckbox');
+    const confirmBtn = document.getElementById('confirmCancelBtn');
+
+    function checkFormValidity() {
+        if (reasonTextarea && confirmCheckbox && confirmBtn) {
+            const reasonValid = reasonTextarea.value.length >= 10;
+            const checkboxChecked = confirmCheckbox.checked;
+            confirmBtn.disabled = !(reasonValid && checkboxChecked);
+        }
+    }
+
+    if (reasonTextarea) {
+        reasonTextarea.addEventListener('input', checkFormValidity);
+    }
+
+    if (confirmCheckbox) {
+        confirmCheckbox.addEventListener('change', checkFormValidity);
+    }
+});
+
+function confirmCancellation(refundAmount) {
+    const reason = document.querySelector('textarea[name="cancellation_reason"]').value;
+    const checkbox = document.getElementById('confirmCheckbox');
+
+    if (reason.length < 10) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Reason Required',
+            text: 'Please provide a reason for cancellation (minimum 10 characters)',
+            confirmButtonColor: '#3b82f6'
+        });
+        return false;
+    }
+
+    if (!checkbox.checked) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Please Confirm',
+            text: 'You must acknowledge the cancellation fees to proceed.',
+            confirmButtonColor: '#3b82f6'
+        });
+        return false;
+    }
+
+    return Swal.fire({
+        title: 'Final Confirmation',
+        html: `You are about to cancel this booking.<br>
+               <span class="text-sm font-semibold text-red-600 mt-2 block">
+               You will lose ₵{{ number_format($totalDeductions ?? 0, 2) }} in fees
+               </span>
+               <span class="text-sm font-semibold text-green-600 block">
+               You will receive ₵${refundAmount.toFixed(2)} as refund
+               </span>
+               <span class="text-xs text-gray-500 mt-2 block">
+               This action cannot be undone.
+               </span>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Yes, proceed with cancellation',
+        cancelButtonText: 'No, keep my booking'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('cancelForm').submit();
+        }
+        return false;
+    });
+}
+
+function confirmSimpleCancel() {
     return Swal.fire({
         title: 'Cancel Booking?',
         text: 'Are you sure you want to cancel this booking? This action cannot be undone.',
@@ -297,23 +558,28 @@ function confirmCancel() {
         cancelButtonColor: '#6b7280',
         confirmButtonText: 'Yes, cancel booking',
         cancelButtonText: 'No, keep it'
-    }).then((result) => {
-        return result.isConfirmed;
     });
 }
 
-// Auto-hide success/error messages after 5 seconds
-document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(function() {
-        document.querySelectorAll('.bg-green-100, .bg-red-100').forEach(function(el) {
-            el.style.transition = 'opacity 0.5s';
-            el.style.opacity = '0';
-            setTimeout(function() {
-                el.remove();
-            }, 500);
-        });
-    }, 5000);
+// Close modal when clicking outside
+document.getElementById('cancelModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeCancelModal();
+    }
 });
+
+// Auto-hide success/error messages after 5 seconds
+setTimeout(function() {
+    document.querySelectorAll('.bg-green-100, .bg-red-100').forEach(function(el) {
+        el.style.transition = 'opacity 0.5s';
+        el.style.opacity = '0';
+        setTimeout(function() {
+            if (el && el.parentNode) {
+                el.remove();
+            }
+        }, 500);
+    });
+}, 5000);
 </script>
 @endpush
 @endsection

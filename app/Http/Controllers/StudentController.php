@@ -9,6 +9,10 @@ use App\Models\Review;
 use App\Models\Hostel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
+use App\Models\Payment;
+use App\Models\Complaint;
+use Unicodeveloper\Paystack\Facades\Paystack;
 
 class StudentController extends Controller
 {
@@ -76,6 +80,64 @@ public function dashboard()
 
     return view('student.dashboard', compact('stats', 'recentBookings', 'recommendedHostels', 'activeBooking'));
 }
+
+    /**
+     * Show fee payment form
+     */
+    public function showPaymentForm()
+    {
+        $user = Auth::user();
+        $feeAmount = config('app.student_fee_amount', 50000); // Default fee amount in kobo (500 NGN)
+        
+        return view('student.payments.fee-payment', compact('user', 'feeAmount'));
+    }
+
+    /**
+     * Initialize fee payment through Paystack
+     */
+    public function initializeFeePayment(Request $request)
+    {
+        $user = Auth::user();
+        $feeAmount = config('app.student_fee_amount', 50000); // Amount in kobo
+        
+        try {
+            // Create a payment record for tracking
+            $reference = 'FEE-' . $user->id . '-' . time();
+            
+            $paymentData = [
+                'amount' => $feeAmount,
+                'email' => $user->email,
+                'orderID' => $reference,
+                'currency' => 'NGN',
+            ];
+
+            // Initialize Paystack payment
+            return Paystack::getAuthorizationUrl($paymentData)->redirectNow();
+        } catch (\Exception $e) {
+            return redirect()->route('student.payment')
+                ->with('error', 'Unable to initialize payment. Please try again.');
+        }
+    }
+
+    /**
+     * Handle fee payment callback from Paystack
+     */
+    public function handlePaymentCallback()
+    {
+        $paymentDetails = Paystack::getPaymentData();
+        $user = Auth::user();
+
+        if ($paymentDetails['status'] == true) {
+            // Payment successful
+            $user->update(['has_paid_fees' => true]);
+            
+            return redirect()->route('student.dashboard')
+                ->with('success', 'Payment successful! Fee payment completed.');
+        } else {
+            return redirect()->route('student.payment')
+                ->with('error', 'Payment failed or was cancelled.');
+        }
+    }
 
     public function bookings()
     {
@@ -191,49 +253,243 @@ public function dashboard()
             ->latest()
             ->paginate(10);
 
-        return view('student.reviews.index', compact('reviews'));
+        // Get bookings that can be reviewed (completed stays that haven't been reviewed yet)
+        $reviewableBookings = Booking::where('user_id', Auth::id())
+            ->where('status', 'completed')
+            ->whereDoesntHave('review')
+            ->with('room.hostel')
+            ->latest()
+            ->get();
+
+        return view('student.reviews.index', compact('reviews', 'reviewableBookings'));
     }
 
-    public function createReview(Booking $booking)
+    /**
+     * Show form to create a review
+     */
+    public function createReview(Request $request)
     {
-        // Check if user owns this booking and can review
-        if ($booking->user_id !== Auth::id() || $booking->booking_status !== 'checked_out') {
-            abort(403, 'Unauthorized action.');
+        $bookingId = $request->get('booking_id');
+        $hostelId = $request->get('hostel_id');
+
+        if ($bookingId) {
+            $booking = Booking::where('user_id', Auth::id())
+                ->where('id', $bookingId)
+                ->where('status', 'completed')
+                ->with('room.hostel')
+                ->firstOrFail();
+
+            return view('student.reviews.create', [
+                'hostel' => $booking->room->hostel,
+                'booking' => $booking
+            ]);
         }
 
-        // Check if review already exists
-        if ($booking->review()->exists()) {
-            return back()->with('error', 'You have already reviewed this booking.');
+        if ($hostelId) {
+            $hostel = Hostel::where('is_approved', true)
+                ->where('status', 'active')
+                ->findOrFail($hostelId);
+
+            // Check if user has completed a booking at this hostel
+            $hasCompletedBooking = Booking::where('user_id', Auth::id())
+                ->where('hostel_id', $hostelId)
+                ->where('status', 'completed')
+                ->exists();
+
+            if (!$hasCompletedBooking) {
+                return redirect()->route('student.reviews')
+                    ->with('error', 'You can only review hostels you have stayed at.');
+            }
+
+            // Check if already reviewed
+            $alreadyReviewed = Review::where('user_id', Auth::id())
+                ->where('hostel_id', $hostelId)
+                ->exists();
+
+            if ($alreadyReviewed) {
+                return redirect()->route('student.reviews')
+                    ->with('error', 'You have already reviewed this hostel.');
+            }
+
+            return view('student.reviews.create', [
+                'hostel' => $hostel,
+                'booking' => null
+            ]);
         }
 
-        return view('student.reviews.create', compact('booking'));
+        return redirect()->route('student.reviews')
+            ->with('error', 'Please select a hostel to review.');
     }
 
-    public function storeReview(Request $request, Booking $booking)
+    /**
+     * Store a new review
+     */
+    public function storeReview(Request $request)
     {
-        // Check if user owns this booking and can review
-        if ($booking->user_id !== Auth::id() || $booking->booking_status !== 'checked_out') {
-            abort(403, 'Unauthorized action.');
+        $validated = $request->validate([
+            'hostel_id' => 'required|exists:hostels,id',
+            'booking_id' => 'nullable|exists:bookings,id',
+            'rating' => 'required|integer|min:1|max:5',
+            'title' => 'required|string|max:255',
+            'review' => 'required|string|min:20|max:2000',
+            'pros' => 'nullable|string|max:1000',
+            'cons' => 'nullable|string|max:1000',
+            'stay_duration' => 'nullable|string|max:100',
+        ]);
+
+        // Check if user has already reviewed this hostel
+        $existingReview = Review::where('user_id', Auth::id())
+            ->where('hostel_id', $validated['hostel_id'])
+            ->first();
+
+        if ($existingReview) {
+            return back()->with('error', 'You have already reviewed this hostel.');
+        }
+
+        // Verify user has completed a booking at this hostel
+        $hasCompletedBooking = Booking::where('user_id', Auth::id())
+            ->where('hostel_id', $validated['hostel_id'])
+            ->where('status', 'completed')
+            ->exists();
+
+        if (!$hasCompletedBooking) {
+            return back()->with('error', 'You can only review hostels you have stayed at.');
+        }
+
+        DB::transaction(function () use ($validated) {
+            // Create the review
+            $review = Review::create([
+                'user_id' => Auth::id(),
+                'hostel_id' => $validated['hostel_id'],
+                'booking_id' => $validated['booking_id'] ?? null,
+                'rating' => $validated['rating'],
+                'title' => $validated['title'],
+                'review' => $validated['review'],
+                'pros' => $validated['pros'] ?? null,
+                'cons' => $validated['cons'] ?? null,
+                'stay_duration' => $validated['stay_duration'] ?? null,
+                'is_verified' => true, // Verified since they had a completed booking
+                'status' => 'published',
+            ]);
+
+            // Update hostel's average rating
+            $this->updateHostelRating($validated['hostel_id']);
+        });
+
+        return redirect()->route('student.reviews')
+            ->with('success', 'Thank you for your review! It has been published.');
+    }
+
+    /**
+     * Show form to edit a review
+     */
+    public function editReview(Review $review)
+    {
+        if ($review->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        // Only allow editing within 30 days
+        if ($review->created_at->diffInDays(now()) > 30) {
+            return redirect()->route('student.reviews')
+                ->with('error', 'Reviews can only be edited within 30 days of posting.');
+        }
+
+        $review->load('hostel');
+
+        return view('student.reviews.edit', compact('review'));
+    }
+
+    /**
+     * Update a review
+     */
+    public function updateReview(Request $request, Review $review)
+    {
+        if ($review->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        // Only allow editing within 30 days
+        if ($review->created_at->diffInDays(now()) > 30) {
+            return redirect()->route('student.reviews')
+                ->with('error', 'Reviews can only be edited within 30 days of posting.');
         }
 
         $validated = $request->validate([
             'rating' => 'required|integer|min:1|max:5',
-            'comment' => 'required|string|min:10|max:1000',
+            'title' => 'required|string|max:255',
+            'review' => 'required|string|min:20|max:2000',
+            'pros' => 'nullable|string|max:1000',
+            'cons' => 'nullable|string|max:1000',
+            'stay_duration' => 'nullable|string|max:100',
         ]);
 
-        $review = Review::create([
-            'user_id' => Auth::id(),
-            'hostel_id' => $booking->hostel_id,
-            'booking_id' => $booking->id,
-            'rating' => $validated['rating'],
-            'comment' => $validated['comment'],
-            'status' => 'pending',
-        ]);
+        DB::transaction(function () use ($review, $validated) {
+            $review->update([
+                'rating' => $validated['rating'],
+                'title' => $validated['title'],
+                'review' => $validated['review'],
+                'pros' => $validated['pros'] ?? null,
+                'cons' => $validated['cons'] ?? null,
+                'stay_duration' => $validated['stay_duration'] ?? null,
+            ]);
 
-        // Update hostel rating
-        $booking->hostel->updateRating();
+            // Update hostel's average rating
+            $this->updateHostelRating($review->hostel_id);
+        });
 
-        return redirect()->route('student.reviews.index')
-            ->with('success', 'Review submitted successfully. It will be visible after approval.');
+        return redirect()->route('student.reviews')
+            ->with('success', 'Your review has been updated.');
     }
+
+    /**
+     * Delete a review
+     */
+    public function destroyReview(Review $review)
+    {
+        if ($review->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        // Only allow deletion within 30 days
+        if ($review->created_at->diffInDays(now()) > 30) {
+            return redirect()->route('student.reviews')
+                ->with('error', 'Reviews can only be deleted within 30 days of posting.');
+        }
+
+        DB::transaction(function () use ($review) {
+            $hostelId = $review->hostel_id;
+            $review->delete();
+
+            // Update hostel's average rating
+            $this->updateHostelRating($hostelId);
+        });
+
+        return redirect()->route('student.reviews')
+            ->with('success', 'Your review has been deleted.');
+    }
+
+    /**
+     * Update hostel's average rating
+     */
+    private function updateHostelRating($hostelId)
+    {
+        $hostel = Hostel::find($hostelId);
+        
+        if ($hostel) {
+            $averageRating = Review::where('hostel_id', $hostelId)
+                ->where('status', 'published')
+                ->avg('rating');
+
+            $reviewsCount = Review::where('hostel_id', $hostelId)
+                ->where('status', 'published')
+                ->count();
+
+            $hostel->update([
+                'rating' => round($averageRating, 1),
+                'reviews_count' => $reviewsCount,
+            ]);
+        }
+    }
+}
 }
