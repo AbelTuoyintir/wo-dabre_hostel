@@ -44,7 +44,7 @@
                         <div class="absolute top-3 right-3 bg-white rounded-lg px-2 py-1 flex items-center space-x-1">
                             <i class="fas fa-star text-yellow-400 text-sm"></i>
                             <span class="font-semibold text-gray-800 text-sm">
-                                {{ $hostel->rating ?? 'N/A' }}
+                                {{ number_format($hostel->rating ?? 0, 1) }}
                             </span>
                         </div>
                     </div>
@@ -63,7 +63,7 @@
                         <!-- Room Count -->
                         <div class="flex items-center text-gray-600 text-sm mt-2">
                             <i class="fas fa-door-open mr-2 text-blue-500"></i>
-                            <span>{{ $hostel->rooms->count() }} available rooms</span>
+                            <span>{{ $hostel->available_rooms_count ?? 0 }} available rooms</span>
                         </div>
 
                         <!-- Price -->
@@ -71,18 +71,22 @@
                             <div class="flex justify-between items-center">
                                 <span class="text-gray-600 text-sm">From</span>
                                 <span class="text-xl font-bold text-blue-600">
-                                    ₵{{ number_format($hostel->min_price ?? 0, 2) }}
+                                    @if($hostel->min_price > 0)
+                                        ₵{{ number_format($hostel->min_price, 2) }}
+                                    @else
+                                        <span class="text-gray-400 text-sm">Price N/A</span>
+                                    @endif
                                 </span>
                             </div>
                             <span class="text-xs text-gray-500">/month</span>
                         </div>
 
-                        <!-- CTA Button -->
-                        <button type="button" 
-                                onclick="event.preventDefault(); window.location.href='{{ route('student.hostels.show', $hostel) }}'"
-                                class="w-full mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium">
-                            View Details
-                        </button>
+                        <!-- View Details Button -->
+                        <div class="mt-4">
+                            <span class="block w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium text-center cursor-pointer">
+                                View Details
+                            </span>
+                        </div>
                     </div>
                 </a>
             @endforeach

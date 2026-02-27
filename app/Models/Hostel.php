@@ -17,7 +17,6 @@ class Hostel extends Model
         'email',
         'description',
         'phone',
-        'description',
         'rating',
         'manager_id',
         'is_approved',

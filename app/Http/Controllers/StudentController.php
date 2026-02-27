@@ -140,7 +140,7 @@ class StudentController extends Controller
         }
     }
 
-    
+
     /**
      * Handle fee payment callback from Paystack
      */
@@ -582,91 +582,86 @@ class StudentController extends Controller
     /**
      * Browse available hostels (with price in GHS)
      */
-    public function browseHostels(Request $request)
-    {
-        $query = Hostel::where('is_approved', true)
-            ->where('status', 'active')
-            ->with(['primaryImage', 'rooms' => function($q) {
-                $q->where('status', 'available')
-                  ->whereColumn('current_occupancy', '<', 'capacity');
-            }]);
-
-        // Search filter
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
+  public function browseHostels(Request $request)
+{
+    // Get all approved hostels
+    $hostels = Hostel::where('is_approved', 1)
+        ->with(['primaryImage'])
+        ->when($request->search, function($query, $search) {
+            return $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('location', 'like', "%{$search}%");
             });
+        })
+        ->get();
+
+    // Add room information to each hostel
+    foreach ($hostels as $hostel) {
+        // Get available rooms
+        $availableRooms = $hostel->rooms()
+            ->where('status', 'available')
+            ->whereColumn('current_occupancy', '<', 'capacity')
+            ->get();
+        
+        // Set properties
+        $hostel->available_rooms_count = $availableRooms->count();
+        $hostel->min_price = $availableRooms->min('price_per_month');
+        
+        // If no available rooms, set min_price to 0
+        if (!$hostel->min_price) {
+            $hostel->min_price = 0;
         }
-
-        // Price range filter (in GHS)
-        if ($request->filled('min_price')) {
-            $query->whereHas('rooms', function($q) use ($request) {
-                $q->where('price_per_month', '>=', $request->min_price);
-            });
-        }
-
-        if ($request->filled('max_price')) {
-            $query->whereHas('rooms', function($q) use ($request) {
-                $q->where('price_per_month', '<=', $request->max_price);
-            });
-        }
-
-        $hostels = $query->get()
-            ->filter(function($hostel) {
-                return $hostel->rooms->isNotEmpty();
-            })
-            ->map(function($hostel) {
-                $hostel->min_price = $hostel->rooms->min('price_per_month');
-                $hostel->max_price = $hostel->rooms->max('price_per_month');
-                return $hostel;
-            });
-
-        // Get unique locations for filter
-        $locations = Hostel::where('is_approved', true)
-            ->where('status', 'active')
-            ->select('location')
-            ->distinct()
-            ->orderBy('location')
-            ->pluck('location');
-
-        return view('student.hostels.browse', compact('hostels', 'locations'));
     }
+
+    return view('student.hostels.browse', compact('hostels'));
+}
 
     /**
      * View single hostel details (prices in GHS)
      */
-    public function viewHostel(Hostel $hostel)
-    {
-        abort_if(!$hostel->is_approved || $hostel->status !== 'active', 404);
+ /**
+ * View single hostel details
+ */
+/**
+ * View single hostel details
+ */
+public function viewHostel(Hostel $hostel)
+{
+    // Ensure hostel is approved
+    if (!$hostel->is_approved) {
+        abort(404);
+    }
 
-        $hostel->load(['images', 'rooms' => function($q) {
-            $q->where('status', 'available')
-              ->whereColumn('current_occupancy', '<', 'capacity');
-        }]);
+    // Load hostel with images
+    $hostel->load(['images', 'primaryImage']);
+    
+    // Get available rooms
+    $availableRooms = $hostel->rooms()
+        ->where('status', 'available')
+        ->whereColumn('current_occupancy', '<', 'capacity')
+        ->get();
 
-        $availableRooms = $hostel->rooms->filter(function($room) {
-            return $room->availableSpaces() > 0;
+    // Get average rating
+    $averageRating = $hostel->reviews()->avg('rating') ?? 0;
+    $reviewCount = $hostel->reviews()->count();
+
+    // Get similar hostels
+    $similarHostels = Hostel::where('is_approved', true)
+        ->where('id', '!=', $hostel->id)
+        ->where('location', $hostel->location)
+        ->with(['primaryImage'])
+        ->limit(3)
+        ->get()
+        ->map(function($h) {
+            $h->min_price = $h->rooms()
+                ->where('status', 'available')
+                ->whereColumn('current_occupancy', '<', 'capacity')
+                ->min('price_per_month');
+            return $h;
         });
 
-        $averageRating = $hostel->rating ?? 0;
-        $reviewCount = $hostel->reviews_count ?? 0;
-
-        $similarHostels = Hostel::where('is_approved', true)
-            ->where('status', 'active')
-            ->where('id', '!=', $hostel->id)
-            ->where('location', $hostel->location)
-            ->with('primaryImage')
-            ->limit(3)
-            ->get()
-            ->map(function($h) {
-                $h->min_price = $h->rooms()->min('price_per_month');
-                return $h;
-            });
-
-        return view('student.hostels.show', compact('hostel', 'availableRooms', 'averageRating', 'reviewCount', 'similarHostels'));
-    }
+    return view('student.hostels.show', compact('hostel', 'availableRooms', 'averageRating', 'reviewCount', 'similarHostels'));
+}
 
     /**
      * Get user's bookings with filters
@@ -839,8 +834,8 @@ class StudentController extends Controller
             'name' => 'required|string|max:255',
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:500',
-            'emergency_contact' => 'nullable|string|max:100',
-            'emergency_phone' => 'nullable|string|max:20',
+            'password' => 'nullable|string|min:8|confirmed',
+            'email' => 'required|email|unique:users,email,' . $user->id,
         ]);
 
         $user->update($validated);
