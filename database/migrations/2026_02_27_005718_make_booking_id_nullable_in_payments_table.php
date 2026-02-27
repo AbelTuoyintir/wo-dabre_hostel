@@ -8,15 +8,15 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::table('hostels', function (Blueprint $table) {
-            $table->integer('reviews_count')->default(0)->after('rating');
+        Schema::table('payments', function (Blueprint $table) {
+            $table->foreignId('booking_id')->nullable()->change();
         });
     }
 
     public function down()
     {
-        Schema::table('hostels', function (Blueprint $table) {
-            $table->dropColumn([ 'reviews_count']);
+        Schema::table('payments', function (Blueprint $table) {
+            $table->foreignId('booking_id')->nullable(false)->change();
         });
     }
 };

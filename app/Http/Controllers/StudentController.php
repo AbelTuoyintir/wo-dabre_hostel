@@ -140,13 +140,17 @@ class StudentController extends Controller
         }
     }
 
+    
     /**
      * Handle fee payment callback from Paystack
      */
     public function handlePaymentCallback(Request $request)
     {
+        \Log::debug('Paystack callback', $request->all());
+
         try {
             $paymentDetails = Paystack::getPaymentData();
+            \Log::debug('Paystack response', $paymentDetails);
 
             if ($paymentDetails['status'] && $paymentDetails['data']['status'] === 'success') {
 
