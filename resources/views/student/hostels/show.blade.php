@@ -96,6 +96,10 @@
 <div class="bg-white rounded-lg shadow-sm p-6">
     <h2 class="text-2xl font-bold text-gray-900 mb-6">Available Rooms</h2>
     
+    <!-- Available Rooms Section -->
+<div class="bg-white rounded-lg shadow-sm p-6">
+    <h2 class="text-2xl font-bold text-gray-900 mb-6">Available Rooms</h2>
+    
     @if($availableRooms && $availableRooms->count() > 0)
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @foreach($availableRooms as $room)
@@ -104,7 +108,7 @@
                     <div class="flex justify-between items-start mb-3">
                         <h3 class="text-lg font-semibold text-gray-900">Room {{ $room->number }}</h3>
                         <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full">
-                            {{ $room->availableSpaces() }} space{{ $room->availableSpaces() > 1 ? 's' : '' }} left
+                            {{ $room->availableSpaces() }} space{{ $room->availableSpaces() != 1 ? 's' : '' }} left
                         </span>
                     </div>
 
@@ -144,12 +148,35 @@
                     </div>
                     @endif
 
-                    <!-- Price and Book Button -->
+                    <!-- PRICE SECTION - FIXED -->
                     <div class="mt-4 pt-4 border-t">
                         <div class="flex justify-between items-center mb-3">
                             <span class="text-gray-600">Price</span>
-                            <span class="text-xl font-bold text-blue-600">₵{{ number_format($room->price_per_month, 2) }}</span>
+                            <div class="text-right">
+                                @php
+                                    // Determine which price to show
+                                    $priceAmount = null;
+                                    $pricePeriod = null;
+                                    
+                                    if (!empty($room->price_per_month) && $room->price_per_month > 0) {
+                                        $priceAmount = $room->price_per_month;
+                                        $pricePeriod = 'month';
+                                    } elseif (!empty($room->price_per_semester) && $room->price_per_semester > 0) {
+                                        $priceAmount = $room->price_per_semester;
+                                        $pricePeriod = 'semester';
+                                    }
+                                @endphp
+                                
+                                @if($priceAmount)
+                                    <span class="text-xl font-bold text-blue-600">₵{{ number_format($priceAmount, 2) }}</span>
+                                    <span class="text-xs text-gray-500">/{{ $pricePeriod }}</span>
+                                @else
+                                    <span class="text-gray-400 text-sm">Price not set</span>
+                                @endif
+                            </div>
                         </div>
+                        
+                        <!-- BOOK BUTTON -->
                         <a href="{{ route('bookings.create', ['hostel' => $hostel->id, 'room' => $room->id]) }}" 
                            class="block w-full px-4 py-2 bg-blue-600 text-white text-center rounded-lg hover:bg-blue-700 transition">
                             <i class="fas fa-calendar-check mr-2"></i>Book This Room
@@ -168,5 +195,6 @@
             </a>
         </div>
     @endif
+
 </div>
 @endsection

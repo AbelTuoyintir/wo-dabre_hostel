@@ -635,11 +635,21 @@ public function viewHostel(Hostel $hostel)
     // Load hostel with images
     $hostel->load(['images', 'primaryImage']);
     
-    // Get available rooms
+    // Get available rooms - fix the query
     $availableRooms = $hostel->rooms()
         ->where('status', 'available')
-        ->whereColumn('current_occupancy', '<', 'capacity')
+        ->where(function($q) {
+            $q->whereColumn('current_occupancy', '<', 'capacity')
+              ->orWhereNull('current_occupancy'); // Handle null values
+        })
         ->get();
+
+    // Set default occupancy to 0 if null
+    foreach ($availableRooms as $room) {
+        if ($room->current_occupancy === null) {
+            $room->current_occupancy = 0;
+        }
+    }
 
     // Get average rating
     $averageRating = $hostel->reviews()->avg('rating') ?? 0;
@@ -655,15 +665,16 @@ public function viewHostel(Hostel $hostel)
         ->map(function($h) {
             $h->min_price = $h->rooms()
                 ->where('status', 'available')
-                ->whereColumn('current_occupancy', '<', 'capacity')
-                ->min('price_per_month');
+                ->where(function($q) {
+                    $q->whereColumn('current_occupancy', '<', 'capacity')
+                      ->orWhereNull('current_occupancy');
+                })
+                ->min('price_per_month') ?? $h->rooms()->min('price_per_semester') / 4;
             return $h;
         });
 
     return view('student.hostels.show', compact('hostel', 'availableRooms', 'averageRating', 'reviewCount', 'similarHostels'));
-}
-
-    /**
+}    /**
      * Get user's bookings with filters
      */
     public function myBookings(Request $request)
