@@ -1,18 +1,23 @@
 <?php
-// app/Http/Controllers/Student/StudentController.php
 
-namespace App\Http\Controllers\Student;
+namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Review;
 use App\Models\Hostel;
+use App\Models\Room;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Carbon\Carbon;
 use App\Models\Payment;
 use App\Models\Complaint;
 use Unicodeveloper\Paystack\Facades\Paystack;
+use App\Mail\PaymentReceiptMail;
+use Illuminate\Support\Facades\Mail;
+
 
 class StudentController extends Controller
 {
@@ -22,98 +27,114 @@ class StudentController extends Controller
     }
 
     /**
- * Student Dashboard
- */
-public function dashboard()
-{
-    $user = Auth::user();
+     * Student Dashboard
+     */
+    public function dashboard()
+    {
+        $user = Auth::user();
 
-    // Get user's stats
-    $stats = [
-        'total_bookings' => Booking::where('user_id', $user->id)->count(),
-        'active_bookings' => Booking::where('user_id', $user->id)
+        // Get user's stats
+        $stats = [
+            'total_bookings' => Booking::where('user_id', $user->id)->count(),
+            'active_bookings' => Booking::where('user_id', $user->id)
+                ->where('status', 'confirmed')
+                ->where('check_out', '>=', now())
+                ->count(),
+            'total_paid' => Payment::whereHas('booking', fn($q) => $q->where('user_id', $user->id))
+                ->where('status', 'completed')
+                ->sum('amount'),
+            'complaints' => Complaint::where('user_id', $user->id)->count(),
+            'pending_complaints' => Complaint::where('user_id', $user->id)
+                ->whereIn('status', ['pending', 'in_progress'])
+                ->count(),
+        ];
+
+        // Get active booking if any
+        $activeBooking = Booking::where('user_id', $user->id)
             ->where('status', 'confirmed')
             ->where('check_out', '>=', now())
-            ->count(),
-        'total_paid' => Payment::whereHas('booking', fn($q) => $q->where('user_id', $user->id))
-            ->where('status', 'completed')
-            ->sum('amount'),
-        'complaints' => Complaint::where('user_id', $user->id)->count(),
-        'pending_complaints' => Complaint::where('user_id', $user->id)
-            ->whereIn('status', ['pending', 'in_progress'])
-            ->count(),
-    ];
+            ->with(['room.hostel'])
+            ->first();
 
-    // Get active booking if any
-    $activeBooking = Booking::where('user_id', $user->id)
-        ->where('status', 'confirmed')
-        ->where('check_out', '>=', now())
-        ->with(['room.hostel'])
-        ->first();
+        // Get recent bookings
+        $recentBookings = Booking::where('user_id', $user->id)
+            ->with(['room.hostel'])
+            ->latest()
+            ->limit(5)
+            ->get();
 
-    // Get recent bookings
-    $recentBookings = Booking::where('user_id', $user->id)
-        ->with(['room.hostel'])
-        ->latest()
-        ->limit(5)
-        ->get();
+        // Get recommended hostels (featured or highly rated)
+        $recommendedHostels = Hostel::where('is_approved', true)
+            ->where('status', 'active')
+            ->whereHas('rooms', function($q) {
+                $q->where('status', 'available')
+                  ->whereColumn('current_occupancy', '<', 'capacity');
+            })
+            ->with(['primaryImage'])
+            ->orderByDesc('is_featured')
+            ->orderByDesc('rating')
+            ->limit(4)
+            ->get()
+            ->map(function($hostel) {
+                $hostel->min_price = $hostel->rooms()
+                    ->where('status', 'available')
+                    ->whereColumn('current_occupancy', '<', 'capacity')
+                    ->min('price_per_month');
+                return $hostel;
+            });
 
-    // Get recommended hostels (featured or highly rated)
-    $recommendedHostels = Hostel::where('is_approved', true)
-        ->where('status', 'active')
-        ->whereHas('rooms', function($q) {
-            $q->where('status', 'available')
-              ->whereColumn('current_occupancy', '<', 'capacity');
-        })
-        ->with(['primaryImage'])
-        ->orderByDesc('is_featured')
-        ->orderByDesc('rating')
-        ->limit(4)
-        ->get()
-        ->map(function($hostel) {
-            $hostel->min_price = $hostel->rooms()
-                ->where('status', 'available')
-                ->whereColumn('current_occupancy', '<', 'capacity')
-                ->min('price_per_month');
-            return $hostel;
-        });
-
-    return view('student.dashboard', compact('stats', 'recentBookings', 'recommendedHostels', 'activeBooking'));
-}
+        return view('student.dashboard', compact('stats', 'recentBookings', 'recommendedHostels', 'activeBooking'));
+    }
 
     /**
      * Show fee payment form
      */
+
     public function showPaymentForm()
     {
         $user = Auth::user();
-        $feeAmount = config('app.student_fee_amount', 50000); // Default fee amount in kobo (500 NGN)
-        
-        return view('student.payments.fee-payment', compact('user', 'feeAmount'));
+        // Fee amount in Ghana Cedis (GHS)
+        $feeAmountInGHS = config('app.student_fee_amount', 500); // Default ₵500
+
+        return view('student.payments.fee-payment', compact('user', 'feeAmountInGHS'));
     }
 
     /**
-     * Initialize fee payment through Paystack
+     * Initialize fee payment through Paystack (GHS)
      */
     public function initializeFeePayment(Request $request)
     {
         $user = Auth::user();
-        $feeAmount = config('app.student_fee_amount', 50000); // Amount in kobo
-        
+
+        // Set the fee amount in Ghana Cedis (GHS)
+        $feeAmountInGHS = config('app.student_fee_amount', 500);
+
         try {
-            // Create a payment record for tracking
-            $reference = 'FEE-' . $user->id . '-' . time();
-            
+            // Generate a unique reference
+            $reference = 'FEE-' . $user->id . '-' . time() . '-' . Str::random(4);
+
             $paymentData = [
-                'amount' => $feeAmount,
+                'user_id' => $user->id,
                 'email' => $user->email,
-                'orderID' => $reference,
-                'currency' => 'NGN',
+                'amount' => $feeAmountInGHS * 100, // Convert to pesewas
+                'currency' => 'GHS',
+                'reference' => $reference,
+                'callback_url' => route('student.payment.callback'),
+                'metadata' => [
+                    'user_id' => $user->id,
+                    'user_name' => $user->name,
+                    'user_email' => $user->email,
+                    'payment_type' => 'fee',
+                    'payment_for' => 'Student Accommodation Fee',
+                    'fee_amount' => $feeAmountInGHS,
+                ],
             ];
 
             // Initialize Paystack payment
             return Paystack::getAuthorizationUrl($paymentData)->redirectNow();
+
         } catch (\Exception $e) {
+            \Log::error('Fee payment initialization failed: ' . $e->getMessage());
             return redirect()->route('student.payment')
                 ->with('error', 'Unable to initialize payment. Please try again.');
         }
@@ -122,33 +143,81 @@ public function dashboard()
     /**
      * Handle fee payment callback from Paystack
      */
-    public function handlePaymentCallback()
+    public function handlePaymentCallback(Request $request)
     {
-        $paymentDetails = Paystack::getPaymentData();
-        $user = Auth::user();
+        try {
+            $paymentDetails = Paystack::getPaymentData();
 
-        if ($paymentDetails['status'] == true) {
-            // Payment successful
-            $user->update(['has_paid_fees' => true]);
-            
-            return redirect()->route('student.dashboard')
-                ->with('success', 'Payment successful! Fee payment completed.');
-        } else {
+            if ($paymentDetails['status'] && $paymentDetails['data']['status'] === 'success') {
+
+                // FIX: Handle metadata safely - it could be array or string
+                $metadata = $paymentDetails['data']['metadata'];
+
+                // If it's a string, decode it; if it's already an array, use it directly
+                if (is_string($metadata)) {
+                    $metadata = json_decode($metadata, true);
+                }
+
+                $user = Auth::user();
+
+                // Store payment record (amount already in GHS from Paystack)
+                $payment = Payment::create([
+                    'user_id' => $user->id,
+                    'booking_id' => null, // This is a fee payment, not booking payment
+                    'reference' => $paymentDetails['data']['reference'],
+                    'amount' => $paymentDetails['data']['amount'] / 100, // Convert from pesewas to GHS
+                    'currency' => 'GHS',
+                    'payment_method' => $paymentDetails['data']['channel'],
+                    'status' => 'completed',
+                    'metadata' => json_encode($paymentDetails['data']), // Store full payment data as JSON
+                ]);
+
+                // Update user's fee payment status if needed
+                // $user->update(['fee_paid' => true, 'fee_paid_at' => now()]);
+
+                // You can access metadata values safely now
+                $userName = $metadata['user_name'] ?? $user->name;
+                $feeAmount = $metadata['fee_amount'] ?? ($paymentDetails['data']['amount'] / 100);
+
+                // SEND EMAIL RECEIPT TO USER
+                try {
+                    Mail::to($user->email)->send(new PaymentReceiptMail($payment, $user));
+                    \Log::info('Payment receipt email sent to ' . $user->email);
+                } catch (\Exception $mailException) {
+                    // Log email error but don't stop the process
+                    \Log::error('Failed to send payment receipt email: ' . $mailException->getMessage());
+                }
+
+                return redirect()->route('student.payment')
+                    ->with('success', 'Payment of ₵' . number_format($paymentDetails['data']['amount'] / 100, 2) . ' was successful! Receipt #' . $payment->id . ' has been sent to your email.');
+            }
+
             return redirect()->route('student.payment')
-                ->with('error', 'Payment failed or was cancelled.');
+                ->with('error', 'Payment was not successful. Please try again.');
+
+        } catch (\Exception $e) {
+            \Log::error('Payment callback failed: ' . $e->getMessage());
+            return redirect()->route('student.payment')
+                ->with('error', 'Unable to verify payment. Please contact support.');
         }
     }
 
+    /**
+     * Get user's bookings
+     */
     public function bookings()
     {
         $bookings = Auth::user()->bookings()
-            ->with('hostel')
+            ->with('hostel', 'room')
             ->latest()
             ->paginate(10);
 
         return view('student.bookings.index', compact('bookings'));
     }
 
+    /**
+     * Show booking details
+     */
     public function showBooking(Booking $booking)
     {
         // Check if user owns this booking
@@ -156,96 +225,109 @@ public function dashboard()
             abort(403, 'Unauthorized action.');
         }
 
+        $booking->load(['hostel', 'room', 'payment']);
+
         return view('student.bookings.show', compact('booking'));
     }
 
-   public function cancelBooking(Request $request, Booking $booking)
-{
-    // Check if user owns this booking
-    if ($booking->user_id !== Auth::id()) {
-        abort(403, 'Unauthorized action.');
-    }
-
-    // Validate cancellation reason
-    $request->validate([
-        'cancellation_reason' => 'required|string|min:10|max:500',
-    ]);
-
-    // Determine which status column to use
-    $currentStatus = $booking->booking_status ?? $booking->status ?? 'pending';
-
-    // Only allow cancellation if booking is still pending or confirmed
-    if (!in_array($currentStatus, ['pending', 'confirmed'])) {
-        return back()->with('error', 'Cannot cancel booking at this stage.');
-    }
-
-    // Check if booking has a payment
-    if (!$booking->payment || $booking->payment->status !== 'completed') {
-        return back()->with('error', 'No payment found for this booking.');
-    }
-
-    DB::beginTransaction();
-
-    try {
-        // Calculate refund amount (full refund for pending, partial for confirmed)
-        $refundAmount = $booking->total_amount;
-
-        // Apply cancellation policy (optional)
-        if ($currentStatus == 'confirmed') {
-            // Deduct 10% cancellation fee for confirmed bookings
-            $refundAmount = $booking->total_amount * 0.9;
+    /**
+     * Cancel booking with refund (GHS)
+     */
+    public function cancelBooking(Request $request, Booking $booking)
+    {
+        // Check if user owns this booking
+        if ($booking->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized action.');
         }
 
-        // Process refund through Paystack
-        $refund = Paystack::refund([
-            'transaction' => $booking->payment->transaction_id,
-            'amount' => round($refundAmount * 100), // Convert to pesewas
-            'currency' => 'GHS',
-            'reason' => $request->cancellation_reason
+        // Validate cancellation reason
+        $request->validate([
+            'cancellation_reason' => 'required|string|min:10|max:500',
         ]);
 
-        // Update booking status
-        if ($booking->booking_status) {
-            $booking->update([
-                'booking_status' => 'cancelled',
-                'cancellation_reason' => $request->cancellation_reason,
-                'cancelled_at' => now(),
-            ]);
-        } else {
-            $booking->update([
-                'status' => 'cancelled',
-                'cancellation_reason' => $request->cancellation_reason,
-                'cancelled_at' => now(),
-            ]);
+        // Determine which status column to use
+        $currentStatus = $booking->booking_status ?? $booking->status ?? 'pending';
+
+        // Only allow cancellation if booking is still pending or confirmed
+        if (!in_array($currentStatus, ['pending', 'confirmed'])) {
+            return back()->with('error', 'Cannot cancel booking at this stage.');
         }
 
-        // Update payment record
-        $booking->payment->update([
-            'status' => 'refunded',
-            'refund_amount' => $refundAmount,
-            'refund_reference' => $refund['data']['reference'] ?? null,
-            'refunded_at' => now(),
-        ]);
-
-        // Increment available rooms in hostel
-        if ($booking->hostel) {
-            $booking->hostel->increment('available_rooms');
+        // Check if booking has a payment
+        if (!$booking->payment || $booking->payment->status !== 'completed') {
+            return back()->with('error', 'No payment found for this booking.');
         }
 
-        DB::commit();
+        DB::beginTransaction();
 
-        return back()->with('success',
-            "Booking cancelled successfully. ₵" . number_format($refundAmount, 2) .
-            " will be refunded to your original payment method within 3-5 business days."
-        );
+        try {
+            // Calculate refund amount in GHS
+            $refundAmount = $booking->total_amount;
 
-    } catch (\Exception $e) {
-        DB::rollBack();
-        \Log::error('Booking cancellation failed: ' . $e->getMessage());
+            // Apply cancellation policy (10% fee for confirmed bookings)
+            if ($currentStatus == 'confirmed') {
+                $refundAmount = $booking->total_amount * 0.9; // 90% refund, 10% fee
+            }
 
-        return back()->with('error', 'Failed to cancel booking. Please contact support.');
+            // Process refund through Paystack (amount in pesewas)
+            $refund = Paystack::refund([
+                'transaction' => $booking->payment->transaction_id,
+                'amount' => round($refundAmount * 100), // Convert GHS to pesewas
+                'currency' => 'GHS',
+                'reason' => $request->cancellation_reason
+            ]);
+
+            // Update booking status
+            if ($booking->booking_status) {
+                $booking->update([
+                    'booking_status' => 'cancelled',
+                    'cancellation_reason' => $request->cancellation_reason,
+                    'cancelled_at' => now(),
+                ]);
+            } else {
+                $booking->update([
+                    'status' => 'cancelled',
+                    'cancellation_reason' => $request->cancellation_reason,
+                    'cancelled_at' => now(),
+                ]);
+            }
+
+            // Update payment record
+            $booking->payment->update([
+                'status' => 'refunded',
+                'refund_amount' => $refundAmount,
+                'refund_reference' => $refund['data']['reference'] ?? null,
+                'refunded_at' => now(),
+            ]);
+
+            // Increment available rooms in hostel
+            if ($booking->room && $booking->room->hostel) {
+                $booking->room->hostel->increment('available_rooms');
+
+                // Decrement room occupancy
+                if ($booking->room->current_occupancy > 0) {
+                    $booking->room->decrement('current_occupancy');
+                }
+            }
+
+            DB::commit();
+
+            return back()->with('success',
+                "Booking cancelled successfully. ₵" . number_format($refundAmount, 2) .
+                " will be refunded to your original payment method within 3-5 business days."
+            );
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Booking cancellation failed: ' . $e->getMessage());
+
+            return back()->with('error', 'Failed to cancel booking. Please contact support.');
+        }
     }
 
+    /**
+     * List user's reviews
+     */
     public function reviews()
     {
         $reviews = Auth::user()->reviews()
@@ -368,7 +450,7 @@ public function dashboard()
                 'pros' => $validated['pros'] ?? null,
                 'cons' => $validated['cons'] ?? null,
                 'stay_duration' => $validated['stay_duration'] ?? null,
-                'is_verified' => true, // Verified since they had a completed booking
+                'is_verified' => true,
                 'status' => 'published',
             ]);
 
@@ -425,6 +507,7 @@ public function dashboard()
         ]);
 
         DB::transaction(function () use ($review, $validated) {
+            $oldRating = $review->rating;
             $review->update([
                 'rating' => $validated['rating'],
                 'title' => $validated['title'],
@@ -475,7 +558,7 @@ public function dashboard()
     private function updateHostelRating($hostelId)
     {
         $hostel = Hostel::find($hostelId);
-        
+
         if ($hostel) {
             $averageRating = Review::where('hostel_id', $hostelId)
                 ->where('status', 'published')
@@ -491,5 +574,274 @@ public function dashboard()
             ]);
         }
     }
-}
+
+    /**
+     * Browse available hostels (with price in GHS)
+     */
+    public function browseHostels(Request $request)
+    {
+        $query = Hostel::where('is_approved', true)
+            ->where('status', 'active')
+            ->with(['primaryImage', 'rooms' => function($q) {
+                $q->where('status', 'available')
+                  ->whereColumn('current_occupancy', '<', 'capacity');
+            }]);
+
+        // Search filter
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('location', 'like', "%{$search}%");
+            });
+        }
+
+        // Price range filter (in GHS)
+        if ($request->filled('min_price')) {
+            $query->whereHas('rooms', function($q) use ($request) {
+                $q->where('price_per_month', '>=', $request->min_price);
+            });
+        }
+
+        if ($request->filled('max_price')) {
+            $query->whereHas('rooms', function($q) use ($request) {
+                $q->where('price_per_month', '<=', $request->max_price);
+            });
+        }
+
+        $hostels = $query->get()
+            ->filter(function($hostel) {
+                return $hostel->rooms->isNotEmpty();
+            })
+            ->map(function($hostel) {
+                $hostel->min_price = $hostel->rooms->min('price_per_month');
+                $hostel->max_price = $hostel->rooms->max('price_per_month');
+                return $hostel;
+            });
+
+        // Get unique locations for filter
+        $locations = Hostel::where('is_approved', true)
+            ->where('status', 'active')
+            ->select('location')
+            ->distinct()
+            ->orderBy('location')
+            ->pluck('location');
+
+        return view('student.hostels.browse', compact('hostels', 'locations'));
+    }
+
+    /**
+     * View single hostel details (prices in GHS)
+     */
+    public function viewHostel(Hostel $hostel)
+    {
+        abort_if(!$hostel->is_approved || $hostel->status !== 'active', 404);
+
+        $hostel->load(['images', 'rooms' => function($q) {
+            $q->where('status', 'available')
+              ->whereColumn('current_occupancy', '<', 'capacity');
+        }]);
+
+        $availableRooms = $hostel->rooms->filter(function($room) {
+            return $room->availableSpaces() > 0;
+        });
+
+        $averageRating = $hostel->rating ?? 0;
+        $reviewCount = $hostel->reviews_count ?? 0;
+
+        $similarHostels = Hostel::where('is_approved', true)
+            ->where('status', 'active')
+            ->where('id', '!=', $hostel->id)
+            ->where('location', $hostel->location)
+            ->with('primaryImage')
+            ->limit(3)
+            ->get()
+            ->map(function($h) {
+                $h->min_price = $h->rooms()->min('price_per_month');
+                return $h;
+            });
+
+        return view('student.hostels.show', compact('hostel', 'availableRooms', 'averageRating', 'reviewCount', 'similarHostels'));
+    }
+
+    /**
+     * Get user's bookings with filters
+     */
+    public function myBookings(Request $request)
+    {
+        $query = Booking::where('user_id', Auth::id())
+            ->with(['hostel', 'room', 'payment']);
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $sort = $request->get('sort', 'latest');
+        switch ($sort) {
+            case 'oldest':
+                $query->oldest();
+                break;
+            case 'checkin_asc':
+                $query->orderBy('check_in', 'asc');
+                break;
+            case 'checkin_desc':
+                $query->orderBy('check_in', 'desc');
+                break;
+            default:
+                $query->latest();
+        }
+
+        $bookings = $query->paginate(10);
+        return view('student.bookings.index', compact('bookings'));
+    }
+
+    /**
+     * View booking details (amounts in GHS)
+     */
+    public function viewBooking(Booking $booking)
+    {
+        abort_if($booking->user_id !== Auth::id(), 403);
+        $booking->load(['hostel', 'room', 'payment']);
+        return view('student.bookings.show', compact('booking'));
+    }
+
+    /**
+     * List user's complaints
+     */
+    public function complaints(Request $request)
+    {
+        $query = Complaint::where('user_id', Auth::id());
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('category')) {
+            $query->where('category', $request->category);
+        }
+
+        $complaints = $query->latest()->paginate(10);
+        return view('student.complaints.index', compact('complaints'));
+    }
+
+    /**
+     * Store a new complaint
+     */
+    public function storeComplaint(Request $request)
+    {
+        $validated = $request->validate([
+            'subject' => 'required|string|max:255',
+            'category' => 'required|string|in:maintenance,payment,behavior,other',
+            'priority' => 'nullable|in:low,medium,high,urgent',
+            'booking_id' => 'nullable|exists:bookings,id',
+            'description' => 'required|string|min:20|max:2000',
+        ]);
+
+        Complaint::create([
+            'user_id' => Auth::id(),
+            'subject' => $validated['subject'],
+            'category' => $validated['category'],
+            'priority' => $validated['priority'] ?? 'medium',
+            'booking_id' => $validated['booking_id'] ?? null,
+            'description' => $validated['description'],
+            'status' => 'pending',
+        ]);
+
+        return redirect()->route('student.complaints')
+            ->with('success', 'Your complaint has been submitted.');
+    }
+
+    /**
+     * List user's payments (amounts in GHS)
+     */
+    public function payments(Request $request)
+    {
+        $query = Payment::whereHas('booking', function($q) {
+                $q->where('user_id', Auth::id());
+            })
+            ->orWhere('user_id', Auth::id()) // For fee payments without booking
+            ->with(['booking.hostel', 'booking.room'])
+            ->latest();
+
+        // Apply filters
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('payment_method')) {
+            $query->where('payment_method', $request->payment_method);
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        $payments = $query->paginate(10);
+
+        return view('student.payments.index', compact('payments'));
+    }
+
+    /**
+     * View payment receipt (amounts in GHS)
+     */
+    public function viewReceipt(Payment $payment)
+    {
+        // Check if payment belongs to user
+        $hasAccess = false;
+
+        if ($payment->booking && $payment->booking->user_id === Auth::id()) {
+            $hasAccess = true;
+        } elseif ($payment->user_id === Auth::id()) {
+            $hasAccess = true;
+        }
+
+        abort_if(!$hasAccess, 403);
+
+        $payment->load(['booking.hostel', 'booking.room']);
+        return view('student.payments.receipt', compact('payment'));
+    }
+
+    /**
+     * View user profile
+     */
+    public function profile()
+    {
+        $user = Auth::user();
+
+        $stats = [
+            'total_bookings' => Booking::where('user_id', $user->id)->count(),
+            'total_paid' => Payment::whereHas('booking', fn($q) => $q->where('user_id', $user->id))
+                ->where('status', 'completed')
+                ->sum('amount'),
+            'total_reviews' => Review::where('user_id', $user->id)->count(),
+            'total_complaints' => Complaint::where('user_id', $user->id)->count(),
+        ];
+
+        return view('student.profile', compact('user', 'stats'));
+    }
+
+    /**
+     * Update user profile
+     */
+    public function updateProfile(Request $request)
+    {
+        $user = Auth::user();
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'phone' => 'nullable|string|max:20',
+            'address' => 'nullable|string|max:500',
+            'emergency_contact' => 'nullable|string|max:100',
+            'emergency_phone' => 'nullable|string|max:20',
+        ]);
+
+        $user->update($validated);
+
+        return redirect()->route('student.profile')
+            ->with('success', 'Profile updated successfully.');
+    }
 }

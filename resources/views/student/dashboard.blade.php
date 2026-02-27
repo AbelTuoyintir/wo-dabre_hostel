@@ -7,7 +7,7 @@
 <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg shadow-lg p-6 mb-6 text-white">
     <div class="flex items-center justify-between">
         <div>
-            <h1 class="text-2xl font-bold">Welcome back, {{ Auth::user()->name }}! 👋</h1>
+            <h1 class="text-2xl font-bold">Welcome back, {{ auth()->user()->name }}!! 👋</h1>
             <p class="text-blue-100 mt-1">Ready to find your perfect accommodation for the semester?</p>
         </div>
         <a href="{{ route('student.hostels.browse') }}"

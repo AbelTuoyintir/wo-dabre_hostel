@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\StudentDashboard;
 use App\Http\Controllers\PaymentController;
 
 /*

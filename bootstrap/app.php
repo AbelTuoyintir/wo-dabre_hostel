@@ -11,21 +11,28 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-    $middleware->alias([
-        'auth' => \Illuminate\Auth\Middleware\Authenticate::class,
-        'admin' => \App\Http\Middleware\AdminMiddleware::class,
-        'hostel.manager' => \App\Http\Middleware\HostelManagerMiddleware::class,
-        'student' => \App\Http\Middleware\StudentMiddleware::class,
-    ]);
-
-   // ✅ Make sure VerifyCsrfToken is in web middleware group
-        $middleware->group('web', [
-            \App\Http\Middleware\VerifyCsrfToken::class,  // MUST BE HERE
-            \Illuminate\Session\Middleware\StartSession::class,
-            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
-            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+        // Register your middleware aliases
+        $middleware->alias([
+            'auth' => \Illuminate\Auth\Middleware\Authenticate::class,
+            'admin' => \App\Http\Middleware\AdminMiddleware::class,
+            'hostel.manager' => \App\Http\Middleware\HostelManagerMiddleware::class,
+            'student' => \App\Http\Middleware\StudentMiddleware::class,
+            'role' => \App\Http\Middleware\RoleMiddleware::class,
         ]);
-})
+
+        // ✅ CORRECT: Append to existing web middleware group
+        $middleware->web(append: [
+            \App\Http\Middleware\VerifyCsrfToken::class,
+        ]);
+
+        // If you need to add middleware to API group
+        // $middleware->api(append: [
+        //     \App\Http\Middleware\YourApiMiddleware::class,
+        // ]);
+
+        // If you need global middleware
+        // $middleware->append(\App\Http\Middleware\YourGlobalMiddleware::class);
+    })
     ->withExceptions(function (Exceptions $exceptions) {
         //
     })->create();

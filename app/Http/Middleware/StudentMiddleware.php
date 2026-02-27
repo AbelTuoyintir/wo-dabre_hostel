@@ -27,15 +27,8 @@ class StudentMiddleware
 
         // Check if user has student role
         if ($user->role !== 'student') {
-            // Redirect based on actual role
-            if ($user->role === 'admin') {
-                return redirect()->route('admin.dashboard')
-                    ->with('error', 'Student access only.');
-            } elseif ($user->role === 'hostel_manager') {
-                return redirect()->route('hostel-manager.dashboard')
-                    ->with('error', 'Student access only.');
-            }
-            return redirect()->route('dashboard')
+           
+            return redirect()->route('home')
                 ->with('error', 'Student access required.');
         }
 
