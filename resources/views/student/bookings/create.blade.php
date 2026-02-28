@@ -47,8 +47,8 @@
                             Check-in Date <span class="text-red-500">*</span>
                         </label>
                         <input type="date" 
-                               name="check_in" 
-                               id="check_in"
+                               name="check_in_date" 
+                               id="check_in_date"
                                min="{{ date('Y-m-d', strtotime('+1 day')) }}"
                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                                required>
@@ -58,8 +58,8 @@
                             Check-out Date <span class="text-red-500">*</span>
                         </label>
                         <input type="date" 
-                               name="check_out" 
-                               id="check_out"
+                               name="check_out_date" 
+                               id="check_out_date"
                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                                required>
                     </div>
@@ -104,8 +104,8 @@
 
 @push('scripts')
 <script>
-const checkIn = document.getElementById('check_in');
-const checkOut = document.getElementById('check_out');
+const checkIn = document.getElementById('check_in_date');
+const checkOut = document.getElementById('check_out_date');
 const priceSummary = document.getElementById('priceSummary');
 const submitBtn = document.getElementById('submitBtn');
 const monthlyRate = {{ $room->price_per_month }};

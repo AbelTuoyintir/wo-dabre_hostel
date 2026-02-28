@@ -81,7 +81,7 @@ class Booking extends Model
      */
     public function isActive(): bool
     {
-        return in_array($this->booking_status, ['confirmed', 'checked_in']);
+        return in_array($this->booking_status, ['confirmed', 'checked_in_date']);
     }
 
     /**
