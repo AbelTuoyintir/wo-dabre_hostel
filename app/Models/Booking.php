@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Booking extends Model
 {
@@ -61,12 +61,20 @@ class Booking extends Model
     }
 
     /**
-     * Get the payments for this booking
+     * Get the payment record for this booking
+     *
+     * Although the payments table technically allows multiple entries, the
+     * application logic only ever creates a single payment for each booking
+     * (captures, refunds, etc. are tracked on that row). Defining this as a
+     * hasOne relationship makes it easier to access the payment without
+     * needing to call `->first()` on a collection.
      */
-    public function payments(): HasMany
+    public function payment(): HasOne
     {
-        return $this->hasMany(Payment::class);
+        return $this->hasOne(Payment::class);
     }
+
+
 
     /**
      * Get the complaints for this booking
@@ -114,5 +122,21 @@ class Booking extends Model
     public function getNightsAttribute(): int
     {
         return $this->check_in_date->diffInDays($this->check_out_date);
+    }
+
+    /**
+     * Backward compatibility accessor for check_in
+     */
+    public function getCheckInAttribute()
+    {
+        return $this->check_in_date;
+    }
+
+    /**
+     * Backward compatibility accessor for check_out
+     */
+    public function getCheckOutAttribute()
+    {
+        return $this->check_out_date;
     }
 }

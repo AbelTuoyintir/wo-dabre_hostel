@@ -83,17 +83,17 @@ class HostelManagementController extends Controller
                 ->where('status', 'completed')
                 ->count(),
             'today_checkins' => Booking::whereIn('hostel_id', $hostelIds)
-                ->whereDate('check_in', $currentTime->toDateString())
+                ->whereDate('check_in_date', $currentTime->toDateString())
                 ->where('status', 'confirmed')
                 ->count(),
             'today_checkouts' => Booking::whereIn('hostel_id', $hostelIds)
-                ->whereDate('check_out', $currentTime->toDateString())
+                ->whereDate('check_out_date', $currentTime->toDateString())
                 ->where('status', 'confirmed')
                 ->count(),
             'active_bookings' => Booking::whereIn('hostel_id', $hostelIds)
                 ->where('status', 'confirmed')
-                ->where('check_in', '<=', $currentTime)
-                ->where('check_out', '>=', $currentTime)
+                ->where('check_in_date', '<=', $currentTime)
+                ->where('check_out_date', '>=', $currentTime)
                 ->count(),
         ];
 

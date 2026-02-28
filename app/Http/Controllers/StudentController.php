@@ -38,7 +38,7 @@ class StudentController extends Controller
             'total_bookings' => Booking::where('user_id', $user->id)->count(),
             'active_bookings' => Booking::where('user_id', $user->id)
                 ->where('status', 'confirmed')
-                ->where('check_out', '>=', now())
+                ->where('check_out_date', '>=', now())
                 ->count(),
             'total_paid' => Payment::whereHas('booking', fn($q) => $q->where('user_id', $user->id))
                 ->where('status', 'completed')
@@ -52,7 +52,7 @@ class StudentController extends Controller
         // Get active booking if any
         $activeBooking = Booking::where('user_id', $user->id)
             ->where('status', 'confirmed')
-            ->where('check_out', '>=', now())
+            ->where('check_out_date', '>=', now())
             ->with(['room.hostel'])
             ->first();
 
@@ -692,10 +692,10 @@ public function viewHostel(Hostel $hostel)
                 $query->oldest();
                 break;
             case 'checkin_asc':
-                $query->orderBy('check_in', 'asc');
+                $query->orderBy('check_in_date', 'asc');
                 break;
             case 'checkin_desc':
-                $query->orderBy('check_in', 'desc');
+                $query->orderBy('check_in_date', 'desc');
                 break;
             default:
                 $query->latest();

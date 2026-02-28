@@ -55,15 +55,15 @@
                 <div class="grid grid-cols-2 gap-4 mt-4 pt-4 border-t">
                     <div>
                         <p class="text-sm text-gray-500">Check In</p>
-                        <p class="font-semibold">{{ $booking->check_in->format('F d, Y') }}</p>
+                        <p class="font-semibold">{{ $booking->check_in_date->format('F d, Y') }}</p>
                     </div>
                     <div>
                         <p class="text-sm text-gray-500">Check Out</p>
-                        <p class="font-semibold">{{ $booking->check_out->format('F d, Y') }}</p>
+                        <p class="font-semibold">{{ $booking->check_out_date->format('F d, Y') }}</p>
                     </div>
                     <div>
                         <p class="text-sm text-gray-500">Duration</p>
-                        <p class="font-semibold">{{ $booking->check_in->diffInDays($booking->check_out) }} nights</p>
+                        <p class="font-semibold">{{ $booking->check_in_date->diffInDays($booking->check_out_date) }} nights</p>
                     </div>
                     <div>
                         <p class="text-sm text-gray-500">Booked On</p>
@@ -158,7 +158,7 @@
                         </button>
                     @endif
 
-                    <a href="{{ route('student.complaints.create', ['booking' => $booking->id]) }}" 
+                    <a href="{{ route('student.complaints', ['booking' => $booking->id]) }}" 
                        class="block w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition text-center">
                         <i class="fas fa-exclamation-triangle mr-2"></i>Report Issue
                     </a>

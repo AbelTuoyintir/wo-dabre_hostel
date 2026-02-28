@@ -414,6 +414,16 @@ function deleteComplaint(id) {
     });
 }
 
+// open modal if booking query param present
+@if(request('booking'))
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        openComplaintModal();
+        document.getElementById('booking_id').value = "{{ request('booking') }}";
+    });
+</script>
+@endif
+
 // Character counter for description
 document.getElementById('description')?.addEventListener('input', function() {
     const minLength = 20;

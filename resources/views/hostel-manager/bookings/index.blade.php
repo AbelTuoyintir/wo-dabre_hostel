@@ -181,7 +181,7 @@
                     </td>
                     <td class="px-4 py-2 whitespace-nowrap">
                         @php
-                            $paymentStatus = $booking->payment->status ?? 'pending';
+                            $paymentStatus = $booking->payment?->status ?? 'pending';
                             $paymentClass = match($paymentStatus) {
                                 'completed' => 'bg-green-100 text-green-700',
                                 'pending' => 'bg-yellow-100 text-yellow-700',

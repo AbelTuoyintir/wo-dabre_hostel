@@ -42,8 +42,8 @@ class PaymentController extends Controller
     {
         $rules = [
             'room_id' => 'required|exists:rooms,id',
-            'check_in' => 'required|date|after:today',
-            'check_out' => 'required|date|after:check_in',
+            'check_in_date' => 'required|date|after:today',
+            'check_out_date' => 'required|date|after:check_in_date',
         ];
 
         // Add validation for guests only
@@ -58,20 +58,20 @@ class PaymentController extends Controller
         $room = Room::findOrFail($validated['room_id']);
         
         // Check availability again
-        if (!$this->checkRoomAvailability($room->id, $validated['check_in'], $validated['check_out'])) {
+        if (!$this->checkRoomAvailability($room->id, $validated['check_in_date'], $validated['check_out_date'])) {
             return back()->with('error', 'Room is not available for selected dates.');
         }
 
         // Calculate total amount
-        $nights = (new \DateTime($validated['check_in']))->diff(new \DateTime($validated['check_out']))->days;
+        $nights = (new \DateTime($validated['check_in_date']))->diff(new \DateTime($validated['check_out_date']))->days;
         $totalAmount = $room->price_per_month * ($nights / 30); // Convert monthly to daily rate
 
         // Store booking data in session for after payment
         session(['pending_booking' => [
             'room_id' => $room->id,
             'hostel_id' => $room->hostel_id,
-            'check_in' => $validated['check_in'],
-            'check_out' => $validated['check_out'],
+            'check_in_date' => $validated['check_in_date'],
+            'check_out_date' => $validated['check_out_date'],
             'total_amount' => $totalAmount,
             'guest_data' => Auth::check() ? null : [
                 'name' => $validated['name'],
@@ -129,8 +129,8 @@ class PaymentController extends Controller
                     'booking_data' => [
                         'room_id' => $pendingBooking['room_id'],
                         'hostel_id' => $pendingBooking['hostel_id'],
-                        'check_in' => $pendingBooking['check_in'],
-                        'check_out' => $pendingBooking['check_out'],
+                        'check_in_date' => $pendingBooking['check_in_date'],
+                        'check_out_date' => $pendingBooking['check_out_date'],
                         'total_amount' => $pendingBooking['total_amount'],
                     ],
                     'reference' => $reference
@@ -194,7 +194,7 @@ class PaymentController extends Controller
             }
 
             // Check room availability one last time
-            if (!$this->checkRoomAvailability($bookingData['room_id'], $bookingData['check_in'], $bookingData['check_out'])) {
+            if (!$this->checkRoomAvailability($bookingData['room_id'], $bookingData['check_in_date'], $bookingData['check_out_date'])) {
                 DB::rollBack();
                 
                 // If guest, we need to delete the created user
@@ -211,8 +211,8 @@ class PaymentController extends Controller
                 'user_id' => $userId,
                 'room_id' => $bookingData['room_id'],
                 'hostel_id' => $bookingData['hostel_id'],
-                'check_in' => $bookingData['check_in'],
-                'check_out' => $bookingData['check_out'],
+                'check_in_date' => $bookingData['check_in_date'],
+                'check_out_date' => $bookingData['check_out_date'],
                 'total_amount' => $bookingData['total_amount'],
                 'status' => 'confirmed',
                 'payment_status' => 'paid',
@@ -319,11 +319,11 @@ class PaymentController extends Controller
         $existingBookings = Booking::where('room_id', $roomId)
             ->where('status', 'confirmed')
             ->where(function($query) use ($checkIn, $checkOut) {
-                $query->whereBetween('check_in', [$checkIn, $checkOut])
-                      ->orWhereBetween('check_out', [$checkIn, $checkOut])
+                $query->whereBetween('check_in_date', [$checkIn, $checkOut])
+                      ->orWhereBetween('check_out_date', [$checkIn, $checkOut])
                       ->orWhere(function($q) use ($checkIn, $checkOut) {
-                          $q->where('check_in', '<=', $checkIn)
-                            ->where('check_out', '>=', $checkOut);
+                          $q->where('check_in_date', '<=', $checkIn)
+                            ->where('check_out_date', '>=', $checkOut);
                       });
             })
             ->count();
