@@ -61,7 +61,7 @@ class BookingController extends Controller
 
         // Check if room is available
         if (!$room->isAvailable()) {
-            return redirect()->route('bookings.hostel.rooms', $hostel)
+            return redirect()->route('student.hostels.show', $hostel)
                 ->with('error', 'This room is no longer available.');
         }
 
@@ -89,18 +89,41 @@ class BookingController extends Controller
             $rules['phone'] = 'required|string|max:20';
         }
 
+        // Validate the request
         $validated = $request->validate($rules);
 
         $room = Room::findOrFail($validated['room_id']);
 
         // Check availability again
         if (!$this->checkRoomAvailability($room->id, $validated['check_in'], $validated['check_out'])) {
-            return back()->with('error', 'Room is not available for selected dates.');
+            return redirect()->route('student.hostels.show', $validated['hostel_id'])
+                ->with('error', 'Room is not available for selected dates.');
         }
 
-        // Calculate total amount
-        $nights = (new \DateTime($validated['check_in']))->diff(new \DateTime($validated['check_out']))->days;
-        $totalAmount = $room->price_per_month * ($nights / 30); // Convert monthly to daily rate
+        // Calculate ONLY the room cost (no student fee here)
+        $checkIn = new \DateTime($validated['check_in']);
+        $checkOut = new \DateTime($validated['check_out']);
+        $nights = $checkIn->diff($checkOut)->days;
+        
+        // Determine which price to use
+        if (!empty($room->price_per_month) && $room->price_per_month > 0) {
+            // Monthly rate
+            $roomCost = ($room->price_per_month / 30) * $nights;
+        } elseif (!empty($room->price_per_semester) && $room->price_per_semester > 0) {
+            // Semester rate (assuming 4 months = 120 days)
+            $roomCost = ($room->price_per_semester / 120) * $nights;
+        } else {
+            return back()->with('error', 'Room price not set.');
+        }
+
+        // Ensure amount is at least 1 GHS
+        $roomCost = max(1, round($roomCost, 2));
+
+        \Log::info('Booking store - Room cost calculation:', [
+            'room_id' => $room->id,
+            'nights' => $nights,
+            'room_cost' => $roomCost
+        ]);
 
         // Store booking data in session for after payment
         session(['pending_booking' => [
@@ -108,7 +131,7 @@ class BookingController extends Controller
             'hostel_id' => $room->hostel_id,
             'check_in' => $validated['check_in'],
             'check_out' => $validated['check_out'],
-            'total_amount' => $totalAmount,
+            'total_amount' => $roomCost, // This is ONLY the room cost
             'guest_data' => Auth::check() ? null : [
                 'name' => $validated['name'],
                 'email' => $validated['email'],
@@ -117,7 +140,7 @@ class BookingController extends Controller
             ],
         ]]);
 
-        // Initialize payment with Paystack
+        // Initialize payment with Paystack (will add student fee there)
         return $this->initializePaystackPayment();
     }
 
@@ -125,170 +148,280 @@ class BookingController extends Controller
      * Initialize Paystack payment
      */
     private function initializePaystackPayment()
-    {
-        $pendingBooking = session('pending_booking');
+{
+    $pendingBooking = session('pending_booking');
 
-        if (!$pendingBooking) {
-            return redirect()->route('bookings.hostel.select')
-                ->with('error', 'No booking information found. Please start over.');
-        }
-
-        // Determine user email
-        if (Auth::check()) {
-            $user = Auth::user();
-            $email = $user->email;
-            $userId = $user->id;
-        } else {
-            $email = $pendingBooking['guest_data']['email'];
-            $userId = null;
-        }
-
-        // Calculate fees (1.95% for Paystack)
-        $feePercentage = 0.0195;
-        $finalAmount = $pendingBooking['total_amount'] * (1 + $feePercentage);
-
-        try {
-            $reference = Paystack::genTranxRef();
-
-            $paymentData = [
-                'email' => $email,
-                'amount' => round($finalAmount * 100), // Convert to pesewas
-                'currency' => 'GHS',
-                'reference' => $reference,
-                'callback_url' => route('payment.callback', ['gateway' => 'paystack']),
-                'metadata' => json_encode([
-                    'user_id' => $userId,
-                    'is_guest' => !Auth::check(),
-                    'guest_data' => $pendingBooking['guest_data'],
-                    'booking_data' => [
-                        'room_id' => $pendingBooking['room_id'],
-                        'hostel_id' => $pendingBooking['hostel_id'],
-                        'check_in' => $pendingBooking['check_in'],
-                        'check_out' => $pendingBooking['check_out'],
-                        'total_amount' => $pendingBooking['total_amount'],
-                    ],
-                    'reference' => $reference
-                ]),
-            ];
-
-            session(['payment_reference' => $reference]);
-
-            return Paystack::getAuthorizationUrl($paymentData)->redirectNow();
-
-        } catch (\Exception $e) {
-            \Log::error('Payment initialization failed: ' . $e->getMessage());
-            return redirect()->route('bookings.hostel.select')
-                ->with('error', 'Payment initialization failed. Please try again.');
-        }
+    if (!$pendingBooking) {
+        return redirect()->route('student.hostels.browse')
+            ->with('error', 'No booking information found. Please start over.');
     }
 
-    /**
-     * Handle payment callback from Paystack
-     */
-    public function handlePaymentCallback($gateway)
-    {
-        if ($gateway !== 'paystack') {
-            return redirect()->route('bookings.hostel.select')
-                ->with('error', 'Unsupported payment gateway.');
-        }
+    // Determine user email
+    if (Auth::check()) {
+        $user = Auth::user();
+        $email = $user->email;
+        $userId = $user->id;
+        $isGuest = false;
+        $guestData = null;
+    } else {
+        $email = $pendingBooking['guest_data']['email'];
+        $userId = null;
+        $isGuest = true;
+        $guestData = $pendingBooking['guest_data']; // This should contain temp_password
+    }
 
-        try {
-            $paymentDetails = Paystack::getPaymentData();
+    // Get the total amount from pending booking (room cost)
+    $roomCost = $pendingBooking['total_amount'];
+    
+    // Get student fee from config (₵150)
+    $studentFee = config('app.student_fee_amount', 150);
+    
+    // Calculate total before Paystack fee
+    $subtotal = $roomCost + $studentFee;
+    
+    // Calculate Paystack fees (2%)
+    $feePercentage = 0.02;
+    $feeAmount = $subtotal * $feePercentage;
+    $finalAmount = $subtotal + $feeAmount;
+    
+    // Convert to pesewas (multiply by 100) and ensure it's an integer
+    $amountInPesewas = (int) round($finalAmount * 100);
 
-            if (!$paymentDetails['status'] || $paymentDetails['data']['status'] !== 'success') {
-                return redirect()->route('bookings.hostel.select')
-                    ->with('error', 'Payment was not successful. Please try again.');
-            }
+    try {
+        $reference = Paystack::genTranxRef();
 
-            $metadata = json_decode($paymentDetails['data']['metadata'], true);
-            $bookingData = $metadata['booking_data'];
-
-            DB::beginTransaction();
-
-            $password = null;
-
-            // Create user account if guest
-            if ($metadata['is_guest']) {
-                $tempPassword = $metadata['guest_data']['temp_password'];
-
-                $user = User::create([
-                    'name' => $metadata['guest_data']['name'],
-                    'email' => $metadata['guest_data']['email'],
-                    'phone' => $metadata['guest_data']['phone'],
-                    'password' => Hash::make($tempPassword),
-                    'role' => 'student',
-                    'email_verified_at' => now(),
-                ]);
-
-                $userId = $user->id;
-                $password = $tempPassword;
-
-                Auth::login($user);
-            } else {
-                $userId = $metadata['user_id'];
-                $user = User::find($userId);
-            }
-
-            // Check room availability one last time
-            if (!$this->checkRoomAvailability($bookingData['room_id'], $bookingData['check_in'], $bookingData['check_out'])) {
-                DB::rollBack();
-
-                if ($metadata['is_guest'] && isset($user)) {
-                    $user->delete();
-                }
-
-                return redirect()->route('bookings.hostel.select')
-                    ->with('error', 'Sorry, the room is no longer available. Your payment will be refunded automatically.');
-            }
-
-            // Create booking
-            $booking = Booking::create([
+        // IMPORTANT: Metadata must be a flat array, NOT nested inside another 'metadata' key
+        $paymentData = [
+            'email' => $email,
+            'amount' => $amountInPesewas,
+            'currency' => 'GHS',
+            'reference' => $reference,
+            'callback_url' => route('payment.callback', ['gateway' => 'paystack']),
+            'metadata' => [ // This is the correct format - flat array
                 'user_id' => $userId,
-                'room_id' => $bookingData['room_id'],
-                'hostel_id' => $bookingData['hostel_id'],
-                'check_in' => $bookingData['check_in'],
-                'check_out' => $bookingData['check_out'],
-                'total_amount' => $bookingData['total_amount'],
-                'status' => 'confirmed',
-                'payment_status' => 'paid',
-                'payment_reference' => $paymentDetails['data']['reference'],
-                'booking_reference' => 'BK-' . strtoupper(Str::random(8)),
-            ]);
+                'is_guest' => $isGuest, // Use boolean, not string
+                'guest_data' => $guestData, // Will be null for logged-in users, array for guests
+                'booking_data' => [
+                    'room_id' => $pendingBooking['room_id'],
+                    'hostel_id' => $pendingBooking['hostel_id'],
+                    'check_in' => $pendingBooking['check_in'],
+                    'check_out' => $pendingBooking['check_out'],
+                    'room_cost' => $roomCost,
+                    'student_fee' => $studentFee,
+                    'total_amount' => $subtotal,
+                ],
+                'reference' => $reference
+            ],
+        ];
 
-            // Create payment record
-            $booking->payment()->create([
-                'amount' => $bookingData['total_amount'],
-                'transaction_id' => $paymentDetails['data']['reference'],
-                'payment_method' => $paymentDetails['data']['channel'],
-                'status' => 'completed',
-                'metadata' => json_encode($paymentDetails['data'])
-            ]);
+        \Log::info('Payment Data sent to Paystack:', $paymentData);
 
-            // Update room occupancy
-            $room = Room::find($bookingData['room_id']);
-            $room->increment('current_occupancy');
+        session(['payment_reference' => $reference]);
 
-            // Clear session data
-            session()->forget(['pending_booking', 'payment_reference']);
+        return Paystack::getAuthorizationUrl($paymentData)->redirectNow();
 
-            DB::commit();
+    } catch (\Exception $e) {
+        \Log::error('Payment initialization failed: ' . $e->getMessage());
+        return redirect()->route('student.hostels.browse')
+            ->with('error', 'Payment initialization failed. Please try again.');
+    }
+}
 
-            // Send confirmation emails
-            $this->sendBookingConfirmation($booking, $user, $password);
-
-            return redirect()->route('bookings.show', $booking)
-                ->with('success', 'Payment successful! Your booking is confirmed.' .
-                    ($password ? ' Your login credentials have been sent to your email.' : ''));
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            \Log::error('Payment callback failed: ' . $e->getMessage());
-
-            return redirect()->route('bookings.hostel.select')
-                ->with('error', 'There was an error processing your booking. Please contact support.');
-        }
+/**
+ * Handle payment callback from Paystack
+ */
+/**
+ * Handle payment callback from Paystack
+ */
+public function handlePaymentCallback($gateway)
+{
+    if ($gateway !== 'paystack') {
+        return redirect()->route('student.hostels.browse')
+            ->with('error', 'Unsupported payment gateway.');
     }
 
+    try {
+        $paymentDetails = Paystack::getPaymentData();
+        
+        \Log::info('Payment callback - Full payment details:', ['paymentDetails' => $paymentDetails]);
+
+        if (!$paymentDetails['status'] || $paymentDetails['data']['status'] !== 'success') {
+            return redirect()->route('student.hostels.browse')
+                ->with('error', 'Payment was not successful. Please try again.');
+        }
+
+        // Get metadata - Paystack returns it directly, not nested
+        $metadata = $paymentDetails['data']['metadata'] ?? null;
+        
+        \Log::info('Metadata received:', ['metadata' => $metadata]);
+        
+        if (!is_array($metadata)) {
+            \Log::error('Metadata is not an array:', ['type' => gettype($metadata)]);
+            return redirect()->route('student.hostels.browse')
+                ->with('error', 'Invalid payment data format. Please contact support.');
+        }
+
+        // Check if booking_data exists
+        if (!isset($metadata['booking_data'])) {
+            \Log::error('Missing booking_data in metadata:', ['metadata' => $metadata]);
+            return redirect()->route('student.hostels.browse')
+                ->with('error', 'Invalid booking data. Please contact support.');
+        }
+        
+        $bookingData = $metadata['booking_data'];
+
+        DB::beginTransaction();
+
+        $password = null;
+        $user = null;
+        $userId = null;
+
+        // Check if this is a guest user (using boolean, not string comparison)
+        $isGuest = isset($metadata['is_guest']) && $metadata['is_guest'] === true;
+        
+        if ($isGuest) {
+            \Log::info('Creating new user account for guest');
+            
+            // Check if guest data exists and is an array
+            if (!isset($metadata['guest_data']) || !is_array($metadata['guest_data'])) {
+                \Log::error('Invalid guest_data:', ['guest_data' => $metadata['guest_data'] ?? null]);
+                DB::rollBack();
+                return redirect()->route('student.hostels.browse')
+                    ->with('error', 'Invalid guest data. Please contact support.');
+            }
+            
+            $guestData = $metadata['guest_data'];
+            
+            // Check if temp_password exists
+            if (!isset($guestData['temp_password'])) {
+                \Log::error('Missing temp_password in guest_data:', ['guestData' => $guestData]);
+                DB::rollBack();
+                return redirect()->route('student.hostels.browse')
+                    ->with('error', 'Invalid user data. Please contact support.');
+            }
+            
+            $tempPassword = $guestData['temp_password'];
+
+            // Create the user
+            $user = User::create([
+                'name' => $guestData['name'],
+                'email' => $guestData['email'],
+                'phone' => $guestData['phone'] ?? null,
+                'password' => Hash::make($tempPassword),
+                'role' => 'student',
+                'email_verified_at' => now(),
+            ]);
+
+            $userId = $user->id;
+            $password = $tempPassword;
+
+            // Log the user in
+            Auth::login($user);
+            \Log::info('Guest user created and logged in:', ['user_id' => $userId]);
+        } else {
+            // For authenticated users
+            $userId = $metadata['user_id'] ?? null;
+            if (!$userId) {
+                \Log::error('Missing user_id for authenticated user:', ['metadata' => $metadata]);
+                DB::rollBack();
+                return redirect()->route('student.hostels.browse')
+                    ->with('error', 'Invalid user data. Please contact support.');
+            }
+            $user = User::find($userId);
+            if (!$user) {
+                \Log::error('User not found:', ['user_id' => $userId]);
+                DB::rollBack();
+                return redirect()->route('student.hostels.browse')
+                    ->with('error', 'User not found. Please contact support.');
+            }
+            \Log::info('Authenticated user:', ['user_id' => $userId]);
+        }
+
+        // Check room availability one last time
+        if (!$this->checkRoomAvailability($bookingData['room_id'], $bookingData['check_in'], $bookingData['check_out'])) {
+            \Log::warning('Room no longer available:', ['room_id' => $bookingData['room_id']]);
+            DB::rollBack();
+
+            if ($isGuest && isset($user)) {
+                $user->delete();
+                \Log::info('Deleted guest user due to room unavailability');
+            }
+
+            return redirect()->route('student.hostels.browse')
+                ->with('error', 'Sorry, the room is no longer available. Your payment will be refunded automatically.');
+        }
+
+        // Calculate total amount (convert string values to float if needed)
+        $totalAmount = (float) ($bookingData['total_amount'] ?? 
+                                 ((float)($bookingData['room_cost'] ?? 0) + (float)($bookingData['student_fee'] ?? 0)));
+
+        // Create booking
+        // Create booking
+        $booking = Booking::create([
+            'user_id' => $userId,
+            'room_id' => $bookingData['room_id'],
+            'hostel_id' => $bookingData['hostel_id'],
+            'check_in' => $bookingData['check_in'],
+            'check_out' => $bookingData['check_out'],
+            'total_amount' => $totalAmount,
+            'status' => 'confirmed',
+            'payment_status' => 'paid',
+            'payment_reference' => $paymentDetails['data']['reference'],
+            'booking_reference' => 'BK-' . strtoupper(Str::random(8)),
+            'booking_number' => 'BK-' . strtoupper(Str::random(8)), // Add this line
+        ]);
+
+        \Log::info('Booking created:', ['booking_id' => $booking->id]);
+
+        // Create payment record
+        $booking->payment()->create([
+            'booking_id' => $booking->id,
+            'amount' => $totalAmount,
+            'transaction_id' => $paymentDetails['data']['reference'],
+            'payment_method' => $paymentDetails['data']['channel'],
+            'status' => 'completed',
+            'metadata' => json_encode($paymentDetails['data'])
+        ]);
+
+        \Log::info('Payment record created');
+
+        // Update room occupancy
+        $room = Room::find($bookingData['room_id']);
+        if ($room) {
+            $room->increment('current_occupancy');
+            \Log::info('Room occupancy incremented:', ['room_id' => $room->id, 'new_occupancy' => $room->current_occupancy]);
+        }
+
+        // Clear session data
+        session()->forget(['pending_booking', 'payment_reference']);
+
+        DB::commit();
+
+        // Send confirmation emails
+        try {
+            $this->sendBookingConfirmation($booking, $user, $password);
+            \Log::info('Confirmation email sent');
+        } catch (\Exception $mailException) {
+            \Log::error('Failed to send confirmation email: ' . $mailException->getMessage());
+        }
+
+        $successMessage = 'Payment successful! Your booking is confirmed.';
+        if ($password) {
+            $successMessage .= ' Your login credentials have been sent to your email.';
+        }
+
+        return redirect()->route('student.bookings.show', $booking)
+            ->with('success', $successMessage);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        \Log::error('Payment callback failed: ' . $e->getMessage());
+        \Log::error('Stack trace: ' . $e->getTraceAsString());
+
+        return redirect()->route('student.hostels.browse')
+            ->with('error', 'There was an error processing your booking. Please contact support.');
+    }
+}
     /**
      * List user bookings
      */
@@ -300,7 +433,7 @@ class BookingController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
-        return view('hostel-manager.bookings.index', compact('bookings'));
+        return view('student.bookings.index', compact('bookings'));
     }
 
     /**
@@ -315,7 +448,7 @@ class BookingController extends Controller
 
         $booking->load(['room.hostel', 'payment']);
 
-        return view('bookings.show', compact('booking'));
+        return view('student.bookings.show', compact('booking'));
     }
 
     /**
@@ -350,7 +483,7 @@ class BookingController extends Controller
             // TODO: Process refund via Paystack
         });
 
-        return redirect()->route('bookings.show', $booking)
+        return redirect()->route('student.bookings.show', $booking)
             ->with('success', 'Booking cancelled successfully. Refund will be processed within 3-5 business days.');
     }
 

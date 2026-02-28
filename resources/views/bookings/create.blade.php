@@ -147,11 +147,19 @@
                             </span>
                         </div>
                         <div class="flex justify-between text-sm">
-                            <span class="text-gray-600">Accommodation Total:</span>
+                            <span class="text-gray-600">Accommodation Cost:</span>
                             <span id="accommodationTotal" class="font-medium">-</span>
                         </div>
                         <div class="flex justify-between text-sm">
-                            <span class="text-gray-600">Processing Fee (1.95%):</span>
+                            <span class="text-gray-600">Student Fee (one-time):</span>
+                            <span class="font-medium">₵{{ number_format(150, 2) }}</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">Subtotal:</span>
+                            <span id="subtotal" class="font-medium">-</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">Processing Fee (2%):</span>
                             <span id="processingFee" class="font-medium">-</span>
                         </div>
                         <div class="border-t border-blue-200 my-2"></div>
@@ -186,6 +194,7 @@ const checkIn = document.getElementById('check_in');
 const checkOut = document.getElementById('check_out');
 const priceSummary = document.getElementById('priceSummary');
 const submitBtn = document.getElementById('submitBtn');
+const STUDENT_FEE = 150; // Fixed student fee
 
 @php
     // Get the appropriate price for calculation
@@ -222,15 +231,19 @@ function calculateTotal() {
                 accommodationTotal = (rateAmount / 120) * diffDays;
             }
             
-            // Calculate processing fee (1.95%)
-            const processingFee = accommodationTotal * 0.0195;
+            // Calculate subtotal (accommodation + student fee)
+            const subtotal = accommodationTotal + STUDENT_FEE;
+            
+            // Calculate processing fee (2%) on subtotal
+            const processingFee = subtotal * 0.02;
             
             // Calculate total including fee
-            const totalWithFee = accommodationTotal + processingFee;
+            const totalWithFee = subtotal + processingFee;
             
             // Update display
             document.getElementById('durationDisplay').textContent = diffDays + ' nights';
             document.getElementById('accommodationTotal').textContent = '₵' + accommodationTotal.toFixed(2);
+            document.getElementById('subtotal').textContent = '₵' + subtotal.toFixed(2);
             document.getElementById('processingFee').textContent = '₵' + processingFee.toFixed(2);
             document.getElementById('totalAmount').textContent = '₵' + totalWithFee.toFixed(2);
             
