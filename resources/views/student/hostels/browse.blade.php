@@ -72,7 +72,7 @@
                                 <span class="text-gray-600 text-sm">From</span>
                                 <span class="text-xl font-bold text-blue-600">
                                     @if($hostel->min_price > 0)
-                                        ₵{{ number_format($hostel->min_price, 2) }}
+                                        ₵{{ number_format((float) ($hostel->min_price ?? 0), 2) }}
                                     @else
                                         <span class="text-gray-400 text-sm">Price N/A</span>
                                     @endif

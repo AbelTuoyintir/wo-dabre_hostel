@@ -651,6 +651,8 @@ public function viewHostel(Hostel $hostel)
         }
     }
 
+   
+
     // Get average rating
     $averageRating = $hostel->reviews()->avg('rating') ?? 0;
     $reviewCount = $hostel->reviews()->count();

@@ -101,7 +101,7 @@
             @endif
 
             <!-- Booking Form -->
-            <form action="{{ route('bookings.store') }}" method="POST" id="bookingForm">
+            <form action="{{ Auth::check() ? route('bookings.store.student') : route('bookings.store') }}" method="POST" id="bookingForm">
                 @csrf
                 <input type="hidden" name="room_id" value="{{ $room->id }}">
                 <input type="hidden" name="hostel_id" value="{{ $hostel->id }}">

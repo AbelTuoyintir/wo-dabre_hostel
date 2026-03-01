@@ -291,7 +291,7 @@
                         </p>
                         <div class="flex items-center justify-between">
                             <div>
-                                <span class="text-lg font-bold text-blue-600">₵{{ number_format($hostel->min_price ?? 0, 2) }}</span>
+                                <span class="text-lg font-bold text-blue-600">₵{{ number_format((float) ($hostel->min_price ?? 0), 2) }}</span>
                                 <span class="text-xs text-gray-500">/mo</span>
                             </div>
                             <a href="{{ route('student.hostels.show', $hostel) }}"
