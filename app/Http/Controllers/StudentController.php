@@ -582,30 +582,30 @@ class StudentController extends Controller
     /**
      * Browse available hostels (with price in GHS)
      */
-public function browseHostels(Request $request)
+   public function browseHostels(Request $request)
 {
-    $hostels = Hostel::where('is_approved', 1)
+    // Paginate approved hostels (with rooms and primary image)
+    $hostels = Hostel::approved()
         ->with(['primaryImage', 'rooms'])
-        ->when($request->search, function ($query, $search) {
-            $query->where(function ($q) use ($search) {
+        ->when($request->search, function($query, $search) {
+            return $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('location', 'like', "%{$search}%");
             });
         })
-        ->paginate(9); // Pagination works
+        ->paginate(9);
 
+    // Add available_rooms_count and price (from first available room)
     foreach ($hostels as $hostel) {
-        // Proper filtering on Collection
-        $availableRooms = $hostel->rooms->filter(function($room) {
-            return $room->status === 'available' && $room->current_occupancy < $room->capacity;
-        });
+        $availableRooms = $hostel->rooms
+            ->where('status', Room::STATUS_AVAILABLE)
+            ->where('current_occupancy', '<', 'capacity');
 
         $hostel->available_rooms_count = $availableRooms->count();
 
-        // Use the actual room_cost from filtered rooms
-        $hostel->min_price = $availableRooms->isNotEmpty()
-            ? (float) $availableRooms->min('room_cost')
-            : 0;
+        // Get the price of the first available room, or 0 if none
+        $firstRoom = $availableRooms->first();
+        $hostel->price = $firstRoom ? (float) $firstRoom->room_cost : 0;
     }
 
     return view('student.hostels.browse', compact('hostels'));
@@ -614,12 +614,8 @@ public function browseHostels(Request $request)
     /**
      * View single hostel details (prices in GHS)
      */
- /**
- * View single hostel details
- */
-/**
- * View single hostel details
- */
+
+
 public function viewHostel(Hostel $hostel)
 {
     // Ensure hostel is approved
