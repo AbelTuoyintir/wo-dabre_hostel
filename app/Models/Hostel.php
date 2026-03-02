@@ -99,7 +99,7 @@ class Hostel extends Model
         $minPrice = $this->rooms()
             ->where('status', 'available')
             ->whereColumn('current_occupancy', '<', 'capacity')
-            ->min('price_per_month');
+            ->min('room_cost');
         
         // Convert to float or return null
         return $minPrice ? (float) $minPrice : null;

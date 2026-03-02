@@ -115,9 +115,9 @@
                             <div class="flex items-end justify-between mb-4 mt-4 pt-4 border-t">
                                 <div>
                                     <p class="text-xs text-slate-400 uppercase tracking-wider font-semibold mb-1">Starting from</p>
-                                    @if($hostel->price > 0)
+                                    @if($hostel->min_price > 0)
                                         <p class="text-2xl font-bold text-slate-900">
-                                            ₵{{ number_format($hostel->price, 2) }}
+                                            ₵{{ number_format($hostel->min_price, 2) }}
                                         </p>
                                     @else
                                         <p class="text-lg font-medium text-slate-400">Contact for price</p>

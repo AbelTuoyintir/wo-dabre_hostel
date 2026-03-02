@@ -31,9 +31,9 @@ Route::prefix('bookings')->name('bookings.')->group(function () {
         Route::post('/student', [BookingController::class, 'StudentStore'])
             ->name('store.student');
         
-            // AJAX price calculation used on the booking form
-            Route::post('/calculate', [BookingController::class, 'calculate'])
-                ->name('calculate');
+        // AJAX price calculation used on the booking form
+        Route::post('/calculate', [BookingController::class, 'calculate'])
+            ->name('calculate');
     });
     
     // ===== SHARED ROUTES (Work for both guests and students) =====

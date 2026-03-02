@@ -102,11 +102,11 @@ class Room extends Model
     }
 
     /**
-     * Get the room cost attribute (alias for price_per_semester)
+     * Get the room cost attribute
      * This is used by the booking form and controller
      */
     public function getRoomCostAttribute()
     {
-        return $this->price_per_semester;
+        return $this->attributes['room_cost'] ?? null;
     }
 }

@@ -583,33 +583,34 @@ class StudentController extends Controller
      * Browse available hostels (with price in GHS)
      */
    public function browseHostels(Request $request)
-{
-    // Paginate approved hostels (with rooms and primary image)
-    $hostels = Hostel::approved()
-        ->with(['primaryImage', 'rooms'])
-        ->when($request->search, function($query, $search) {
-            return $query->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('location', 'like', "%{$search}%");
-            });
-        })
-        ->paginate(9);
+    {
+        // Paginate approved hostels (with rooms and primary image)
+        $hostels = Hostel::approved()
+            ->with(['primaryImage', 'rooms'])
+            ->when($request->search, function($query, $search) {
+                return $query->where(function($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('location', 'like', "%{$search}%");
+                });
+            })
+            ->paginate(9);
 
-    // Add available_rooms_count and price (from first available room)
-    foreach ($hostels as $hostel) {
-        $availableRooms = $hostel->rooms
-            ->where('status', Room::STATUS_AVAILABLE)
-            ->where('current_occupancy', '<', 'capacity');
+        // Add available_rooms_count and price (from first available room)
+        foreach ($hostels as $hostel) {
+            $availableRooms = $hostel->rooms
+                ->where('status', Room::STATUS_AVAILABLE)
+                ->where('current_occupancy', '<', 'capacity');
 
-        $hostel->available_rooms_count = $availableRooms->count();
+            $hostel->available_rooms_count = $availableRooms->count();
 
-        // Get the price of the first available room, or 0 if none
-        $firstRoom = $availableRooms->first();
-        $hostel->price = $firstRoom ? (float) $firstRoom->room_cost : 0;
+            // Get the price of the first available room, or 0 if none
+            $firstRoom = $availableRooms->first();
+            
+            $hostel->price = $firstRoom ? (float) $firstRoom->room_cost : 0;
+        }
+
+        return view('student.hostels.browse', compact('hostels'));
     }
-
-    return view('student.hostels.browse', compact('hostels'));
-}
 
     /**
      * View single hostel details (prices in GHS)

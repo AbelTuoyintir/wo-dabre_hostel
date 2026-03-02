@@ -6,6 +6,7 @@ use App\Models\Booking;
 use App\Models\User;
 use App\Models\Room;
 use App\Models\Hostel;
+use App\Models\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -571,12 +572,12 @@ class BookingController extends Controller
 public function StudentStore(Request $request)
 {
 
-dd($request->all());
+
     $rules = [
         'room_id' => 'required|exists:rooms,id',
         'hostel_id' => 'required|exists:hostels,id',
         'check_in_date' => 'required|date',
-        'check_out_date' => 'required|date|after:check_in',
+        'check_out_date' => 'required|date|after:check_in_date',
         'room_cost' => 'required|numeric|min:0',
     ];
 
@@ -631,11 +632,9 @@ dd($request->all());
         'hostel_id' => $room->hostel_id,
         'check_in_date' => $validated['check_in_date'],
         'check_out_date' => $validated['check_out_date'],
-        'booking_period' => $validated['booking_period'],
         'room_cost' => $validated['room_cost'],
         'student_fee' => $studentFee,
         'total_amount' => $totalAmount,
-        'num_semesters' => $validated['num_semesters'],
         'room_gender' => $room->gender,
         'room_occupancy' => $room->current_occupancy,
         'is_authenticated' => true,
@@ -708,11 +707,9 @@ private function initializeStudentPayment()
                     'hostel_id' => $pendingBooking['hostel_id'],
                     'check_in_date' => $pendingBooking['check_in_date'],
                     'check_out_date' => $pendingBooking['check_out_date'],
-                    'booking_period' => $pendingBooking['booking_period'],
                     'room_cost' => $pendingBooking['room_cost'],
                     'student_fee' => $pendingBooking['student_fee'],
                     'total_amount' => $pendingBooking['total_amount'],
-                    'num_semesters' => $pendingBooking['num_semesters'],
                     'room_gender' => $pendingBooking['room_gender'],
                     'room_occupancy' => $pendingBooking['room_occupancy'],
                 ],
@@ -983,17 +980,39 @@ private function initializeStudentPayment()
                 'booking_reference' => $booking->booking_reference
             ]);
 
-            // Create payment record
-            Payment::create([
-                'booking_id' => $booking->id,
-                'amount' => $totalAmount,
-                'transaction_id' => $paymentDetails['data']['reference'],
-                'payment_method' => $paymentDetails['data']['channel'],
-                'status' => 'completed',
-                'paid_at' => now(),
-            ]);
+            // Create payment record with detailed logging
+            try {
+                \Log::info('Attempting to create payment record:', [
+                    'booking_id' => $booking->id,
+                    'user_id' => $userId,
+                    'amount' => $totalAmount,
+                    'transaction_id' => $paymentDetails['data']['reference'],
+                    'payment_method' => $paymentDetails['data']['channel'],
+                ]);
 
-            \Log::info('Payment record created');
+                $payment = Payment::create([
+                    'user_id' => $userId,
+                    'booking_id' => $booking->id,
+                    'reference' => $paymentDetails['data']['reference'],
+                    'amount' => $totalAmount,
+                    'currency' => 'GHS',
+                    'transaction_id' => $paymentDetails['data']['reference'],
+                    'payment_method' => $paymentDetails['data']['channel'],
+                    'status' => 'completed',
+                    'paid_at' => now(),
+                ]);
+
+                \Log::info('Payment record created successfully:', [
+                    'payment_id' => $payment->id,
+                    'payment_reference' => $payment->reference,
+                ]);
+            } catch (\Exception $paymentException) {
+                \Log::error('Failed to create payment record:', [
+                    'error' => $paymentException->getMessage(),
+                    'trace' => $paymentException->getTraceAsString(),
+                ]);
+                throw $paymentException;
+            }
 
             // Update room occupancy
             if ($room) {

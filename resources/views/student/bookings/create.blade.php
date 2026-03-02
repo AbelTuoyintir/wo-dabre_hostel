@@ -8,7 +8,6 @@
         <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-purple-600">
             <h1 class="text-xl font-bold text-white">Complete Your Booking</h1>
         </div>
-@
         <div class="p-6">
 
             <!-- Booking Summary -->
@@ -16,9 +15,15 @@
                 <h2 class="text-lg font-semibold mb-3">Booking Summary</h2>
 
                 <div class="flex items-start space-x-4">
-                    <img src="{{ Storage::url($hostel->primaryImage->path ?? '') }}"
-                         class="w-24 h-24 object-cover rounded-lg"
-                         alt="{{ $hostel->name }}">
+                    @if($hostel->primaryImage)
+                        <img src="{{ Storage::url($hostel->primaryImage->path) }}"
+                             class="w-24 h-24 object-cover rounded-lg"
+                             alt="{{ $hostel->name }}">
+                    @else
+                        <div class="w-24 h-24 bg-gray-200 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-bed text-gray-400 text-2xl"></i>
+                        </div>
+                    @endif
 
                     <div>
                         <h3 class="font-semibold">{{ $hostel->name }}</h3>
