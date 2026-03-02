@@ -96,10 +96,13 @@ class Hostel extends Model
 
     public function getMinPriceAttribute()
     {
-        return $this->rooms()
+        $minPrice = $this->rooms()
             ->where('status', 'available')
             ->whereColumn('current_occupancy', '<', 'capacity')
             ->min('price_per_month');
+        
+        // Convert to float or return null
+        return $minPrice ? (float) $minPrice : null;
     }
 
     public function getAvailableRoomsCountAttribute()

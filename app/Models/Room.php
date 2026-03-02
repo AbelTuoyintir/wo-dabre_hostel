@@ -19,7 +19,7 @@ class Room extends Model
         'gender',
         'status',
         'room_type',
-        'price_per_semester',
+        'room_cost',
     ];
 
     /**
@@ -27,6 +27,7 @@ class Room extends Model
      */
     protected $casts = [
         'capacity' => 'integer',
+        'room_cost' => 'float',
     ];
 
     /**
@@ -39,7 +40,7 @@ class Room extends Model
 
     public function images()
     {
-        return $this->hasMany(RoomImage::class);
+        return $this->hasMany(HostelImage::class);
     }
 
     /**
@@ -98,5 +99,14 @@ class Room extends Model
         return $this->bookings()
             ->whereIn('status', ['confirmed', 'checked_in'])
             ->where('check_out_date', '>', now());
+    }
+
+    /**
+     * Get the room cost attribute (alias for price_per_semester)
+     * This is used by the booking form and controller
+     */
+    public function getRoomCostAttribute()
+    {
+        return $this->price_per_semester;
     }
 }

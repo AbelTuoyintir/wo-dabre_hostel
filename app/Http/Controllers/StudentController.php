@@ -582,35 +582,30 @@ class StudentController extends Controller
     /**
      * Browse available hostels (with price in GHS)
      */
-  public function browseHostels(Request $request)
+public function browseHostels(Request $request)
 {
-    // Get all approved hostels
     $hostels = Hostel::where('is_approved', 1)
-        ->with(['primaryImage'])
-        ->when($request->search, function($query, $search) {
-            return $query->where(function($q) use ($search) {
+        ->with(['primaryImage', 'rooms'])
+        ->when($request->search, function ($query, $search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('location', 'like', "%{$search}%");
             });
         })
-        ->get();
+        ->paginate(9); // Pagination works
 
-    // Add room information to each hostel
     foreach ($hostels as $hostel) {
-        // Get available rooms
-        $availableRooms = $hostel->rooms()
-            ->where('status', 'available')
-            ->whereColumn('current_occupancy', '<', 'capacity')
-            ->get();
-        
-        // Set properties
+        // Proper filtering on Collection
+        $availableRooms = $hostel->rooms->filter(function($room) {
+            return $room->status === 'available' && $room->current_occupancy < $room->capacity;
+        });
+
         $hostel->available_rooms_count = $availableRooms->count();
-        $hostel->min_price = $availableRooms->min('price_per_month');
-        
-        // If no available rooms, set min_price to 0
-        if (!$hostel->min_price) {
-            $hostel->min_price = 0;
-        }
+
+        // Use the actual room_cost from filtered rooms
+        $hostel->min_price = $availableRooms->isNotEmpty()
+            ? (float) $availableRooms->min('room_cost')
+            : 0;
     }
 
     return view('student.hostels.browse', compact('hostels'));

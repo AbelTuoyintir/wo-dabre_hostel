@@ -439,39 +439,60 @@ class BookingController extends Controller
      * AJAX helper to calculate booking totals (nights, subtotal, fees)
      */
     public function calculate(Request $request)
-    {
-        $validated = $request->validate([
-            'check_in_date' => 'required|date',
-            'check_out_date' => 'required|date|after:check_in_date',
-            'room_id' => 'required|exists:rooms,id',
-            'yearly_rate' => 'nullable|numeric'
-        ]);
+{
+    $validated = $request->validate([
+        'check_in_date' => 'required|date',
+        'check_out_date' => 'required|date|after:check_in_date',
+        'room_id' => 'required|exists:rooms,id',
+        'room_cost' => 'nullable|numeric', // <-- we validate room_cost
+    ]);
 
-        $checkIn = Carbon::parse($validated['check_in_date']);
-        $checkOut = Carbon::parse($validated['check_out_date']);
-        
+    // Dates
+    $checkIn  = Carbon::parse($validated['check_in_date']);
+    $checkOut = Carbon::parse($validated['check_out_date']);
+    $nights   = $checkIn->diffInDays($checkOut);
 
-      
+    // Get room cost (yearly)
+    $roomCost = $validated['room_cost'];
 
-        $room = Room::find($validated['room_id']);
-
-        $accommodationTotal = $validated['yearly_rate'];
-        
-
-        $studentFee = config('app.student_fee_amount', 150);
-        $subtotal = $accommodationTotal + $studentFee;
-        $transactionFee = $subtotal * 0.02; // 2%
-        $totalAmount = $subtotal + $transactionFee;
-
-        return response()->json([
-            'success' => true,
-            'nights' => $nights,
-            'accommodation_total' => round($accommodationTotal, 2),
-            'subtotal' => round($subtotal, 2),
-            'transaction_fee' => round($transactionFee, 2),
-            'total_amount' => round($totalAmount, 2),
-        ]);
+    if (!$roomCost) {
+        $room = Room::findOrFail($validated['room_id']);
+        $roomCost = $room->room_cost ?? 0;
     }
+
+    // Charges
+    $agentFee     = config('app.agent_fee', 150); // ₵150
+    $systemCharge = 20; // ₵20
+
+    $subTotal = $roomCost + $agentFee + $systemCharge;
+
+    // Paystack charge (1.95%)
+    $paystackFee = $subTotal * 0.0195;
+
+    $finalTotal = $subTotal + $paystackFee;
+
+    \Log::info('Price calculation', [
+        'nights' => $nights,
+        'room_cost' => $roomCost,
+        'agent_fee' => $agentFee,
+        'system_charge' => $systemCharge,
+        'paystack_fee' => $paystackFee,
+        'final_total' => $finalTotal
+    ]);
+
+    return response()->json([
+        'success' => true,
+        'nights' => $nights,
+
+        // IMPORTANT
+        'room_cost' => round($roomCost, 2),
+
+        'agent_fee' => round($agentFee, 2),
+        'system_charge' => round($systemCharge, 2),
+        'paystack_fee' => round($paystackFee, 2),
+        'total' => round($finalTotal, 2),
+    ]);
+}
 
     /**
      * Generate random secure password
