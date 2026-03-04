@@ -6,6 +6,10 @@ use App\Models\Room;
 use App\Models\Hostel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use App\Models\HostelImage;
 
 class RoomController extends Controller
 {
@@ -172,57 +176,240 @@ class RoomController extends Controller
      */
     public function update(Request $request, Room $room)
     {
-        $validated = $request->validate([
-            'number' => 'required|string|max:255',
-            'capacity' => 'required|integer|min:1',
-            'hostel_id' => 'required|exists:hostels,id',
-            'gender' => 'required|in:male,female,any',
-            'room_type' => 'required|in:single_room,shared_2,shared_4,executive',
-            'status' => 'required|in:available,full,maintenance,inactive',
-            'room_cost' => 'nullable|numeric|min:0',
-            'description' => 'nullable|string|max:1000',
-            'floor' => 'nullable|integer|min:0',
-            'size_sqm' => 'nullable|numeric|min:1',
-            'window_type' => 'nullable|in:street,courtyard,garden,none',
-            'furnished' => 'sometimes|boolean',
-            'private_bathroom' => 'sometimes|boolean',
-        ]);
+        try {
+            $validated = $request->validate([
+                'number' => 'required|string|max:255',
+                'capacity' => 'required|integer|min:1',
+                'hostel_id' => 'required|exists:hostels,id',
+                'gender' => 'required|in:male,female,any',
+                'room_type' => 'required|in:single_room,shared_2,shared_4,executive',
+                'status' => 'required|in:available,full,maintenance,inactive',
+                'room_cost' => 'nullable|numeric|min:0',
+                'description' => 'nullable|string|max:1000',
+                'floor' => 'nullable|integer|min:0',
+                'size_sqm' => 'nullable|numeric|min:1',
+                'window_type' => 'nullable|in:street,courtyard,garden,none',
+                'furnished' => 'sometimes|boolean',
+                'private_bathroom' => 'sometimes|boolean',
+                // Image validation rules
+                'cover_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
+                'gallery_images' => 'nullable|array|max:5',
+                'gallery_images.*' => 'image|mimes:jpeg,png,jpg,gif|max:10240',
+                'removed_images' => 'nullable|array',
+                'removed_images.*' => 'exists:hostel_images,id',
+                'primary_image_id' => 'nullable|exists:hostel_images,id',
+            ]);
 
-        // Handle boolean fields
-        $validated['furnished'] = $request->has('furnished');
-        $validated['private_bathroom'] = $request->has('private_bathroom');
+            // Handle boolean fields
+            $validated['furnished'] = $request->has('furnished');
+            $validated['private_bathroom'] = $request->has('private_bathroom');
 
-        // Check if moving to different hostel
-        if ($validated['hostel_id'] != $room->hostel_id) {
-            // Check room number uniqueness in new hostel
-            $exists = Room::where('hostel_id', $validated['hostel_id'])
-                ->where('number', $validated['number'])
-                ->where('id', '!=', $room->id)
-                ->exists();
+            // Check if moving to different hostel
+            if ($validated['hostel_id'] != $room->hostel_id) {
+                // Check room number uniqueness in new hostel
+                $exists = Room::where('hostel_id', $validated['hostel_id'])
+                    ->where('number', $validated['number'])
+                    ->where('id', '!=', $room->id)
+                    ->exists();
 
-            if ($exists) {
-                return back()
-                    ->withInput()
-                    ->with('error', 'Room number already exists in the target hostel.');
+                if ($exists) {
+                    \Log::warning('Room update failed: Room number already exists in target hostel', [
+                        'room_id' => $room->id,
+                        'room_number' => $validated['number'],
+                        'target_hostel_id' => $validated['hostel_id']
+                    ]);
+
+                    return back()
+                        ->withInput()
+                        ->with('error', 'Room number already exists in the target hostel.');
+                }
+            } else {
+                // Check room number uniqueness in same hostel (excluding current room)
+                $exists = Room::where('hostel_id', $validated['hostel_id'])
+                    ->where('number', $validated['number'])
+                    ->where('id', '!=', $room->id)
+                    ->exists();
+
+                if ($exists) {
+                    \Log::warning('Room update failed: Room number already exists in same hostel', [
+                        'room_id' => $room->id,
+                        'room_number' => $validated['number'],
+                        'hostel_id' => $validated['hostel_id']
+                    ]);
+
+                    return back()
+                        ->withInput()
+                        ->with('error', 'Room number already exists in this hostel.');
+                }
             }
-        } else {
-            // Check room number uniqueness in same hostel (excluding current room)
-            $exists = Room::where('hostel_id', $validated['hostel_id'])
-                ->where('number', $validated['number'])
-                ->where('id', '!=', $room->id)
-                ->exists();
 
-            if ($exists) {
+            // Begin database transaction
+            \DB::beginTransaction();
+
+            try {
+                // Update the room
+                $room->update($validated);
+
+                // Handle removed images
+                if (!empty($validated['removed_images'])) {
+                    $imagesToRemove = HostelImage::whereIn('id', $validated['removed_images'])
+                        ->where('room_id', $room->id)
+                        ->where('type', 'room')
+                        ->get();
+
+                    foreach ($imagesToRemove as $image) {
+                        // Delete file from storage
+                        \Storage::disk('public')->delete($image->image_path);
+                        // Delete record from database
+                        $image->delete();
+                    }
+
+                    \Log::info('Removed images from room', [
+                        'room_id' => $room->id,
+                        'removed_count' => count($validated['removed_images'])
+                    ]);
+                }
+
+                // Handle primary image change
+                if (!empty($validated['primary_image_id'])) {
+                    // Remove primary status from all room images
+                    HostelImage::where('room_id', $room->id)
+                        ->where('type', 'room')
+                        ->update(['is_primary' => false]);
+
+                    // Set new primary image
+                    HostelImage::where('id', $validated['primary_image_id'])
+                        ->where('room_id', $room->id)
+                        ->where('type', 'room')
+                        ->update(['is_primary' => true, 'order' => 0]);
+
+                    \Log::info('Changed primary image for room', [
+                        'room_id' => $room->id,
+                        'new_primary_image_id' => $validated['primary_image_id']
+                    ]);
+                }
+
+                // Handle cover image upload
+                if ($request->hasFile('cover_image')) {
+                    // Optional: Remove old primary image if you want to replace it
+                    $oldPrimary = HostelImage::where('room_id', $room->id)
+                        ->where('type', 'room')
+                        ->where('is_primary', true)
+                        ->first();
+
+                    if ($oldPrimary) {
+                        \Storage::disk('public')->delete($oldPrimary->image_path);
+                        $oldPrimary->delete();
+                    }
+
+                    // Store new cover image
+                    $path = $request->file('cover_image')->store('rooms/covers', 'public');
+
+                    // Create new primary image
+                    $room->images()->create([
+                        'image_path' => $path,
+                        'type' => 'room',
+                        'is_primary' => true,
+                        'order' => 0
+                    ]);
+
+                    \Log::info('Uploaded new cover image for room', [
+                        'room_id' => $room->id,
+                        'image_path' => $path
+                    ]);
+                }
+
+                // Handle gallery images upload
+                if ($request->hasFile('gallery_images')) {
+                    // Get the current max order for gallery images
+                    $maxOrder = HostelImage::where('room_id', $room->id)
+                        ->where('type', 'room')
+                        ->where('is_primary', false)
+                        ->max('order') ?? 0;
+
+                    $order = $maxOrder + 1;
+                    $uploadedCount = 0;
+
+                    foreach ($request->file('gallery_images') as $image) {
+                        if ($uploadedCount >= 5) break; // Limit to 5 images
+
+                        $path = $image->store('rooms/gallery', 'public');
+
+                        $room->images()->create([
+                            'image_path' => $path,
+                            'type' => 'room',
+                            'is_primary' => false,
+                            'order' => $order++
+                        ]);
+
+                        $uploadedCount++;
+                    }
+
+                    \Log::info('Uploaded gallery images for room', [
+                        'room_id' => $room->id,
+                        'uploaded_count' => $uploadedCount
+                    ]);
+                }
+
+                \DB::commit();
+
+                // Log successful update
+                \Log::info('Room updated successfully with images', [
+                    'room_id' => $room->id,
+                    'room_number' => $room->number,
+                    'hostel_id' => $room->hostel_id,
+                    'updated_by' => auth()->id()
+                ]);
+
+                return redirect()
+                    ->route('admin.rooms.index')
+                    ->with('success', "Room {$room->number} updated successfully.");
+
+            } catch (\Exception $e) {
+                \DB::rollBack();
+
+                // Log database error
+                \Log::error('Database error while updating room', [
+                    'room_id' => $room->id,
+                    'error_message' => $e->getMessage(),
+                    'error_code' => $e->getCode(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+
                 return back()
                     ->withInput()
-                    ->with('error', 'Room number already exists in this hostel.');
+                    ->with('error', 'Failed to update room due to a database error. Please try again.');
+            }
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Log validation errors
+            \Log::warning('Room update validation failed', [
+                'room_id' => $room->id,
+                'errors' => $e->errors(),
+                'input' => $request->except(['_token', '_method', 'cover_image', 'gallery_images'])
+            ]);
+
+            // Re-throw to let Laravel handle validation redirect
+            throw $e;
+
+        } catch (\Exception $e) {
+            // Log any unexpected errors
+            \Log::critical('Unexpected error while updating room', [
+                'room_id' => $room->id,
+                'error_message' => $e->getMessage(),
+                'error_code' => $e->getCode(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $request->except(['_token', '_method', 'cover_image', 'gallery_images'])
+            ]);
+
+            return back()
+                ->withInput()
+                ->with('error', 'An unexpected error occurred. Please try again later.');
         }
-
-        $room->update($validated);
-
-        return redirect()
-            ->route('admin.rooms.index')
-            ->with('success', "Room {$room->number} updated successfully.");
     }
 
     /**

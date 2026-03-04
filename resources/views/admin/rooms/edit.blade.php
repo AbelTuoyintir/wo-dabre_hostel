@@ -25,27 +25,46 @@
             </div>
         </div>
 
-        <form action="{{ route('admin.rooms.update', $room) }}" method="POST" class="p-6">
+        <form action="{{ route('admin.rooms.update', $room) }}" method="POST" enctype="multipart/form-data" class="p-6">
             @csrf
             @method('PUT')
 
             <div class="space-y-6">
-                <!-- Hostel Selection -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        <span class="text-red-500">*</span> Select Hostel
-                    </label>
-                    <select name="hostel_id" class="w-full lg:w-1/2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 @error('hostel_id') border-red-500 @enderror" required>
-                        <option value="">Choose a hostel</option>
-                        @foreach($hostels as $hostel)
-                            <option value="{{ $hostel->id }}" {{ old('hostel_id', $room->hostel_id) == $hostel->id ? 'selected' : '' }}>
-                                {{ $hostel->name }} - {{ $hostel->location }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('hostel_id')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
+                <!-- Hostel Selection and Room Type -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Hostel Selection -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <span class="text-red-500">*</span> Select Hostel
+                        </label>
+                        <select name="hostel_id" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 @error('hostel_id') border-red-500 @enderror" required>
+                            <option value="">Choose a hostel</option>
+                            @foreach($hostels as $hostel)
+                                <option value="{{ $hostel->id }}" {{ old('hostel_id', $room->hostel_id) == $hostel->id ? 'selected' : '' }}>
+                                    {{ $hostel->name }} - {{ $hostel->location }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('hostel_id')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Room Type -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <span class="text-red-500">*</span> Room Type
+                        </label>
+                        <select name="room_type" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 @error('room_type') border-red-500 @enderror" required>
+                            <option value="single_room" {{ old('room_type', $room->room_type) == 'single_room' ? 'selected' : '' }}>Single Room</option>
+                            <option value="shared_2" {{ old('room_type', $room->room_type) == 'shared_2' ? 'selected' : '' }}>2 in room</option>
+                            <option value="shared_4" {{ old('room_type', $room->room_type) == 'shared_4' ? 'selected' : '' }}>4 in room</option>
+                            <option value="executive" {{ old('room_type', $room->room_type) == 'executive' ? 'selected' : '' }}>Executive</option>
+                        </select>
+                        @error('room_type')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -113,7 +132,7 @@
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <span class="text-gray-500 sm:text-sm">$</span>
                             </div>
-<input type="number" name="room_cost" value="{{ old('room_cost', $room->room_cost) }}" step="0.01" min="0"
+                            <input type="number" name="room_cost" value="{{ old('room_cost', $room->room_cost) }}" step="0.01" min="0"
                                    class="w-full pl-7 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 @error('room_cost') border-red-500 @enderror"
                                    placeholder="0.00">
                         </div>
@@ -193,6 +212,120 @@
                     </div>
                 </div>
 
+                <!-- Room Images Section -->
+                <div class="border-t border-gray-200 pt-6">
+                    <h4 class="text-md font-medium text-gray-900 mb-4">Room Images</h4>
+
+                    <!-- Current Images Display -->
+                    @if($room->images && count($room->images) > 0)
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-3">Current Images</label>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="current-images">
+                                @foreach($room->images as $image)
+                                    <div class="relative group border rounded-lg p-2 {{ $image->is_primary ? 'bg-blue-50 border-blue-300' : '' }}" data-image-id="{{ $image->id }}">
+                                        <img src="{{ Storage::url($image->image_path) }}"
+                                             alt="Room {{ $room->number }}"
+                                             class="w-full h-32 object-cover rounded-lg mb-2">
+
+                                        <!-- Image Labels -->
+                                        <div class="absolute top-3 left-3 flex gap-1">
+                                            @if($image->is_primary)
+                                                <span class="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+                                                    Primary
+                                                </span>
+                                            @endif
+                                        </div>
+
+                                        <!-- Image Actions -->
+                                        <div class="flex justify-between items-center mt-2">
+                                            <div class="flex gap-2">
+                                                @if(!$image->is_primary)
+                                                    <button type="button"
+                                                            onclick="setAsPrimary({{ $image->id }})"
+                                                            class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200">
+                                                        Make Primary
+                                                    </button>
+                                                @endif
+
+                                                <button type="button"
+                                                        onclick="markForRemoval({{ $image->id }})"
+                                                        class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded hover:bg-red-200">
+                                                    Remove
+                                                </button>
+                                            </div>
+
+                                            <!-- Order Indicator -->
+                                            @if(!$image->is_primary)
+                                                <span class="text-xs text-gray-500">Order: {{ $image->order }}</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+
+                            <!-- Hidden inputs for removed images -->
+                            <div id="removed-images-container"></div>
+
+                            <!-- Hidden input for primary image change -->
+                            <input type="hidden" name="primary_image_id" id="primary_image_id" value="">
+                        </div>
+                    @endif
+
+                    <!-- Add New Images Section -->
+                    <div class="border-t border-gray-100 pt-4">
+                        <h5 class="text-sm font-medium text-gray-700 mb-3">Add New Images</h5>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Primary/Cover Image Upload -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Cover Image
+                                </label>
+                                <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-blue-500 transition-colors">
+                                    <div class="text-center">
+                                        <svg class="mx-auto h-10 w-10 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H8a4 4 0 01-4-4V12a4 4 0 014-4h32a4 4 0 014 4v16.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
+                                        <div class="mt-2">
+                                            <label for="cover_image" class="cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500">
+                                                <span>Upload cover image</span>
+                                                <input id="cover_image" name="cover_image" type="file" class="sr-only" accept="image/*" onchange="previewCoverImage(this)">
+                                            </label>
+                                        </div>
+                                        <p class="text-xs text-gray-500 mt-1">PNG, JPG up to 10MB</p>
+                                    </div>
+                                    <div id="cover-preview" class="mt-2 hidden">
+                                        <img src="" class="h-24 w-auto rounded-lg mx-auto" alt="Cover preview">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Gallery Images Upload -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Gallery Images
+                                </label>
+                                <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-blue-500 transition-colors">
+                                    <div class="text-center">
+                                        <svg class="mx-auto h-10 w-10 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H8a4 4 0 01-4-4V12a4 4 0 014-4h32a4 4 0 014 4v16.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                            <path d="M30 28l-6-6-6 6M20 16h.01" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
+                                        <div class="mt-2">
+                                            <label for="gallery_images" class="cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500">
+                                                <span>Upload gallery images</span>
+                                                <input id="gallery_images" name="gallery_images[]" type="file" class="sr-only" accept="image/*" multiple onchange="previewGalleryImages(this)">
+                                            </label>
+                                        </div>
+                                        <p class="text-xs text-gray-500 mt-1">PNG, JPG up to 10MB each (max 5)</p>
+                                    </div>
+                                    <div id="gallery-preview" class="grid grid-cols-2 gap-2 mt-3 hidden"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Description -->
                 <div class="border-t border-gray-200 pt-6">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Room Description</label>
@@ -260,11 +393,136 @@
 
 @push('scripts')
 <script>
-function confirmDelete() {
-    if (confirm('Are you sure you want to delete this room?')) {
-        document.getElementById('delete-form').submit();
+    // Store removed image IDs
+    let removedImages = [];
+
+    function markForRemoval(imageId) {
+        if (confirm('Are you sure you want to remove this image?')) {
+            removedImages.push(imageId);
+
+            // Add to hidden inputs
+            updateRemovedImagesInput();
+
+            // Hide the image container
+            const imageContainer = document.querySelector(`[data-image-id="${imageId}"]`);
+            if (imageContainer) {
+                imageContainer.style.opacity = '0.5';
+                imageContainer.style.pointerEvents = 'none';
+                imageContainer.classList.add('bg-gray-100');
+
+                // Add "marked for removal" text
+                const removalBadge = document.createElement('div');
+                removalBadge.className = 'absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold z-10';
+                removalBadge.textContent = 'Marked for Removal';
+                imageContainer.style.position = 'relative';
+                imageContainer.appendChild(removalBadge);
+            }
+        }
     }
-}
+
+    function updateRemovedImagesInput() {
+        const container = document.getElementById('removed-images-container');
+        container.innerHTML = '';
+
+        removedImages.forEach(id => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'removed_images[]';
+            input.value = id;
+            container.appendChild(input);
+        });
+    }
+
+    function setAsPrimary(imageId) {
+        // Update hidden input
+        document.getElementById('primary_image_id').value = imageId;
+
+        // Update UI
+        document.querySelectorAll('[data-image-id]').forEach(container => {
+            container.classList.remove('bg-blue-50', 'border-blue-300');
+
+            // Remove existing primary badge if any
+            const existingBadge = container.querySelector('.bg-blue-500');
+            if (existingBadge) {
+                existingBadge.remove();
+            }
+        });
+
+        // Add primary styling to selected image
+        const selectedContainer = document.querySelector(`[data-image-id="${imageId}"]`);
+        selectedContainer.classList.add('bg-blue-50', 'border-blue-300');
+
+        // Add primary badge
+        const badgeContainer = selectedContainer.querySelector('.absolute.top-3.left-3');
+        if (badgeContainer) {
+            badgeContainer.innerHTML = '<span class="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">Primary</span>';
+        }
+    }
+
+    function previewCoverImage(input) {
+        const preview = document.getElementById('cover-preview');
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.querySelector('img').src = e.target.result;
+                preview.classList.remove('hidden');
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function previewGalleryImages(input) {
+        const preview = document.getElementById('gallery-preview');
+        preview.innerHTML = '';
+
+        if (input.files && input.files.length > 0) {
+            preview.classList.remove('hidden');
+
+            for (let i = 0; i < Math.min(input.files.length, 5); i++) {
+                const file = input.files[i];
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    const div = document.createElement('div');
+                    div.className = 'relative';
+                    div.innerHTML = `
+                        <img src="${e.target.result}" class="w-full h-16 object-cover rounded-lg">
+                        <span class="absolute top-1 right-1 bg-green-500 text-white text-xs px-1 rounded">New</span>
+                    `;
+                    preview.appendChild(div);
+                }
+
+                reader.readAsDataURL(file);
+            }
+
+            // Show message if more than 5 files selected
+            if (input.files.length > 5) {
+                const warningDiv = document.createElement('div');
+                warningDiv.className = 'col-span-full text-center text-xs text-amber-600 mt-2';
+                warningDiv.textContent = 'Maximum 5 images allowed. Only the first 5 will be uploaded.';
+                preview.appendChild(warningDiv);
+            }
+        } else {
+            preview.classList.add('hidden');
+        }
+    }
+
+    function confirmDelete() {
+        if (confirm('Are you sure you want to delete this room?')) {
+            document.getElementById('delete-form').submit();
+        }
+    }
 </script>
+@endpush
+
+@push('styles')
+<style>
+    .border-dashed {
+        background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' stroke='%23CBD5E0' stroke-width='2' stroke-dasharray='6%2c 14' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+    }
+    .border-dashed:hover {
+        background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' stroke='%233B82F6' stroke-width='2' stroke-dasharray='6%2c 14' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+    }
+</style>
 @endpush
 @endsection

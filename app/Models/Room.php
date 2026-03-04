@@ -34,6 +34,8 @@ class Room extends Model
     protected $casts = [
         'capacity' => 'integer',
         'room_cost' => 'float',
+        'furnished' => 'boolean',
+        'private_bathroom' => 'boolean',
     ];
 
     /**
@@ -46,7 +48,12 @@ class Room extends Model
 
     public function images()
     {
-        return $this->hasMany(HostelImage::class);
+        return $this->hasMany(HostelImage::class)->where('type', 'room');
+    }
+
+    public function primaryImage()
+    {
+        return $this->hasOne(HostelImage::class)->where('type', 'room')->where('is_primary', true);
     }
 
     /**
