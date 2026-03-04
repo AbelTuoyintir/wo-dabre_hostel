@@ -38,10 +38,10 @@
             <!-- Hostel & Room Details -->
             <div class="bg-white rounded-lg shadow-sm p-6">
                 <h2 class="text-lg font-semibold text-gray-800 mb-4">Accommodation Details</h2>
-                
+
                 <div class="flex items-start space-x-4 mb-4">
                     @if($booking->hostel && $booking->hostel->primaryImage)
-                        <img src="{{ Storage::url($booking->hostel->primaryImage->path) }}" 
+                        <img src="{{ Storage::url($booking->hostel->primaryImage->path) }}"
                              alt="{{ $booking->hostel->name }}"
                              class="w-20 h-20 object-cover rounded-lg">
                     @endif
@@ -76,7 +76,7 @@
             @if($booking->payment)
             <div class="bg-white rounded-lg shadow-sm p-6">
                 <h2 class="text-lg font-semibold text-gray-800 mb-4">Payment Details</h2>
-                
+
                 <div class="space-y-3">
                     <div class="flex justify-between">
                         <span class="text-gray-600">Amount Paid</span>
@@ -96,7 +96,7 @@
                     </div>
                 </div>
 
-                <a href="{{ route('student.payments.receipt', $booking->payment) }}" 
+                <a href="{{ route('student.payments.receipt', $booking->payment) }}"
                    class="mt-4 inline-block text-blue-600 hover:text-blue-800">
                     <i class="fas fa-download mr-1"></i>Download Receipt
                 </a>
@@ -109,7 +109,7 @@
             <!-- Status Timeline -->
             <div class="bg-white rounded-lg shadow-sm p-6">
                 <h2 class="text-lg font-semibold text-gray-800 mb-4">Timeline</h2>
-                
+
                 <div class="space-y-4">
                     <div class="flex items-start">
                         <div class="flex-shrink-0 mr-3">
@@ -122,7 +122,7 @@
                             <p class="text-sm text-gray-500">{{ $booking->created_at->format('M d, Y h:i A') }}</p>
                         </div>
                     </div>
-                    
+
                     @if($booking->status == 'confirmed' || $booking->status == 'completed')
                     <div class="flex items-start">
                         <div class="flex-shrink-0 mr-3">
@@ -142,23 +142,23 @@
             <!-- Actions -->
             <div class="bg-white rounded-lg shadow-sm p-6">
                 <h2 class="text-lg font-semibold text-gray-800 mb-4">Actions</h2>
-                
+
                 <div class="space-y-3">
                     @if($booking->status == 'pending')
-                        <a href="{{ route('payment.callback', ['gateway' => 'paystack', 'booking_id' => $booking->id]) }}" 
+<a href="{{ route('bookings.payment.callback', ['gateway' => 'paystack', 'booking_id' => $booking->id]) }}"
                            class="block w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-center">
                             <i class="fas fa-credit-card mr-2"></i>Complete Payment
                         </a>
                     @endif
 
                     @if(in_array($booking->status, ['pending', 'confirmed']))
-                        <button onclick="cancelBooking({{ $booking->id }})" 
+                        <button onclick="cancelBooking({{ $booking->id }})"
                                 class="block w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-center">
                             <i class="fas fa-times-circle mr-2"></i>Cancel Booking
                         </button>
                     @endif
 
-                    <a href="{{ route('student.complaints', ['booking' => $booking->id]) }}" 
+                    <a href="{{ route('student.complaints', ['booking' => $booking->id]) }}"
                        class="block w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition text-center">
                         <i class="fas fa-exclamation-triangle mr-2"></i>Report Issue
                     </a>

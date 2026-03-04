@@ -17,8 +17,19 @@
             <p class="mt-1 text-sm text-gray-600">Add a new room to your hostel system.</p>
         </div>
 
-        <form action="{{ route('admin.rooms.store') }}" method="POST" class="p-6">
+        <form action="{{ route('admin.rooms.store') }}" method="POST" enctype="multipart/form-data" class="p-6">
             @csrf
+
+            @if($errors->any())
+                <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                    <strong class="font-bold">Validation Error!</strong>
+                    <ul class="mt-2 list-disc list-inside">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
 
             <div class="space-y-6">
                 <!-- Hostel Selection -->
@@ -27,7 +38,7 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             <span class="text-red-500">*</span> Select Hostel
                         </label>
-                        <select name="hostel_id" class="w-full  border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 @error('hostel_id') border-red-500 @enderror" required>
+                        <select name="hostel_id" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 @error('hostel_id') border-red-500 @enderror" required>
                             <option value="">Choose a hostel</option>
                             @foreach($hostels as $hostel)
                                 <option value="{{ $hostel->id }}" {{ old('hostel_id') == $hostel->id ? 'selected' : '' }}>
@@ -42,18 +53,17 @@
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">
-                                <span class="text-red-500">*</span> room_type
-                            </label>
-                            <select name="room_type" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 @error('room_type') border-red-500 @enderror" required>
-                                <option value="single_room" {{ old('room_type') == 'single_room' ? 'selected' : '' }}>Single</option>
-                                <option value="shared_2" {{ old('room_type') == 'shared_2' ? 'selected' : '' }}>2 in room</option>
-                                <option value="shared_4" {{ old('room_type') == 'shared_4' ? 'selected' : '' }}>3 in room</option>
-                                <option value="executive" {{ old('room_type') == 'executive' ? 'selected' : '' }}>4 in room</option>
-                            </select>
-                            @error('room_type')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-
+                            <span class="text-red-500">*</span> Room Type
+                        </label>
+                        <select name="room_type" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 @error('room_type') border-red-500 @enderror" required>
+                            <option value="single_room" {{ old('room_type') == 'single_room' ? 'selected' : '' }}>Single Room</option>
+                            <option value="shared_2" {{ old('room_type') == 'shared_2' ? 'selected' : '' }}>2 in room</option>
+                            <option value="shared_4" {{ old('room_type') == 'shared_4' ? 'selected' : '' }}>4 in room</option>
+                            <option value="executive" {{ old('room_type') == 'executive' ? 'selected' : '' }}>Executive</option>
+                        </select>
+                        @error('room_type')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
                     </div>
                 </div>
 
@@ -69,9 +79,6 @@
                         @error('number')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
-
-
-
                     </div>
 
                     <!-- Floor -->
@@ -116,11 +123,11 @@
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <span class="text-gray-500 sm:text-sm">$</span>
                             </div>
-                            <input type="number" name="price_per_month" value="{{ old('room_cost') }}" step="0.01" min="0"
-                                   class="w-full pl-7 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 @error('price_per_month') border-red-500 @enderror"
+                            <input type="number" name="room_cost" value="{{ old('room_cost') }}" step="0.01" min="0"
+                                   class="w-full pl-7 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 @error('room_cost') border-red-500 @enderror"
                                    placeholder="0.00">
                         </div>
-                        @error('price_per_month')
+                        @error('room_cost')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
                     </div>
@@ -196,6 +203,68 @@
                     </div>
                 </div>
 
+                <!-- Room Images Section -->
+                <div class="border-t border-gray-200 pt-6">
+                    <h4 class="text-md font-medium text-gray-900 mb-4">Room Images</h4>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Cover Image Upload -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <span class="text-red-500">*</span> Cover Image
+                            </label>
+                            <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-blue-500 transition-colors">
+                                <div class="text-center">
+                                    <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H8a4 4 0 01-4-4V12a4 4 0 014-4h32a4 4 0 014 4v16.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                    <div class="mt-4">
+                                        <label for="cover_image" class="cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500">
+                                            <span>Click to upload cover image</span>
+                                            <input id="cover_image" name="cover_image" type="file" class="sr-only" accept="image/*" onchange="previewCoverImage(this)" required>
+                                        </label>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-2">PNG, JPG, GIF up to 10MB</p>
+                                    <p class="text-xs text-gray-400 mt-1">This will be the main image displayed for the room</p>
+                                </div>
+                                <div id="cover-preview" class="mt-4 hidden">
+                                    <img src="" class="max-h-40 mx-auto rounded-lg shadow-md" alt="Cover preview">
+                                </div>
+                            </div>
+                            @error('cover_image')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <!-- Gallery Images Upload -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Gallery Images (Optional)
+                            </label>
+                            <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-blue-500 transition-colors">
+                                <div class="text-center">
+                                    <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H8a4 4 0 01-4-4V12a4 4 0 014-4h32a4 4 0 014 4v16.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                        <path d="M30 28l-6-6-6 6M20 16h.01" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                    <div class="mt-4">
+                                        <label for="gallery_images" class="cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500">
+                                            <span>Click to upload gallery images</span>
+                                            <input id="gallery_images" name="gallery_images[]" type="file" class="sr-only" accept="image/*" multiple onchange="previewGalleryImages(this)">
+                                        </label>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-2">PNG, JPG, GIF up to 10MB each (max 5 images)</p>
+                                    <p class="text-xs text-gray-400 mt-1">Additional photos showing different angles of the room</p>
+                                </div>
+                                <div id="gallery-preview" class="grid grid-cols-2 gap-3 mt-4 hidden"></div>
+                            </div>
+                            @error('gallery_images.*')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Description -->
                 <div class="border-t border-gray-200 pt-6">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Room Description</label>
@@ -239,10 +308,99 @@
                         <li>Capacity determines maximum number of occupants</li>
                         <li>Set price per month to enable booking calculations</li>
                         <li>Status "Available" means room can be booked</li>
+                        <li>Cover image is required and will be displayed as the main room photo</li>
+                        <li>Upload multiple gallery images to showcase the room from different angles</li>
                     </ul>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+    function previewCoverImage(input) {
+        const preview = document.getElementById('cover-preview');
+        const previewImg = preview.querySelector('img');
+
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                previewImg.src = e.target.result;
+                preview.classList.remove('hidden');
+            }
+
+            reader.readAsDataURL(input.files[0]);
+        } else {
+            preview.classList.add('hidden');
+            previewImg.src = '';
+        }
+    }
+
+    function previewGalleryImages(input) {
+        const preview = document.getElementById('gallery-preview');
+        preview.innerHTML = '';
+
+        if (input.files && input.files.length > 0) {
+            preview.classList.remove('hidden');
+
+            // Limit to 5 images
+            const maxFiles = Math.min(input.files.length, 5);
+
+            for (let i = 0; i < maxFiles; i++) {
+                const file = input.files[i];
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    const div = document.createElement('div');
+                    div.className = 'relative group';
+                    div.innerHTML = `
+                        <img src="${e.target.result}"
+                             class="w-full h-24 object-cover rounded-lg shadow-sm"
+                             alt="Gallery preview ${i+1}">
+                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all rounded-lg"></div>
+                        <span class="absolute top-1 right-1 bg-green-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                            New
+                        </span>
+                    `;
+                    preview.appendChild(div);
+                }
+
+                reader.readAsDataURL(file);
+            }
+
+            // Show warning if more than 5 files selected
+            if (input.files.length > 5) {
+                const warningDiv = document.createElement('div');
+                warningDiv.className = 'col-span-2 text-center text-xs text-amber-600 mt-2';
+                warningDiv.textContent = 'Maximum 5 images allowed. Only the first 5 will be uploaded.';
+                preview.appendChild(warningDiv);
+            }
+        } else {
+            preview.classList.add('hidden');
+        }
+    }
+
+    // Debug function to check if files are selected
+    document.getElementById('cover_image').addEventListener('change', function(e) {
+        console.log('Cover image selected:', e.target.files.length > 0 ? e.target.files[0].name : 'No file');
+    });
+
+    document.getElementById('gallery_images').addEventListener('change', function(e) {
+        console.log('Gallery images selected:', e.target.files.length);
+    });
+</script>
+@endpush
+
+@push('styles')
+<style>
+    .border-dashed {
+        background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' stroke='%23CBD5E0' stroke-width='2' stroke-dasharray='6%2c 14' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+    }
+    .border-dashed:hover {
+        background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' stroke='%233B82F6' stroke-width='2' stroke-dasharray='6%2c 14' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+    }
+</style>
+@endpush
 @endsection

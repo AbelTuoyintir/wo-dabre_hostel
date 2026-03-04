@@ -87,7 +87,7 @@ class RoomController extends Controller
     /**
      * Store a newly created room
      */
-    public function store(Request $request)
+   public function store(Request $request)
     {
         try {
             $validated = $request->validate([
@@ -104,31 +104,149 @@ class RoomController extends Controller
                 'window_type' => 'nullable|in:street,courtyard,garden,none',
                 'furnished' => 'sometimes|boolean',
                 'private_bathroom' => 'sometimes|boolean',
+                // Image validation rules
+                'cover_image' => 'required|image|mimes:jpeg,png,jpg,gif|max:10240', // 10MB max, required
+                'gallery_images' => 'nullable|array|max:5',
+                'gallery_images.*' => 'image|mimes:jpeg,png,jpg,gif|max:10240', // 10MB max per image
             ]);
 
             // Handle boolean fields
             $validated['furnished'] = $request->has('furnished');
             $validated['private_bathroom'] = $request->has('private_bathroom');
 
-            // Check if room number already exists in this hostel
+            // Check if room number already exists in the same hostel
             $exists = Room::where('hostel_id', $validated['hostel_id'])
                 ->where('number', $validated['number'])
                 ->exists();
 
             if ($exists) {
+                \Log::warning('Room creation failed: Room number already exists', [
+                    'room_number' => $validated['number'],
+                    'hostel_id' => $validated['hostel_id']
+                ]);
+
                 return back()
                     ->withInput()
                     ->with('error', 'Room number already exists in this hostel.');
             }
 
-            $room = Room::create($validated);
+            // Begin database transaction
+            \DB::beginTransaction();
 
-            return redirect()
-                ->route('admin.rooms.index')
-                ->with('success', "Room {$room->number} created successfully.");
+            try {
+                // Create the room
+                $room = Room::create($validated);
+
+// Handle cover image upload
+                if ($request->hasFile('cover_image')) {
+                    $path = $request->file('cover_image')->store('rooms/covers', 'public');
+
+                    // Create primary image
+                    $room->images()->create([
+                        'image_path' => $path,
+                        'hostel_id' => $room->hostel_id,
+                        'type' => 'room',
+                        'is_primary' => true,
+                        'order' => 0
+                    ]);
+
+                    \Log::info('Uploaded cover image for new room', [
+                        'room_id' => $room->id,
+                        'image_path' => $path
+                    ]);
+                }
+
+                // Handle gallery images upload
+                if ($request->hasFile('gallery_images')) {
+                    $order = 1; // Start from 1 since cover image is at order 0
+                    $uploadedCount = 0;
+
+                    foreach ($request->file('gallery_images') as $image) {
+                        if ($uploadedCount >= 5) break; // Limit to 5 images
+
+                        $path = $image->store('rooms/gallery', 'public');
+
+$room->images()->create([
+                            'image_path' => $path,
+                            'hostel_id' => $room->hostel_id,
+                            'type' => 'room',
+                            'is_primary' => false,
+                            'order' => $order++
+                        ]);
+
+                        $uploadedCount++;
+                    }
+
+                    \Log::info('Uploaded gallery images for new room', [
+                        'room_id' => $room->id,
+                        'uploaded_count' => $uploadedCount
+                    ]);
+                }
+
+                \DB::commit();
+
+                // Log successful creation
+                \Log::info('Room created successfully with images', [
+                    'room_id' => $room->id,
+                    'room_number' => $room->number,
+                    'hostel_id' => $room->hostel_id,
+                    'created_by' => auth()->id()
+                ]);
+
+                return redirect()
+                    ->route('admin.rooms.index')
+                    ->with('success', "Room {$room->number} created successfully.");
+
+            } catch (\Exception $e) {
+                \DB::rollBack();
+
+                // Delete uploaded images if any (cleanup)
+                // This ensures we don't have orphaned files if database transaction fails
+                if (isset($room)) {
+                    $images = $room->images;
+                    foreach ($images as $image) {
+                        \Storage::disk('public')->delete($image->image_path);
+                    }
+                }
+
+                // Log database error
+                \Log::error('Database error while creating room', [
+                    'error_message' => $e->getMessage(),
+                    'error_code' => $e->getCode(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+
+                return back()
+                    ->withInput()
+                    ->with('error', 'Failed to create room due to a database error. Please try again.');
+            }
+
         } catch (\Illuminate\Validation\ValidationException $e) {
-            \Log::error('Room creation validation failed', ['errors' => $e->errors()]);
-            return back()->withErrors($e->validator)->withInput();
+            // Log validation errors
+            \Log::warning('Room creation validation failed', [
+                'errors' => $e->errors(),
+                'input' => $request->except(['_token', '_method', 'cover_image', 'gallery_images'])
+            ]);
+
+            // Re-throw to let Laravel handle validation redirect
+            throw $e;
+
+        } catch (\Exception $e) {
+            // Log any unexpected errors
+            \Log::critical('Unexpected error while creating room', [
+                'error_message' => $e->getMessage(),
+                'error_code' => $e->getCode(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $request->except(['_token', '_method', 'cover_image', 'gallery_images'])
+            ]);
+
+            return back()
+                ->withInput()
+                ->with('error', 'An unexpected error occurred. Please try again later.');
         }
     }
 
@@ -302,12 +420,13 @@ class RoomController extends Controller
                         $oldPrimary->delete();
                     }
 
-                    // Store new cover image
+// Store new cover image
                     $path = $request->file('cover_image')->store('rooms/covers', 'public');
 
                     // Create new primary image
                     $room->images()->create([
                         'image_path' => $path,
+                        'hostel_id' => $room->hostel_id,
                         'type' => 'room',
                         'is_primary' => true,
                         'order' => 0
@@ -333,10 +452,11 @@ class RoomController extends Controller
                     foreach ($request->file('gallery_images') as $image) {
                         if ($uploadedCount >= 5) break; // Limit to 5 images
 
-                        $path = $image->store('rooms/gallery', 'public');
+$path = $image->store('rooms/gallery', 'public');
 
                         $room->images()->create([
                             'image_path' => $path,
+                            'hostel_id' => $room->hostel_id,
                             'type' => 'room',
                             'is_primary' => false,
                             'order' => $order++

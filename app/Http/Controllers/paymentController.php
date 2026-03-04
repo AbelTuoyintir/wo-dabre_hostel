@@ -22,7 +22,7 @@ class PaymentController extends Controller
     public function showBookingForm(Request $request, $roomId)
     {
         $room = Room::with('hostel')->findOrFail($roomId);
-        
+
         // Check if room is available
         if (!$room->isAvailable()) {
             return redirect()->route('hostels.show', $room->hostel_id)
@@ -56,7 +56,7 @@ class PaymentController extends Controller
         $validated = $request->validate($rules);
 
         $room = Room::findOrFail($validated['room_id']);
-        
+
         // Check availability again
         if (!$this->checkRoomAvailability($room->id, $validated['check_in_date'], $validated['check_out_date'])) {
             return back()->with('error', 'Room is not available for selected dates.');
@@ -92,7 +92,7 @@ class PaymentController extends Controller
     public function initializePayment()
     {
         $pendingBooking = session('pending_booking');
-        
+
         if (!$pendingBooking) {
             return redirect()->route('hostels.index')
                 ->with('error', 'No booking information found. Please start over.');
@@ -115,13 +115,13 @@ class PaymentController extends Controller
 
         try {
             $reference = Paystack::genTranxRef();
-            
+
             $paymentData = [
                 'email' => $email,
                 'amount' => round($finalAmount * 100), // Convert to pesewas
                 'currency' => 'GHS',
                 'reference' => $reference,
-                'callback_url' => route('payment.callback'),
+'callback_url' => route('bookings.payment.callback', ['gateway' => 'paystack']),
                 'metadata' => json_encode([
                     'user_id' => $userId,
                     'is_guest' => !Auth::check(),
@@ -156,7 +156,7 @@ class PaymentController extends Controller
     {
         try {
             $paymentDetails = Paystack::getPaymentData();
-            
+
             if (!$paymentDetails['status'] || $paymentDetails['data']['status'] !== 'success') {
                 return redirect()->route('hostels.index')
                     ->with('error', 'Payment was not successful. Please try again.');
@@ -168,12 +168,12 @@ class PaymentController extends Controller
             DB::beginTransaction();
 
             $password = null;
-            
+
             // Create user account if guest
             if ($metadata['is_guest']) {
                 // Get the temporary password from metadata
                 $tempPassword = $metadata['guest_data']['temp_password'];
-                
+
                 $user = User::create([
                     'name' => $metadata['guest_data']['name'],
                     'email' => $metadata['guest_data']['email'],
@@ -182,10 +182,10 @@ class PaymentController extends Controller
                     'role' => 'student',
                     'email_verified_at' => now(), // Auto-verify email since they paid
                 ]);
-                
+
                 $userId = $user->id;
                 $password = $tempPassword; // Store plain password for email
-                
+
                 // Log the user in
                 Auth::login($user);
             } else {
@@ -196,12 +196,12 @@ class PaymentController extends Controller
             // Check room availability one last time
             if (!$this->checkRoomAvailability($bookingData['room_id'], $bookingData['check_in_date'], $bookingData['check_out_date'])) {
                 DB::rollBack();
-                
+
                 // If guest, we need to delete the created user
                 if ($metadata['is_guest'] && isset($user)) {
                     $user->delete();
                 }
-                
+
                 return redirect()->route('hostels.index')
                     ->with('error', 'Sorry, the room is no longer available. Your payment will be refunded automatically.');
             }
@@ -242,13 +242,13 @@ class PaymentController extends Controller
             $this->sendBookingConfirmation($booking, $user, $password);
 
             return redirect()->route('booking.confirmation', $booking->booking_reference)
-                ->with('success', 'Payment successful! Your booking is confirmed.' . 
+                ->with('success', 'Payment successful! Your booking is confirmed.' .
                     ($password ? ' Your login credentials have been sent to your email.' : ''));
 
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('Payment callback failed: ' . $e->getMessage());
-            
+
             return redirect()->route('hostels.index')
                 ->with('error', 'There was an error processing your booking. Please contact support.');
         }
@@ -263,20 +263,20 @@ class PaymentController extends Controller
         $lowercase = 'abcdefghijklmnopqrstuvwxyz';
         $numbers = '0123456789';
         $special = '!@#$%^&*()-_=+';
-        
+
         // Ensure at least one of each type
         $password = '';
         $password .= $uppercase[random_int(0, strlen($uppercase) - 1)];
         $password .= $lowercase[random_int(0, strlen($lowercase) - 1)];
         $password .= $numbers[random_int(0, strlen($numbers) - 1)];
         $password .= $special[random_int(0, strlen($special) - 1)];
-        
+
         // Fill the rest randomly
         $allChars = $uppercase . $lowercase . $numbers . $special;
         for ($i = 4; $i < $length; $i++) {
             $password .= $allChars[random_int(0, strlen($allChars) - 1)];
         }
-        
+
         // Shuffle to mix the guaranteed characters
         return str_shuffle($password);
     }
@@ -301,8 +301,8 @@ class PaymentController extends Controller
 
             Mail::send('emails.booking-confirmation', $data, function ($message) use ($user, $plainPassword) {
                 $message->to($user->email, $user->name)
-                        ->subject($plainPassword ? 
-                            'Welcome to UCC Hostels - Your Booking Confirmation & Login Details' : 
+                        ->subject($plainPassword ?
+                            'Welcome to UCC Hostels - Your Booking Confirmation & Login Details' :
                             'Your UCC Hostel Booking Confirmation');
             });
 
@@ -348,7 +348,7 @@ class PaymentController extends Controller
     // Verify webhook signature
     $signature = $request->header('x-paystack-signature');
     $payload = $request->getContent();
-    
+
     if (!$this->verifyPaystackSignature($signature, $payload)) {
         return response()->json(['error' => 'Invalid signature'], 401);
     }
@@ -357,10 +357,10 @@ class PaymentController extends Controller
 
     if ($event['event'] === 'refund.processed') {
         $data = $event['data'];
-        
+
         // Find payment by transaction reference
         $payment = Payment::where('transaction_id', $data['transaction']['reference'])->first();
-        
+
         if ($payment) {
             $payment->update([
                 'refund_status' => 'processed',

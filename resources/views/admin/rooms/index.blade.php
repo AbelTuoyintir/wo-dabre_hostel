@@ -14,14 +14,14 @@
             </span>
         </div>
         <div class="flex items-center gap-3">
-            <a href="{{ route('admin.rooms.export') }}" 
+            <a href="{{ route('admin.rooms.export') }}"
                class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
                 </svg>
                 Export
             </a>
-            <a href="{{ route('admin.rooms.create') }}" 
+            <a href="{{ route('admin.rooms.create') }}"
                class="inline-flex items-center px-4 py-2 border border-transparent rounded-md bg-blue-600 text-sm font-medium text-white hover:bg-blue-700">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -48,7 +48,7 @@
                     <div>
                         <label class="block text-xs font-medium text-gray-500 mb-1">Search</label>
                         <div class="relative">
-                            <input type="text" name="search" placeholder="Room # or hostel..." 
+                            <input type="text" name="search" placeholder="Room # or hostel..."
                                    value="{{ request('search') }}"
                                    class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
                             <div class="absolute left-3 top-2.5 text-gray-400">
@@ -127,11 +127,11 @@
                 </div>
 
                 <div class="flex items-center justify-between pt-2">
-                    <button type="submit" 
+                    <button type="submit"
                             class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-medium text-xs text-white hover:bg-blue-700">
                         Apply Filters
                     </button>
-                    <a href="{{ route('admin.rooms.index') }}" 
+                    <a href="{{ route('admin.rooms.index') }}"
                        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-xs font-medium text-gray-700 bg-white hover:bg-gray-50">
                         Clear Filters
                     </a>
@@ -149,7 +149,7 @@
                 <button @click="selectAll()" class="text-sm text-blue-600 hover:text-blue-800">Select All</button>
                 <button @click="clearAll()" class="text-sm text-gray-600 hover:text-gray-800">Clear</button>
             </div>
-            
+
             <div class="flex items-center space-x-3">
                 <select x-model="bulkAction" class="border-gray-300 rounded-md text-sm">
                     <option value="">Bulk Actions</option>
@@ -159,33 +159,33 @@
                     <option value="capacity">Update Capacity</option>
                     <option value="price">Update Price</option>
                 </select>
-                
+
                 <select x-show="bulkAction === 'status'" x-model="bulkValue" class="border-gray-300 rounded-md text-sm">
                     <option value="available">Available</option>
                     <option value="full">Full</option>
                     <option value="maintenance">Maintenance</option>
                     <option value="inactive">Inactive</option>
                 </select>
-                
+
                 <select x-show="bulkAction === 'gender'" x-model="bulkValue" class="border-gray-300 rounded-md text-sm">
                     <option value="male">Male</option>
                     <option value="female">Female</option>
                     <option value="any">Any</option>
                 </select>
-                
+
                 <select x-show="bulkAction === 'hostel'" x-model="bulkValue" class="border-gray-300 rounded-md text-sm">
                     @foreach($hostels as $hostel)
                         <option value="{{ $hostel->id }}">{{ $hostel->name }}</option>
                     @endforeach
                 </select>
-                
-                <input x-show="bulkAction === 'capacity'" type="number" x-model="bulkValue" 
+
+                <input x-show="bulkAction === 'capacity'" type="number" x-model="bulkValue"
                        placeholder="Capacity" class="border-gray-300 rounded-md text-sm w-24">
-                
-                <input x-show="bulkAction === 'price'" type="number" x-model="bulkValue" 
+
+                <input x-show="bulkAction === 'price'" type="number" x-model="bulkValue"
                        placeholder="Price" class="border-gray-300 rounded-md text-sm w-32">
-                
-                <button @click="applyBulkAction()" 
+
+                <button @click="applyBulkAction()"
                         class="px-4 py-2 bg-gray-800 text-white text-sm rounded-md hover:bg-gray-900"
                         :disabled="!selectedCount || !bulkAction || !bulkValue">
                     Apply
@@ -201,7 +201,7 @@
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-6 py-3 text-left">
-                            <input type="checkbox" @click="toggleAll" :checked="isAllSelected" 
+                            <input type="checkbox" @click="toggleAll" :checked="isAllSelected"
                                    class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Room</th>
@@ -219,7 +219,7 @@
                     @forelse($rooms as $room)
                     <tr class="hover:bg-gray-50">
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <input type="checkbox" value="{{ $room->id }}" x-model="selectedItems" 
+                            <input type="checkbox" value="{{ $room->id }}" x-model="selectedItems"
                                    class="room-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500">
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
@@ -242,8 +242,8 @@
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            @if($room->price_per_month)
-                                ${{ number_format($room->price_per_month, 2) }}
+                            @if($room->room_cost)
+                                ${{ number_format($room->room_cost, 2) }}
                             @else
                                 <span class="text-gray-400">Not set</span>
                             @endif
@@ -258,7 +258,7 @@
                             @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 py-1 text-xs rounded-full 
+                            <span class="px-2 py-1 text-xs rounded-full
                                 @if($room->status == 'available') bg-green-100 text-green-800
                                 @elseif($room->status == 'full') bg-yellow-100 text-yellow-800
                                 @elseif($room->status == 'maintenance') bg-orange-100 text-orange-800
@@ -278,21 +278,21 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <div class="flex items-center justify-end space-x-2">
-                                <a href="{{ route('admin.rooms.show', $room) }}" 
+                                <a href="{{ route('admin.rooms.show', $room) }}"
                                    class="text-blue-600 hover:text-blue-900" title="View">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                     </svg>
                                 </a>
-                                <a href="{{ route('admin.rooms.edit', $room) }}" 
+                                <a href="{{ route('admin.rooms.edit', $room) }}"
                                    class="text-indigo-600 hover:text-indigo-900" title="Edit">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                     </svg>
                                 </a>
-                                <form action="{{ route('admin.rooms.destroy', $room) }}" 
-                                      method="POST" 
+                                <form action="{{ route('admin.rooms.destroy', $room) }}"
+                                      method="POST"
                                       onsubmit="return confirm('Are you sure you want to delete this room?');"
                                       class="inline">
                                     @csrf
@@ -325,7 +325,7 @@
                 </tbody>
             </table>
         </div>
-        
+
         <!-- Pagination -->
         @if($rooms->hasPages())
         <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
@@ -342,23 +342,23 @@ function bulkActions() {
         selectedItems: [],
         bulkAction: '',
         bulkValue: '',
-        
+
         get selectedCount() {
             return this.selectedItems.length;
         },
-        
+
         get isAllSelected() {
             return this.selectedCount === {{ $rooms->total() }};
         },
-        
+
         selectAll() {
             this.selectedItems = @json($rooms->pluck('id'));
         },
-        
+
         clearAll() {
             this.selectedItems = [];
         },
-        
+
         toggleAll() {
             if (this.isAllSelected) {
                 this.clearAll();
@@ -366,12 +366,12 @@ function bulkActions() {
                 this.selectAll();
             }
         },
-        
+
         applyBulkAction() {
             if (!this.selectedCount || !this.bulkAction || !this.bulkValue) {
                 return;
             }
-            
+
             fetch('{{ route("admin.rooms.bulk-update") }}', {
                 method: 'POST',
                 headers: {

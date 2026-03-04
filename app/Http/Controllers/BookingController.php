@@ -32,7 +32,7 @@ class BookingController extends Controller
             }])
             ->get();
 
-            
+
 
         return view('bookings.select-hostel', compact('hostels'));
     }
@@ -63,7 +63,7 @@ class BookingController extends Controller
         if ($room->gender === 'any') {
             return true;
         }
-        
+
         // Check if user gender matches room gender preference
         return $user->gender === $room->gender;
     }
@@ -77,7 +77,7 @@ class BookingController extends Controller
         if ($room->gender === 'any' && $room->current_occupancy === 0) {
             $room->gender = $user->gender;
             $room->save();
-            
+
             \Log::info('Room gender updated based on first occupant:', [
                 'room_id' => $room->id,
                 'new_gender' => $user->gender
@@ -94,17 +94,17 @@ class BookingController extends Controller
         if (!$user) {
             return null;
         }
-        
+
         // Check if user has gender set
         if (empty($user->gender)) {
             return 'Please update your profile with your gender before booking.';
         }
-        
+
         // Check gender compatibility
         if (!$this->checkGenderCompatibility($user, $room)) {
             return "This room is for {$room->gender} students only. Your gender does not match.";
         }
-        
+
         return null;
     }
 
@@ -125,7 +125,7 @@ class BookingController extends Controller
         }
 
         $user = Auth::check() ? Auth::user() : null;
-        
+
         // Validate gender for logged-in users
         if ($user) {
             $genderError = $this->validateGenderForBooking($room, $user);
@@ -197,7 +197,7 @@ class BookingController extends Controller
         $validated = $request->validate($rules);
 
         $room = Room::findOrFail($validated['room_id']);
-        
+
         // Gender validation for logged-in users
         if (Auth::check()) {
             $user = Auth::user();
@@ -217,7 +217,7 @@ class BookingController extends Controller
         $checkIn = new \DateTime($validated['check_in_date']);
         $checkOut = new \DateTime($validated['check_out_date']);
         $nights = $checkIn->diff($checkOut)->days;
-        
+
         // Determine which price to use
         if (!empty($room->price_per_month) && $room->price_per_month > 0) {
             // Monthly rate
@@ -293,18 +293,18 @@ class BookingController extends Controller
 
         // Get the total amount from pending booking (room cost)
         $roomCost = $pendingBooking['total_amount'];
-        
+
         // Get student fee from config (₵150)
         $studentFee = config('app.student_fee_amount', 150);
-        
+
         // Calculate total before Paystack fee
         $subtotal = $roomCost + $studentFee;
-        
+
         // Calculate Paystack fees (2%)
         $feePercentage = 0.02;
         $feeAmount = $subtotal * $feePercentage;
         $finalAmount = $subtotal + $feeAmount;
-        
+
         // Convert to pesewas (multiply by 100) and ensure it's an integer
         $amountInPesewas = (int) round($finalAmount * 100);
 
@@ -317,7 +317,7 @@ class BookingController extends Controller
                 'amount' => $amountInPesewas,
                 'currency' => 'GHS',
                 'reference' => $reference,
-                'callback_url' => route('payment.callback', ['gateway' => 'paystack']),
+'callback_url' => route('bookings.payment.callback', ['gateway' => 'paystack']),
                 'metadata' => [ // This is the correct format - flat array
                     'user_id' => $userId,
                     'is_guest' => $isGuest, // Use boolean, not string
@@ -350,7 +350,7 @@ class BookingController extends Controller
         }
     }
 
-  
+
     /**
      * List user bookings
      */
@@ -591,7 +591,7 @@ public function StudentStore(Request $request)
 
     $user = Auth::user();
     $room = Room::findOrFail($validated['room_id']);
-    
+
     // Gender validation for logged-in users
     if (empty($user->gender)) {
         return redirect()->route('student.profile')
@@ -613,7 +613,7 @@ public function StudentStore(Request $request)
 
     // Get student fee from config (₵150)
     $studentFee = config('app.student_fee_amount', 150);
-    
+
     // Calculate total amount (room cost + student fee)
     $totalAmount = $validated['room_cost'] + $studentFee;
 
@@ -663,15 +663,15 @@ private function initializeStudentPayment()
     }
 
     $user = Auth::user();
-    
+
     // Get the total amount from pending booking (room cost + student fee)
     $totalAmount = $pendingBooking['total_amount'];
-    
+
     // Calculate Paystack fees (2%)
     $feePercentage = 0.02;
     $feeAmount = $totalAmount * $feePercentage;
     $finalAmount = $totalAmount + $feeAmount;
-    
+
     // Convert to pesewas (multiply by 100) and ensure it's an integer
     $amountInPesewas = (int) round($finalAmount * 100);
 
@@ -698,7 +698,7 @@ private function initializeStudentPayment()
             'amount' => $amountInPesewas,
             'currency' => 'GHS',
             'reference' => $reference,
-            'callback_url' => route('payment.callback', ['gateway' => 'paystack']),
+'callback_url' => route('bookings.payment.callback', ['gateway' => 'paystack']),
             'metadata' => [
                 'user_id' => $user->id,
                 'is_guest' => false,
@@ -731,7 +731,7 @@ private function initializeStudentPayment()
 }
 
 
-  
+
 
     /**
      * Handle payment callback for ALL users (both guests and students)
@@ -746,7 +746,7 @@ private function initializeStudentPayment()
 
         try {
             $paymentDetails = Paystack::getPaymentData();
-            
+
             \Log::info('Payment callback received:', ['paymentDetails' => $paymentDetails]);
 
             if (!$paymentDetails['status'] || $paymentDetails['data']['status'] !== 'success') {
@@ -756,7 +756,7 @@ private function initializeStudentPayment()
 
             // Get metadata
             $metadata = $paymentDetails['data']['metadata'] ?? null;
-            
+
             if (!is_array($metadata)) {
                 \Log::error('Metadata is not an array:', ['type' => gettype($metadata)]);
                 return redirect()->route('student.hostels.browse')
@@ -765,7 +765,7 @@ private function initializeStudentPayment()
 
             // Check if this is a guest or student based on metadata
             $isGuest = isset($metadata['is_guest']) && $metadata['is_guest'] === true;
-            
+
             if ($isGuest) {
                 return $this->handleGuestPaymentCallback($paymentDetails, $metadata);
             } else {
@@ -788,7 +788,7 @@ private function initializeStudentPayment()
     private function handleGuestPaymentCallback($paymentDetails, $metadata)
     {
         \Log::info('Processing guest payment callback');
-        
+
         $bookingData = $metadata['booking_data'];
 
         DB::beginTransaction();
@@ -801,9 +801,9 @@ private function initializeStudentPayment()
                 return redirect()->route('student.hostels.browse')
                     ->with('error', 'Invalid guest data. Please contact support.');
             }
-            
+
             $guestData = $metadata['guest_data'];
-            
+
             // Check if temp_password exists
             if (!isset($guestData['temp_password'])) {
                 \Log::error('Missing temp_password in guest_data:', ['guestData' => $guestData]);
@@ -811,7 +811,7 @@ private function initializeStudentPayment()
                 return redirect()->route('student.hostels.browse')
                     ->with('error', 'Invalid user data. Please contact support.');
             }
-            
+
             $tempPassword = $guestData['temp_password'];
 
             // Create the user with gender from guest data
@@ -849,7 +849,7 @@ private function initializeStudentPayment()
     private function handleStudentPaymentCallback($paymentDetails, $metadata)
     {
         \Log::info('Processing student payment callback');
-        
+
         $bookingData = $metadata['booking_data'];
 
         DB::beginTransaction();
@@ -863,7 +863,7 @@ private function initializeStudentPayment()
                 return redirect()->route('student.hostels.browse')
                     ->with('error', 'Invalid user data. Please contact support.');
             }
-            
+
             $user = User::find($userId);
             if (!$user) {
                 \Log::error('User not found:', ['user_id' => $userId]);
@@ -871,7 +871,7 @@ private function initializeStudentPayment()
                 return redirect()->route('student.hostels.browse')
                     ->with('error', 'User not found. Please contact support.');
             }
-            
+
             \Log::info('Authenticated user found:', ['user_id' => $userId, 'gender' => $user->gender]);
 
             // Process the booking
@@ -902,7 +902,7 @@ private function initializeStudentPayment()
             // Check room availability one last time
             if (!$this->checkRoomAvailability($bookingData['room_id'], $bookingData['check_in_date'], $bookingData['check_out_date'])) {
                 \Log::warning('Room no longer available:', ['room_id' => $bookingData['room_id']]);
-                
+
                 if ($isGuest && isset($user)) {
                     $user->delete();
                     \Log::info('Deleted guest user due to room unavailability');
@@ -917,11 +917,11 @@ private function initializeStudentPayment()
             // Check if user has gender set
             if (empty($user->gender)) {
                 \Log::error('User has no gender set:', ['user_id' => $user->id]);
-                
+
                 if ($isGuest) {
                     $user->delete();
                 }
-                
+
                 DB::rollBack();
                 return redirect()->route('student.hostels.browse')
                     ->with('error', 'Gender information is required. Please contact support.');
@@ -935,11 +935,11 @@ private function initializeStudentPayment()
                     'user_id' => $user->id,
                     'room_id' => $room->id
                 ]);
-                
+
                 if ($isGuest) {
                     $user->delete();
                 }
-                
+
                 DB::rollBack();
                 return redirect()->route('student.hostels.browse')
                     ->with('error', 'Gender mismatch. This room is for ' . $room->gender . ' students only. Your payment will be refunded.');
@@ -953,7 +953,7 @@ private function initializeStudentPayment()
             }
 
             // Calculate total amount
-            $totalAmount = (float) ($bookingData['total_amount'] ?? 
+            $totalAmount = (float) ($bookingData['total_amount'] ??
                                      ((float)($bookingData['room_cost'] ?? 0) + (float)($bookingData['student_fee'] ?? 0)));
 
             // Create booking with unique references
@@ -1018,7 +1018,7 @@ private function initializeStudentPayment()
             if ($room) {
                 $room->increment('current_occupancy');
                 \Log::info('Room occupancy incremented:', [
-                    'room_id' => $room->id, 
+                    'room_id' => $room->id,
                     'new_occupancy' => $room->current_occupancy
                 ]);
             }
