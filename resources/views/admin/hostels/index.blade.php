@@ -174,8 +174,8 @@
                             <div class="flex items-center">
                                 @if($hostel->primaryImage)
                                     <img class="h-10 w-10 rounded-lg object-cover"
-                                         src="{{ Storage::url($hostel->primaryImage->path) }}"
-                                         alt="{{ $hostel->name }}">
+                                        src="{{ Storage::url($hostel->primaryImage->image_path) }}"
+                                        alt="{{ $hostel->name }}">
                                 @else
                                     <div class="h-10 w-10 rounded-lg bg-gray-200 flex items-center justify-center">
                                         <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -192,7 +192,6 @@
                                             </span>
                                         @endif
                                     </div>
-                                    <div class="text-xs text-gray-500">ID: #{{ $hostel->id }}</div>
                                 </div>
                             </div>
                         </td>

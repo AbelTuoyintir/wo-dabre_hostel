@@ -14,7 +14,7 @@
                 </svg>
             </a>
             <h2 class="text-xl font-bold text-gray-800">{{ $room->number }}</h2>
-            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium 
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium
                 @if($room->status == 'available') bg-green-100 text-green-800
                 @elseif($room->status == 'full') bg-yellow-100 text-yellow-800
                 @elseif($room->status == 'maintenance') bg-orange-100 text-orange-800
@@ -23,7 +23,7 @@
             </span>
         </div>
         <div class="flex items-center gap-3">
-            <a href="{{ route('admin.rooms.edit', $room) }}" 
+            <a href="{{ route('admin.rooms.edit', $room) }}"
                class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
@@ -79,8 +79,8 @@
                 <div>
                     <p class="text-sm font-medium text-gray-600">Price/Month</p>
                     <p class="text-2xl font-semibold text-gray-900 mt-1">
-                        @if($room->price_per_month)
-                            ${{ number_format($room->price_per_month, 2) }}
+                        @if($room->room_cost)
+                            ${{ number_format($room->room_cost, 2) }}
                         @else
                             <span class="text-gray-400">Not set</span>
                         @endif
@@ -223,7 +223,7 @@
                             <h4 class="text-lg font-medium text-gray-900">{{ $currentBooking->user->name }}</h4>
                             <p class="text-sm text-gray-500">{{ $currentBooking->user->email }}</p>
                             <p class="text-sm text-gray-500 mt-1">
-                                Check-in: {{ $currentBooking->check_in->format('M d, Y') }} - 
+                                Check-in: {{ $currentBooking->check_in->format('M d, Y') }} -
                                 Check-out: {{ $currentBooking->check_out->format('M d, Y') }}
                             </p>
                         </div>
@@ -263,7 +263,7 @@
                                     {{ $booking->check_out->format('M d, Y') }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 py-1 text-xs rounded-full 
+                                    <span class="px-2 py-1 text-xs rounded-full
                                         @if($booking->status == 'confirmed') bg-green-100 text-green-800
                                         @elseif($booking->status == 'pending') bg-yellow-100 text-yellow-800
                                         @elseif($booking->status == 'cancelled') bg-red-100 text-red-800
@@ -306,7 +306,7 @@
                                 <option value="maintenance" {{ $room->status == 'maintenance' ? 'selected' : '' }}>Maintenance</option>
                                 <option value="inactive" {{ $room->status == 'inactive' ? 'selected' : '' }}>Inactive</option>
                             </select>
-                            <button onclick="updateStatus()" 
+                            <button onclick="updateStatus()"
                                     class="px-4 py-2 bg-gray-800 text-white text-sm rounded-md hover:bg-gray-900">
                                 Update
                             </button>
@@ -314,7 +314,7 @@
                     </div>
 
                     <div class="border-t border-gray-200 pt-4">
-                        <a href="{{ route('admin.rooms.edit', $room) }}" 
+                        <a href="{{ route('admin.rooms.edit', $room) }}"
                            class="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 rounded-md bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
@@ -388,7 +388,7 @@
 <script>
 function updateStatus() {
     const status = document.getElementById('status-select').value;
-    
+
     fetch('{{ route("admin.rooms.status", $room) }}', {
         method: 'PATCH',
         headers: {

@@ -20,7 +20,7 @@
                         Featured
                     </span>
                 @endif
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
                     @if($hostel->status == 'active') bg-green-100 text-green-800
                     @elseif($hostel->status == 'maintenance') bg-orange-100 text-orange-800
                     @else bg-gray-100 text-gray-800 @endif">
@@ -38,7 +38,7 @@
                 <form action="{{ route('admin.hostels.approve', $hostel) }}" method="POST" class="inline">
                     @csrf
                     @method('PATCH')
-                    <button type="submit" 
+                    <button type="submit"
                             class="inline-flex items-center px-4 py-2 border border-transparent rounded-md bg-green-600 text-sm font-medium text-white hover:bg-green-700">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
@@ -47,7 +47,7 @@
                     </button>
                 </form>
             @endif
-            <a href="{{ route('admin.hostels.edit', $hostel) }}" 
+            <a href="{{ route('admin.hostels.edit', $hostel) }}"
                class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
@@ -77,7 +77,7 @@
                     <span class="font-medium text-gray-900">{{ $hostel->available_rooms ?? 0 }}</span>
                 </div>
                 <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
-                    <div class="bg-blue-600 h-2 rounded-full" 
+                    <div class="bg-blue-600 h-2 rounded-full"
                          style="width: {{ $hostel->total_rooms ? ($hostel->available_rooms / $hostel->total_rooms) * 100 : 0 }}%"></div>
                 </div>
             </div>
@@ -115,7 +115,7 @@
                         <span class="text-2xl font-semibold text-gray-900 mr-2">{{ number_format($hostel->rating, 1) }}</span>
                         <div class="flex items-center">
                             @for($i = 1; $i <= 5; $i++)
-                                <svg class="w-5 h-5 {{ $i <= round($hostel->rating) ? 'text-yellow-400' : 'text-gray-300' }}" 
+                                <svg class="w-5 h-5 {{ $i <= round($hostel->rating) ? 'text-yellow-400' : 'text-gray-300' }}"
                                      fill="currentColor" viewBox="0 0 20 20">
                                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                                 </svg>
@@ -164,29 +164,29 @@
                     <h3 class="text-lg font-medium text-gray-900">Gallery</h3>
                 </div>
                 <div class="p-6">
-                    @if($hostel->images && count($hostel->images) > 0)
-                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                            @foreach($hostel->images as $image)
-                                <div class="relative group">
-                                    <img src="{{ Storage::url($image->path) }}" 
-                                         alt="{{ $hostel->name }}" 
-                                         class="w-full h-40 object-cover rounded-lg">
-                                    @if($image->is_primary)
-                                        <span class="absolute top-2 left-2 bg-blue-600 text-white text-xs px-2 py-1 rounded">
-                                            Primary
-                                        </span>
-                                    @endif
-                                </div>
-                            @endforeach
-                        </div>
-                    @else
-                        <div class="text-center py-8">
-                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                            </svg>
-                            <p class="mt-2 text-sm text-gray-500">No images uploaded</p>
-                        </div>
-                    @endif
+                   @if($hostel->images && count($hostel->images) > 0)
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        @foreach($hostel->images as $image)
+                            <div class="relative group">
+                                <img src="{{ Storage::url($image->image_path) }}"
+                                    alt="{{ $hostel->name }}"
+                                    class="w-full h-40 object-cover rounded-lg">
+                                @if($image->is_primary)
+                                    <span class="absolute top-2 left-2 bg-blue-600 text-white text-xs px-2 py-1 rounded">
+                                        Primary
+                                    </span>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="text-center py-8 bg-gray-50 rounded-lg">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H8a4 4 0 01-4-4V12a4 4 0 014-4h32a4 4 0 014 4v16.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        <p class="mt-2 text-sm text-gray-500">No images available for this hostel</p>
+                    </div>
+                @endif
                 </div>
             </div>
 
@@ -231,7 +231,7 @@
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
                 <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
                     <h3 class="text-lg font-medium text-gray-900">Rooms</h3>
-                    <a href="{{ route('admin.rooms.create', ['hostel_id' => $hostel->id]) }}" 
+                    <a href="{{ route('admin.rooms.create', ['hostel_id' => $hostel->id]) }}"
                        class="text-sm text-blue-600 hover:text-blue-800">
                         + Add Room
                     </a>
@@ -265,7 +265,7 @@
                                         <div class="flex items-center">
                                             <span class="text-sm text-gray-900 mr-2">{{ $room->current_occupancy }}/{{ $room->capacity }}</span>
                                             <div class="w-16 bg-gray-200 rounded-full h-2">
-                                                <div class="bg-blue-600 h-2 rounded-full" 
+                                                <div class="bg-blue-600 h-2 rounded-full"
                                                      style="width: {{ ($room->current_occupancy / $room->capacity) * 100 }}%"></div>
                                             </div>
                                         </div>
@@ -274,7 +274,7 @@
                                         ${{ number_format($room->price_per_month, 2) }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="px-2 py-1 text-xs rounded-full 
+                                        <span class="px-2 py-1 text-xs rounded-full
                                             @if($room->status == 'available') bg-green-100 text-green-800
                                             @elseif($room->status == 'full') bg-yellow-100 text-yellow-800
                                             @else bg-gray-100 text-gray-800 @endif">
@@ -315,7 +315,7 @@
                             <span class="text-sm text-gray-900">{{ $hostel->contact_phone }}</span>
                         </div>
                     @endif
-                    
+
                     @if($hostel->contact_email)
                         <div class="flex items-center">
                             <svg class="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

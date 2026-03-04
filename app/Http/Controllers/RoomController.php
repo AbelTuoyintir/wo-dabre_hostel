@@ -16,36 +16,36 @@ class RoomController extends Controller
     {
         // Admin only - no manager checks needed
         $query = Room::with('hostel');
-        
+
         // Apply filters
         if ($request->filled('hostel_id')) {
             $query->where('hostel_id', $request->hostel_id);
         }
-        
+
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
-        
+
         if ($request->filled('gender')) {
             $query->whereIn('gender', [$request->gender, 'any']);
         }
-        
+
         if ($request->filled('min_price')) {
-            $query->where('price_per_month', '>=', $request->min_price);
+            $query->where('room_cost', '>=', $request->min_price);
         }
-        
+
         if ($request->filled('max_price')) {
-            $query->where('price_per_month', '<=', $request->max_price);
+            $query->where('room_cost', '<=', $request->max_price);
         }
-        
+
         if ($request->filled('furnished')) {
             $query->where('furnished', $request->furnished);
         }
-        
+
         if ($request->filled('private_bathroom')) {
             $query->where('private_bathroom', $request->private_bathroom);
         }
-        
+
         if ($request->filled('search')) {
             $query->where(function($q) use ($request) {
                 $q->where('number', 'like', '%' . $request->search . '%')
@@ -54,12 +54,12 @@ class RoomController extends Controller
                   });
             });
         }
-        
+
         $rooms = $query->latest()->paginate(15)->withQueryString();
-        
+
         // Get all hostels for filter dropdown
         $hostels = Hostel::all();
-        
+
         return view('admin.rooms.index', compact('rooms', 'hostels'));
     }
 
@@ -70,7 +70,7 @@ class RoomController extends Controller
     {
         // Get all hostels for selection
         $hostels = Hostel::all();
-        
+
         if ($hostels->isEmpty()) {
             return redirect()
                 ->route('admin.hostels.index')
@@ -93,7 +93,7 @@ class RoomController extends Controller
                 'gender' => 'required|in:male,female,any',
                 'room_type' => 'required|in:single_room,shared_2,shared_4,executive',
                 'status' => 'required|in:available,full,maintenance,inactive',
-                'price_per_month' => 'nullable|numeric|min:0',
+                'room_cost' => 'nullable|numeric|min:0',
                 'description' => 'nullable|string|max:1000',
                 'floor' => 'nullable|integer|min:0',
                 'size_sqm' => 'nullable|numeric|min:1',
@@ -105,12 +105,12 @@ class RoomController extends Controller
             // Handle boolean fields
             $validated['furnished'] = $request->has('furnished');
             $validated['private_bathroom'] = $request->has('private_bathroom');
-            
+
             // Check if room number already exists in this hostel
             $exists = Room::where('hostel_id', $validated['hostel_id'])
                 ->where('number', $validated['number'])
                 ->exists();
-                
+
             if ($exists) {
                 return back()
                     ->withInput()
@@ -127,8 +127,8 @@ class RoomController extends Controller
             return back()->withErrors($e->validator)->withInput();
         }
     }
-        
-        
+
+
     /**
      * Display a specific room
      */
@@ -139,7 +139,7 @@ class RoomController extends Controller
                   ->latest()
                   ->limit(10);
         }]);
-        
+
         $stats = [
             'total_bookings' => $room->bookings()->count(),
             'active_bookings' => $room->bookings()
@@ -149,8 +149,9 @@ class RoomController extends Controller
             'occupancy_rate' => $room->occupancyRate(),
             'available_spaces' => $room->availableSpaces(),
         ];
-        
+
         $currentBooking = $room->currentBooking()->with('user')->first();
+
 
         return view('admin.rooms.show', compact('room', 'stats', 'currentBooking'));
     }
@@ -178,7 +179,7 @@ class RoomController extends Controller
             'gender' => 'required|in:male,female,any',
             'room_type' => 'required|in:single_room,shared_2,shared_4,executive',
             'status' => 'required|in:available,full,maintenance,inactive',
-            'price_per_month' => 'nullable|numeric|min:0',
+            'room_cost' => 'nullable|numeric|min:0',
             'description' => 'nullable|string|max:1000',
             'floor' => 'nullable|integer|min:0',
             'size_sqm' => 'nullable|numeric|min:1',
@@ -198,7 +199,7 @@ class RoomController extends Controller
                 ->where('number', $validated['number'])
                 ->where('id', '!=', $room->id)
                 ->exists();
-                
+
             if ($exists) {
                 return back()
                     ->withInput()
@@ -210,14 +211,13 @@ class RoomController extends Controller
                 ->where('number', $validated['number'])
                 ->where('id', '!=', $room->id)
                 ->exists();
-                
+
             if ($exists) {
                 return back()
                     ->withInput()
                     ->with('error', 'Room number already exists in this hostel.');
-            }
         }
-        
+
         $room->update($validated);
 
         return redirect()
@@ -234,12 +234,12 @@ class RoomController extends Controller
         $hasActiveBookings = $room->bookings()
             ->whereIn('status', ['pending', 'confirmed'])
             ->exists();
-            
+
         if ($hasActiveBookings) {
             return back()
                 ->with('error', 'Cannot delete room with active bookings.');
         }
-        
+
         $roomNumber = $room->number;
         $room->delete();
 
@@ -256,9 +256,9 @@ class RoomController extends Controller
         $request->validate([
             'status' => 'required|in:available,full,maintenance,inactive'
         ]);
-        
+
         $room->update(['status' => $request->status]);
-        
+
         return response()->json([
             'success' => true,
             'message' => 'Room status updated successfully.'
@@ -276,21 +276,21 @@ class RoomController extends Controller
             'action' => 'required|in:status,gender,hostel,capacity,price',
             'value' => 'required'
         ]);
-        
+
         $rooms = Room::whereIn('id', $request->room_ids)->get();
-        
+
         if ($rooms->isEmpty()) {
             return response()->json([
                 'success' => false,
                 'message' => 'No rooms selected.'
             ], 400);
         }
-        
+
         $updatedHostels = collect();
-        
+
         foreach ($rooms as $room) {
             $oldHostelId = $room->hostel_id;
-            
+
             switch ($request->action) {
                 case 'status':
                     $room->update(['status' => $request->value]);
@@ -305,17 +305,17 @@ class RoomController extends Controller
                     $room->update(['capacity' => $request->value]);
                     break;
                 case 'price':
-                    $room->update(['price_per_month' => $request->value]);
+                    $room->update(['room_cost' => $request->value]);
                     break;
             }
-            
+
             // Track hostels that need count updates
             $updatedHostels->push($room->hostel_id);
             if (isset($oldHostelId) && $oldHostelId != $room->hostel_id) {
                 $updatedHostels->push($oldHostelId);
             }
         }
-        
+
         return response()->json([
             'success' => true,
             'message' => count($rooms) . ' rooms updated successfully.'
@@ -328,23 +328,23 @@ class RoomController extends Controller
     public function export(Request $request)
     {
         $query = Room::with('hostel');
-        
+
         if ($request->filled('hostel_id')) {
             $query->where('hostel_id', $request->hostel_id);
         }
-        
+
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
-        
+
         $rooms = $query->get();
-        
+
         $filename = 'rooms-export-' . now()->format('Y-m-d') . '.csv';
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"$filename\"",
         ];
-        
+
         $callback = function() use ($rooms) {
             $file = fopen('php://output', 'w');
             fputcsv($file, [
@@ -352,7 +352,7 @@ class RoomController extends Controller
                 'Floor', 'Size (sqm)', 'Gender', 'Status', 'Price/Month',
                 'Furnished', 'Private Bathroom', 'Window Type', 'Created At'
             ]);
-            
+
             foreach ($rooms as $room) {
                 fputcsv($file, [
                     $room->id,
@@ -364,17 +364,17 @@ class RoomController extends Controller
                     $room->size_sqm ?? 'N/A',
                     $room->gender,
                     $room->status,
-                    $room->price_per_month ?? 'N/A',
+                    $room->room_cost ?? 'N/A',
                     $room->furnished ? 'Yes' : 'No',
                     $room->private_bathroom ? 'Yes' : 'No',
                     $room->window_type ?? 'N/A',
                     $room->created_at->format('Y-m-d H:i:s')
                 ]);
             }
-            
+
             fclose($file);
         };
-        
+
         return response()->stream($callback, 200, $headers);
     }
 }

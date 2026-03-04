@@ -111,12 +111,12 @@
 
                     <!-- Price per Month -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Price per Month ($)</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Price per academic year ($)</label>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <span class="text-gray-500 sm:text-sm">$</span>
                             </div>
-                            <input type="number" name="price_per_month" value="{{ old('price_per_month') }}" step="0.01" min="0"
+                            <input type="number" name="price_per_month" value="{{ old('room_cost') }}" step="0.01" min="0"
                                    class="w-full pl-7 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 @error('price_per_month') border-red-500 @enderror"
                                    placeholder="0.00">
                         </div>

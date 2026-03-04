@@ -99,64 +99,66 @@ class HostelController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
+       $request->validate([
             'name' => 'required|string|max:255',
-            'location' => 'required|string|max:255',
-            'address' => 'required|string|max:500',
-            'description' => 'nullable|string',
-            'phone' => 'nullable|string|max:20',
-            'email' => 'nullable|email|max:255',
+            'location' => 'required|string',
+            'address' => 'required|string',
+            'contact_phone' => 'nullable|string|max:20',
+            'contact_email' => 'nullable|email|max:255',
             'manager_id' => 'nullable|exists:users,id',
-            'is_approved' => 'boolean',
-            'images' => 'nullable|array',
-            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:10240',
+            'description' => 'nullable|string',
+            'cover_image' => 'required|image|mimes:jpeg,png,jpg,gif|max:10240', // 10MB max
+            'gallery_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240', // 10MB max per image
+            'gallery_images' => 'nullable|array|max:5', // Maximum 5 gallery images
         ]);
 
-        DB::beginTransaction();
-        try {
-            // Create hostel
-            $hostel = Hostel::create([
-                'name' => $validated['name'],
-                'location' => $validated['location'],
-                'address' => $validated['address'],
-                'description' => $validated['description'] ?? null,
-                'contact_phone' => $validated['phone'] ?? null,
-                'contact_email' => $validated['email'] ?? null,
-                'manager_id' => $validated['manager_id'] ?? null,
-                'is_featured' => $request->has('is_featured'),
-                'is_approved' => $request->has('is_approved'),
-                'total_rooms' => 0,
-                'available_rooms' => 0,
-                'rating' => 0,
+        // Prepare data for creation
+        $data = $request->only([
+            'name',
+            'location',
+            'address',
+            'contact_phone',
+            'contact_email',
+            'manager_id',
+            'description'
+        ]);
+
+        // Set default values
+        $data['is_approved'] = false; // Default to not approved
+
+        // Create the hostel
+        $hostel = Hostel::create($data);
+
+        // Handle cover image upload (primary image)
+        if ($request->hasFile('cover_image')) {
+            $coverPath = $request->file('cover_image')->store('hostels/covers', 'public');
+
+            // Save as primary image
+            $hostel->images()->create([
+                'image_path' => $coverPath,
+                'type' => 'hostel',
+                'is_primary' => true,
+                'order' => 0
             ]);
-
-            // Handle image uploads
-            if ($request->hasFile('images')) {
-                foreach ($request->file('images') as $index => $image) {
-                    $path = $image->store('hostels/' . $hostel->id, 'public');
-
-                    Image::create([
-                        'hostel_id' => $hostel->id,
-                        'path' => $path,
-                        'is_primary' => $index === 0,
-                    ]);
-                }
-            }
-
-            DB::commit();
-
-            return redirect()
-                ->route('admin.hostels.index', $hostel)
-                ->with('success', 'Hostel created successfully.');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            return redirect()
-                ->back()
-                ->withInput()
-                ->with('error', 'Failed to create hostel. ' . $e->getMessage());
         }
+
+        // Handle gallery images upload
+        if ($request->hasFile('gallery_images')) {
+            $order = 1; // Start from 1 since cover image is at 0
+            foreach ($request->file('gallery_images') as $image) {
+                $path = $image->store('hostels/gallery', 'public');
+
+                // Save as gallery image
+                $hostel->images()->create([
+                    'image_path' => $path,
+                    'type' => 'hostel',
+                    'is_primary' => false,
+                    'order' => $order++
+                ]);
+            }
+        }
+
+        return redirect()->route('admin.hostels.index')->with('success', 'Hostel created successfully with images.');
     }
 
     /**
@@ -200,51 +202,97 @@ class HostelController extends Controller
     /**
      * Update the specified hostel
      */
-    public function update(Request $request, Hostel $hostel)
+   public function update(Request $request, Hostel $hostel)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'location' => 'required|string|max:255',
             'address' => 'required|string|max:500',
             'description' => 'nullable|string',
-            'phone' => 'nullable|string|max:20',
-            'email' => 'nullable|email|max:255',
+            'contact_phone' => 'nullable|string|max:20',
+            'contact_email' => 'nullable|email|max:255',
             'manager_id' => 'nullable|exists:users,id',
-            'is_featured' => 'boolean',
-            'is_approved' => 'boolean',
-            'images' => 'nullable|array',
-            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:10240',
+            'is_featured' => 'sometimes|boolean',
+            'is_approved' => 'sometimes|boolean',
+            'cover_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
+            'gallery_images' => 'nullable|array|max:5',
+            'gallery_images.*' => 'image|mimes:jpeg,png,jpg,gif|max:10240',
+            'removed_images' => 'nullable|array',
+            'removed_images.*' => 'exists:hostel_images,id',
+            'primary_image_id' => 'nullable|exists:hostel_images,id',
         ]);
 
         DB::beginTransaction();
         try {
-            // Update hostel
+            // Update hostel basic info
             $hostel->update([
                 'name' => $validated['name'],
                 'location' => $validated['location'],
                 'address' => $validated['address'],
                 'description' => $validated['description'] ?? null,
-                'phone' => $validated['contact_phone'] ?? null,
-                'email' => $validated['contact_email'] ?? null,
+                'contact_phone' => $validated['contact_phone'] ?? null,
+                'contact_email' => $validated['contact_email'] ?? null,
                 'manager_id' => $validated['manager_id'] ?? null,
                 'is_featured' => $request->has('is_featured'),
                 'is_approved' => $request->has('is_approved'),
             ]);
 
-            // Handle new image uploads
-            if ($request->hasFile('images')) {
-                $hasPrimary = $hostel->images()->where('is_primary', true)->exists();
+            // Handle removed images
+            if (!empty($validated['removed_images'])) {
+                $imagesToRemove = HostelImage::whereIn('id', $validated['removed_images'])
+                    ->where('hostel_id', $hostel->id)
+                    ->get();
 
-                foreach ($request->file('images') as $image) {
-                    $path = $image->store('hostels/' . $hostel->id, 'public');
+                foreach ($imagesToRemove as $image) {
+                    // Delete file from storage
+                    Storage::disk('public')->delete($image->image_path);
+                    // Delete record from database
+                    $image->delete();
+                }
+            }
 
-                    HostelImage::create([
-                        'hostel_id' => $hostel->id,
-                        'path' => $path,
-                        'is_primary' => !$hasPrimary,
+            // Handle primary image change
+            if (!empty($validated['primary_image_id'])) {
+                // Remove primary status from all images
+                $hostel->images()->update(['is_primary' => false]);
+
+                // Set new primary image
+                HostelImage::where('id', $validated['primary_image_id'])
+                    ->where('hostel_id', $hostel->id)
+                    ->update(['is_primary' => true, 'order' => 0]);
+            }
+
+            // Handle new cover image upload
+            if ($request->hasFile('cover_image')) {
+                $path = $request->file('cover_image')->store('hostels/covers', 'public');
+
+                // If this should be the primary image
+                $hostel->images()->create([
+                    'image_path' => $path,
+                    'type' => 'hostel',
+                    'is_primary' => true,
+                    'order' => 0
+                ]);
+            }
+
+            // Handle new gallery images
+            if ($request->hasFile('gallery_images')) {
+                // Get the current max order for non-primary images
+                $maxOrder = $hostel->images()
+                    ->where('is_primary', false)
+                    ->max('order') ?? 0;
+
+                $order = $maxOrder + 1;
+
+                foreach ($request->file('gallery_images') as $image) {
+                    $path = $image->store('hostels/gallery', 'public');
+
+                    $hostel->images()->create([
+                        'image_path' => $path,
+                        'type' => 'hostel',
+                        'is_primary' => false,
+                        'order' => $order++
                     ]);
-
-                    $hasPrimary = true;
                 }
             }
 
@@ -263,7 +311,6 @@ class HostelController extends Controller
                 ->with('error', 'Failed to update hostel. ' . $e->getMessage());
         }
     }
-
     /**
      * Delete the specified hostel
      */

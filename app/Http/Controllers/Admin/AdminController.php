@@ -126,14 +126,64 @@ class AdminController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'location' => 'required|string',
+            'address' => 'required|string',
+            'contact_phone' => 'nullable|string|max:20',
+            'contact_email' => 'nullable|email|max:255',
             'manager_id' => 'nullable|exists:users,id',
-            'is_approved' => 'required|boolean',
             'description' => 'nullable|string',
+            'cover_image' => 'required|image|mimes:jpeg,png,jpg,gif|max:10240', // 10MB max
+            'gallery_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240', // 10MB max per image
+            'gallery_images' => 'nullable|array|max:5', // Maximum 5 gallery images
         ]);
 
-        Hostel::create($request->only(['name', 'location', 'manager_id', 'is_approved', 'description']));
+        // Prepare data for creation
+        $data = $request->only([
+            'name',
+            'location',
+            'address',
+            'contact_phone',
+            'contact_email',
+            'manager_id',
+            'description'
+        ]);
 
-        return redirect()->route('admin.hostels.index')->with('success', 'Hostel created successfully.');
+        // Set default values
+        $data['is_approved'] = false; // Default to not approved
+
+        // Create the hostel
+        $hostel = Hostel::create($data);
+
+        // Handle cover image upload (primary image)
+        if ($request->hasFile('cover_image')) {
+            $coverPath = $request->file('cover_image')->store('hostels/covers', 'public');
+
+            // Save as primary image
+            $hostel->images()->create([
+                'image_path' => $coverPath,
+                'type' => 'hostel',
+                'is_primary' => true,
+                'order' => 0
+            ]);
+        }
+
+        // Handle gallery images upload
+        if ($request->hasFile('gallery_images')) {
+            $order = 1; // Start from 1 since cover image is at 0
+            foreach ($request->file('gallery_images') as $image) {
+                $path = $image->store('hostels/gallery', 'public');
+
+                // Save as gallery image
+                $hostel->images()->create([
+                    'image_path' => $path,
+                    'type' => 'hostel',
+                    'is_primary' => false,
+                    'order' => $order++
+                ]);
+            }
+        }
+
+        return redirect()->route('admin.hostels.index')
+            ->with('success', 'Hostel created successfully with images.');
     }
 
     /**

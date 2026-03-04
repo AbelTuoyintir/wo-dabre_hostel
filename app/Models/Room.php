@@ -20,6 +20,12 @@ class Room extends Model
         'status',
         'room_type',
         'room_cost',
+        'floor',
+        'size_sqm',
+        'window_type',
+        'description',
+        'furnished',
+        'private_bathroom',
     ];
 
     /**
