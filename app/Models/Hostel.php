@@ -59,14 +59,20 @@ class Hostel extends Model
                     ->withTimestamps();
     }
 
-    public function primaryImage()
-    {
-        return $this->hasOne(HostelImage::class)->where('is_primary', true);
-    }
-
+ 
     public function images()
     {
-        return $this->hasMany(HostelImage::class);
+        return $this->hasMany(HostelImage::class)->where('type', 'hostel');
+    }
+
+    public function primaryImage()
+    {
+        return $this->hasOne(HostelImage::class)->where('type', 'hostel')->where('is_primary', true);
+    }
+
+    public function galleryImages()
+    {
+        return $this->hasMany(HostelImage::class)->where('type', 'hostel')->where('is_primary', false)->orderBy('order');
     }
 
     public function complaints()
@@ -100,7 +106,7 @@ class Hostel extends Model
             ->where('status', 'available')
             ->whereColumn('current_occupancy', '<', 'capacity')
             ->min('room_cost');
-        
+
         // Convert to float or return null
         return $minPrice ? (float) $minPrice : null;
     }

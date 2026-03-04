@@ -9,8 +9,10 @@ class HostelImage extends Model
     //
     protected $fillable= [
         'hostel_id',
+        'room_id'
         'image_path',
         'is_primary',
         'order'
     ];
+
 }

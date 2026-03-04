@@ -23,17 +23,17 @@
         <div class="flex items-center gap-3">
             <!-- Approval Toggle -->
             <div class="flex items-center bg-white rounded-md border border-gray-300 p-1">
-                <a href="{{ route('admin.hostels.index', ['pending' => '']) }}" 
+                <a href="{{ route('admin.hostels.index', ['pending' => '']) }}"
                    class="px-3 py-1.5 text-sm font-medium rounded-md {{ !request('pending') ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100' }}">
                     All
                 </a>
-                <a href="{{ route('admin.hostels.index', ['pending' => '1']) }}" 
+                <a href="{{ route('admin.hostels.index', ['pending' => '1']) }}"
                    class="px-3 py-1.5 text-sm font-medium rounded-md {{ request('pending') == '1' ? 'bg-yellow-500 text-white' : 'text-gray-700 hover:bg-gray-100' }}">
                     Pending Approval
                 </a>
             </div>
-            
-            <a href="{{ route('admin.hostels.create') }}" 
+
+            <a href="{{ route('admin.hostels.create') }}"
                class="inline-flex items-center px-4 py-2 border border-transparent rounded-md bg-blue-600 text-sm font-medium text-white hover:bg-blue-700">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -60,7 +60,7 @@
                     <div>
                         <label class="block text-xs font-medium text-gray-500 mb-1">Search</label>
                         <div class="relative">
-                            <input type="text" name="search" placeholder="Name, location, contact..." 
+                            <input type="text" name="search" placeholder="Name, location, contact..."
                                    value="{{ request('search') }}"
                                    class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
                             <div class="absolute left-3 top-2.5 text-gray-400">
@@ -74,7 +74,7 @@
                     <!-- Location -->
                     <div>
                         <label class="block text-xs font-medium text-gray-500 mb-1">Location</label>
-                        <input type="text" name="location" placeholder="City, area..." 
+                        <input type="text" name="location" placeholder="City, area..."
                                value="{{ request('location') }}"
                                class="w-full border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
                     </div>
@@ -113,7 +113,7 @@
                     <!-- Manager -->
                     <div>
                         <label class="block text-xs font-medium text-gray-500 mb-1">Manager</label>
-                        <input type="text" name="manager" placeholder="Manager name" 
+                        <input type="text" name="manager" placeholder="Manager name"
                                value="{{ request('manager') }}"
                                class="w-full border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
                     </div>
@@ -138,11 +138,11 @@
                 </div>
 
                 <div class="flex items-center justify-between pt-2">
-                    <button type="submit" 
+                    <button type="submit"
                             class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-medium text-xs text-white hover:bg-blue-700">
                         Apply Filters
                     </button>
-                    <a href="{{ route('admin.hostels.index') }}" 
+                    <a href="{{ route('admin.hostels.index') }}"
                        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-xs font-medium text-gray-700 bg-white hover:bg-gray-50">
                         Clear Filters
                     </a>
@@ -173,8 +173,8 @@
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center">
                                 @if($hostel->primaryImage)
-                                    <img class="h-10 w-10 rounded-lg object-cover" 
-                                         src="{{ Storage::url($hostel->primaryImage->path) }}" 
+                                    <img class="h-10 w-10 rounded-lg object-cover"
+                                         src="{{ Storage::url($hostel->primaryImage->path) }}"
                                          alt="{{ $hostel->name }}">
                                 @else
                                     <div class="h-10 w-10 rounded-lg bg-gray-200 flex items-center justify-center">
@@ -198,7 +198,7 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm text-gray-900">{{ $hostel->location }}</div>
-                            <div class="text-xs text-gray-500">{{ Str::limit($hostel->address, 30) }}</div>
+                            <div class="text-xs text-gray-500">{{ \Illuminate\Support\Str::limit($hostel->address, 30) }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             @if($hostel->manager)
@@ -219,7 +219,7 @@
                                 <span class="text-sm font-medium text-gray-900 mr-1">{{ number_format($hostel->rating, 1) }}</span>
                                 <div class="flex items-center">
                                     @for($i = 1; $i <= 5; $i++)
-                                        <svg class="w-4 h-4 {{ $i <= round($hostel->rating) ? 'text-yellow-400' : 'text-gray-300' }}" 
+                                        <svg class="w-4 h-4 {{ $i <= round($hostel->rating) ? 'text-yellow-400' : 'text-gray-300' }}"
                                              fill="currentColor" viewBox="0 0 20 20">
                                             <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                                         </svg>
@@ -229,7 +229,7 @@
                             <div class="text-xs text-gray-500">{{ $hostel->reviews_count ?? 0 }} reviews</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 py-1 text-xs rounded-full 
+                            <span class="px-2 py-1 text-xs rounded-full
                                 @if($hostel->status == 'active') bg-green-100 text-green-800
                                 @elseif($hostel->status == 'maintenance') bg-orange-100 text-orange-800
                                 @else bg-gray-100 text-gray-800 @endif">
@@ -253,7 +253,7 @@
                                     <form action="{{ route('admin.hostels.approve', $hostel) }}" method="POST" class="inline">
                                         @csrf
                                         @method('PATCH')
-                                        <button type="submit" 
+                                        <button type="submit"
                                                 class="text-green-600 hover:text-green-900"
                                                 title="Approve Hostel">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -262,24 +262,24 @@
                                         </button>
                                     </form>
                                 @endif
-                                
-                                <a href="{{ route('admin.hostels.show', $hostel) }}" 
+
+                                <a href="{{ route('admin.hostels.show', $hostel) }}"
                                    class="text-blue-600 hover:text-blue-900" title="View">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                     </svg>
                                 </a>
-                                
-                                <a href="{{ route('admin.hostels.edit', $hostel) }}" 
+
+                                <a href="{{ route('admin.hostels.edit', $hostel) }}"
                                    class="text-indigo-600 hover:text-indigo-900" title="Edit">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                     </svg>
                                 </a>
-                                
-                                <form action="{{ route('admin.hostels.destroy', $hostel) }}" 
-                                      method="POST" 
+
+                                <form action="{{ route('admin.hostels.destroy', $hostel) }}"
+                                      method="POST"
                                       onsubmit="return confirm('Are you sure you want to delete this hostel? This will also delete all rooms and bookings associated with it.');"
                                       class="inline">
                                     @csrf
@@ -312,7 +312,7 @@
                 </tbody>
             </table>
         </div>
-        
+
         <!-- Pagination -->
         @if($hostels->hasPages())
         <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
