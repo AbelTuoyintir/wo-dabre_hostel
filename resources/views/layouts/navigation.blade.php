@@ -154,16 +154,17 @@
 
     {{-- User Section --}}
     <div class="border-t border-slate-100 p-4 shrink-0">
+        @auth
         <div x-data="{ open: false }" class="relative">
             <button @click="open = !open"
                     class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors">
                 <div class="w-10 h-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-900
                             flex items-center justify-center text-white font-semibold shadow-md text-sm">
-                    {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                    {{ strtoupper(substr(Auth::user()->name ?? '', 0, 1)) }}
                 </div>
                 <div class="flex-1 text-left min-w-0">
-                    <div class="text-sm font-semibold text-slate-800 truncate">{{ Auth::user()->name }}</div>
-                    <div class="text-xs text-slate-500 truncate">{{ Auth::user()->email }}</div>
+                    <div class="text-sm font-semibold text-slate-800 truncate">{{ Auth::user()->name ?? 'User' }}</div>
+                    <div class="text-xs text-slate-500 truncate">{{ Auth::user()->email ?? '' }}</div>
                 </div>
                 <svg class="w-4 h-4 text-slate-400 transition-transform shrink-0"
                      :class="open ? 'rotate-180' : ''"
@@ -197,8 +198,14 @@
                 </form>
             </div>
         </div>
-    </div>
-</aside>
+        @else
+        <div class="flex items-center gap-3 p-3">
+            <a href="{{ route('login') }}"
+               class="flex-1 text-center px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">
+                Sign In
+            </a>
+            <a href="{{ route('register') }}"
+               class="flex-1 text-center px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
 
 {{-- Mobile Header Toggle --}}
 <div class="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b border-slate-200 z-40 flex items-center px-4">

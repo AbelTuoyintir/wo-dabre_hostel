@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>UCC Hostel Booking System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
@@ -18,9 +19,11 @@
             background-color: #1d4ed8;
             color: white;
         }
+        .hostel-card {
+            transition: transform 0.3s ease;
+        }
         .hostel-card:hover {
             transform: translateY(-5px);
-            transition: transform 0.3s ease;
         }
         #bookingModal {
             display: none;
@@ -39,6 +42,18 @@
             from { transform: translateY(-50px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
         }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -56,50 +71,90 @@
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
-
-                    <!-- Register -->
-                    <a href="{{ url('/register') }}"
-    class="hidden md:flex items-center space-x-2 bg-blue-800 text-white px-4 py-2 rounded-lg hover:bg-blue-900 transition">
-    <i class="fas fa-user-graduate"></i>
-    <span>Create Account</span>
-</a>
-<a href="{{ url('/login') }}"
-    class="bg-white text-blue-900 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition">
-    <i class="fas fa-sign-in-alt mr-2"></i>
-    Student Login
-</a>
-
+                    @guest
+                        <a href="{{ route('register') }}"
+                           class="hidden md:flex items-center space-x-2 bg-blue-800 text-white px-4 py-2 rounded-lg hover:bg-blue-900 transition">
+                            <i class="fas fa-user-graduate"></i>
+                            <span>Create Account</span>
+                        </a>
+                        <a href="{{ route('login') }}"
+                           class="bg-white text-blue-900 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition">
+                            <i class="fas fa-sign-in-alt mr-2"></i> Student Login
+                        </a>
+                    @else
+                        @if(auth()->user()->role === 'student')
+                            <a href="{{ route('student.dashboard') }}"
+                               class="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition">
+                                <i class="fas fa-tachometer-alt mr-2"></i> Dashboard
+                            </a>
+                        @elseif(auth()->user()->role === 'admin')
+                            <a href="{{ route('admin.dashboard') }}"
+                               class="bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition">
+                                <i class="fas fa-cog mr-2"></i> Admin
+                            </a>
+                        @elseif(auth()->user()->role === 'manager')
+                            <a href="{{ route('hostel-manager.dashboard') }}"
+                               class="bg-orange-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-orange-700 transition">
+                                <i class="fas fa-building mr-2"></i> Manager
+                            </a>
+                        @endif
+                        <form method="POST" action="{{ route('logout') }}" class="inline">
+                            @csrf
+                            <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 transition">
+                                <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                            </button>
+                        </form>
+                    @endguest
                 </div>
-
             </div>
         </div>
     </header>
 
+    <!-- Loading Spinner -->
+    <div id="loadingSpinner" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 z-[9999] flex items-center justify-center">
+        <div class="loader"></div>
+    </div>
+
     <!-- Main Content -->
     <main class="container mx-auto px-4 py-8">
+        <!-- Alert Messages -->
+        @if(session('success'))
+            <div class="mb-6 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg">
+                <i class="fas fa-check-circle mr-2"></i>{{ session('success') }}
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
+                <i class="fas fa-exclamation-circle mr-2"></i>{{ session('error') }}
+            </div>
+        @endif
+
         <!-- Search and Filter Section -->
         <section class="mb-12">
             <h2 class="text-3xl font-bold text-gray-800 mb-2">Find Your Perfect Hostel</h2>
             <p class="text-gray-600 mb-6">Browse and book hostels across all UCC campuses. No more roaming around searching for accommodation.</p>
 
             <!-- Search Bar -->
-            <div class="bg-white p-6 rounded-xl shadow-md mb-8">
+            <form method="GET" action="{{ route('hostels.index') }}" class="bg-white p-6 rounded-xl shadow-md mb-8">
                 <div class="flex flex-col md:flex-row md:items-center md:space-x-4">
                     <div class="flex-1 mb-4 md:mb-0">
                         <div class="relative">
                             <i class="fas fa-search absolute left-4 top-3.5 text-gray-400"></i>
-                            <input type="text" id="searchInput" placeholder="Search hostels by name or amenities..." class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                            <input type="text" name="search" id="searchInput" value="{{ request('search', '') }}" placeholder="Search hostels by name or location..."
+                                   class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
                         </div>
                     </div>
                     <div class="flex space-x-4">
-                        <select id="priceFilter" class="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                        <select name="price_range" id="priceFilter" class="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
                             <option value="">Filter by Price</option>
-                            <option value="0-500">Under ₵500</option>
-                            <option value="500-1000">₵500 - ₵1000</option>
-                            <option value="1000-1500">₵1000 - ₵1500</option>
-                            <option value="1500+">Above ₵1500</option>
+                            <option value="0-500" {{ request('price_range') == '0-500' ? 'selected' : '' }}>Under ₵500</option>
+                            <option value="500-1000" {{ request('price_range') == '500-1000' ? 'selected' : '' }}>₵500 - ₵1000</option>
+                            <option value="1000-1500" {{ request('price_range') == '1000-1500' ? 'selected' : '' }}>₵1000 - ₵1500</option>
+                            <option value="1500-2000" {{ request('price_range') == '1500-2000' ? 'selected' : '' }}>₵1500 - ₵2000</option>
+                            <option value="2000+" {{ request('price_range') == '2000+' ? 'selected' : '' }}>Above ₵2000</option>
                         </select>
-                        <button id="applyFilters" class="bg-blue-700 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-800 transition">
+                        <button type="submit" id="applyFilters" class="bg-blue-700 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-800 transition">
                             Search
                         </button>
                     </div>
@@ -108,31 +163,26 @@
                 <!-- Location Filter -->
                 <div class="mt-6">
                     <h3 class="font-medium text-gray-700 mb-3">Filter by Location:</h3>
-                    <div class="flex flex-wrap gap-3">
-                        <button class="location-btn active px-4 py-2 bg-blue-100 text-blue-800 rounded-lg hover:bg-blue-200 transition" data-location="all">
+                    <div class="flex flex-wrap gap-3" id="locationFilters">
+                        <a href="{{ route('hostels.index', array_merge(request()->except('location'), ['location' => 'all'])) }}" 
+                           class="location-btn {{ !request('location') || request('location') == 'all' ? 'active' : '' }} px-4 py-2 bg-blue-100 text-blue-800 rounded-lg hover:bg-blue-200 transition">
                             All Locations
-                        </button>
-                        <button class="location-btn px-4 py-2 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 transition" data-location="amamoma">
-                            <i class="fas fa-map-marker-alt mr-2"></i>Amamoma
-                        </button>
-                        <button class="location-btn px-4 py-2 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 transition" data-location="kwaprow">
-                            <i class="fas fa-map-marker-alt mr-2"></i>Kwaprow
-                        </button>
-                        <button class="location-btn px-4 py-2 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 transition" data-location="ayensu">
-                            <i class="fas fa-map-marker-alt mr-2"></i>Ayensu
-                        </button>
-                        <button class="location-btn px-4 py-2 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 transition" data-location="schoolbus">
-                            <i class="fas fa-map-marker-alt mr-2"></i>Schoolbus Road
-                        </button>
-                        <button class="location-btn px-4 py-2 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 transition" data-location="oldsite">
-                            <i class="fas fa-map-marker-alt mr-2"></i>Oldsite
-                        </button>
+                        </a>
+                        @if(isset($locations))
+                            @foreach($locations as $location)
+                                <a href="{{ route('hostels.index', array_merge(request()->except('location'), ['location' => $location])) }}" 
+                                   class="location-btn {{ request('location') == $location ? 'active' : '' }} px-4 py-2 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 transition">
+                                    <i class="fas fa-map-marker-alt mr-2"></i>{{ $location }}
+                                </a>
+                            @endforeach
+                        @endif
                     </div>
                 </div>
-            </div>
+            </form>
 
             <!-- Stats -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8" id="statsContainer">
+                @if(isset($stats))
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
                     <div class="flex items-center">
                         <div class="bg-blue-100 p-3 rounded-lg mr-4">
@@ -140,7 +190,7 @@
                         </div>
                         <div>
                             <p class="text-gray-500 text-sm">Total Hostels</p>
-                            <p class="text-2xl font-bold text-gray-800">24</p>
+                            <p class="text-2xl font-bold text-gray-800">{{ $stats['total_hostels'] }}</p>
                         </div>
                     </div>
                 </div>
@@ -151,7 +201,7 @@
                         </div>
                         <div>
                             <p class="text-gray-500 text-sm">Available Rooms</p>
-                            <p class="text-2xl font-bold text-gray-800">142</p>
+                            <p class="text-2xl font-bold text-gray-800">{{ $stats['total_rooms'] }}</p>
                         </div>
                     </div>
                 </div>
@@ -162,7 +212,7 @@
                         </div>
                         <div>
                             <p class="text-gray-500 text-sm">Locations</p>
-                            <p class="text-2xl font-bold text-gray-800">5</p>
+                            <p class="text-2xl font-bold text-gray-800">{{ $stats['locations_count'] }}</p>
                         </div>
                     </div>
                 </div>
@@ -173,10 +223,23 @@
                         </div>
                         <div>
                             <p class="text-gray-500 text-sm">Students Booked</p>
-                            <p class="text-2xl font-bold text-gray-800">1,850+</p>
+                            <p class="text-2xl font-bold text-gray-800">1850+</p>
                         </div>
                     </div>
                 </div>
+                @else
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                    <div class="flex items-center">
+                        <div class="bg-blue-100 p-3 rounded-lg mr-4">
+                            <i class="fas fa-building text-blue-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-gray-500 text-sm">Loading...</p>
+                            <p class="text-2xl font-bold text-gray-800">-</p>
+                        </div>
+                    </div>
+                </div>
+                @endif
             </div>
         </section>
 
@@ -185,8 +248,90 @@
             <h2 class="text-2xl font-bold text-gray-800 mb-6">Available Hostels</h2>
 
             <div id="hostelsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <!-- Hostel cards will be dynamically populated -->
+                @if(isset($transformedHostels) && count($transformedHostels) > 0)
+                    @foreach($transformedHostels as $hostel)
+                        @php
+                            $imageUrl = $hostel['primary_image'] && $hostel['primary_image']->path 
+                                ? Storage::url($hostel['primary_image']->path)
+                                : ($hostel['images'] && count($hostel['images']) > 0 
+                                    ? Storage::url($hostel['images']->first()->path)
+                                    : 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');
+                            $minPrice = $hostel['min_price'] ?? 0;
+                            $availableCount = $hostel['available_rooms_count'] ?? 0;
+                        @endphp
+                        <div class="hostel-card bg-white rounded-xl shadow-md overflow-hidden border border-gray-200">
+                            <div class="relative h-48">
+                                <img src="{{ $imageUrl }}" alt="{{ $hostel['name'] }}" class="w-full h-full object-cover">
+                                <div class="absolute top-4 right-4 bg-blue-700 text-white px-3 py-1 rounded-lg font-semibold">
+                                    ₵{{ number_format($minPrice) }}
+                                </div>
+                                <div class="absolute top-4 left-4 bg-white text-gray-800 px-3 py-1 rounded-lg font-medium text-sm">
+                                    {{ $hostel['location'] }}
+                                </div>
+                                @if($hostel['is_featured'])
+                                <div class="absolute bottom-4 left-4 bg-yellow-500 text-white px-3 py-1 rounded-lg font-medium text-sm">
+                                    Featured
+                                </div>
+                                @endif
+                            </div>
+                            <div class="p-6">
+                                <div class="flex justify-between items-start mb-3">
+                                    <h3 class="text-xl font-bold text-gray-800">{{ $hostel['name'] }}</h3>
+                                    <div class="flex items-center">
+                                        <i class="fas fa-star text-yellow-500 mr-1"></i>
+                                        <span class="font-medium">{{ $hostel['rating'] ?? '0.0' }}</span>
+                                    </div>
+                                </div>
+                                <p class="text-gray-600 mb-4">{{ \Illuminate\Support\Str::limit($hostel['description'], 100) }}</p>
+
+                                <div class="mb-4">
+                                    <p class="text-gray-700 font-medium mb-2">Amenities:</p>
+                                    <div class="flex flex-wrap gap-2">
+                                        @if($hostel['amenities'])
+                                            @foreach(array_slice($hostel['amenities'], 0, 3) as $amenity)
+                                                <span class="bg-gray-100 text-gray-800 text-xs px-3 py-1 rounded-full">{{ $amenity }}</span>
+                                            @endforeach
+                                            @if(count($hostel['amenities']) > 3)
+                                                <span class="bg-gray-100 text-gray-800 text-xs px-3 py-1 rounded-full">+{{ count($hostel['amenities']) - 3 }}</span>
+                                            @endif
+                                        @endif
+                                    </div>
+                                </div>
+
+                                <div class="flex justify-between items-center mb-4">
+                                    <div>
+                                        <p class="text-gray-700"><i class="fas fa-bed text-blue-500 mr-2"></i>From ₵{{ number_format($minPrice) }}/year</p>
+                                    </div>
+                                    <div class="text-green-600 font-semibold">
+                                        <i class="fas fa-check-circle mr-1"></i> {{ $availableCount }} Available
+                                    </div>
+                                </div>
+
+                                <a href="{{ route('hostels.guestshow', $hostel['id']) }}"
+                                   class="block w-full bg-blue-700 text-white py-3 rounded-lg font-semibold hover:bg-blue-800 transition text-center">
+                                    <i class="fas fa-calendar-check mr-2"></i> View Details
+                                </a>
+                            </div>
+                        </div>
+                    @endforeach
+                @else
+                    <div class="col-span-full text-center py-12">
+                        <i class="fas fa-search text-gray-400 text-5xl mb-4"></i>
+                        <h3 class="text-xl font-semibold text-gray-700 mb-2">No hostels found</h3>
+                        <p class="text-gray-500">Try adjusting your filters or search terms</p>
+                        <a href="{{ route('hostels.index') }}" class="mt-4 inline-block bg-blue-700 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-800 transition">
+                            Clear Filters
+                        </a>
+                    </div>
+                @endif
             </div>
+
+            <!-- Pagination -->
+            @if(isset($hostels) && $hostels->hasPages())
+            <div class="mt-8">
+                {{ $hostels->links() }}
+            </div>
+            @endif
         </section>
     </main>
 
@@ -214,12 +359,12 @@
                 </div>
                 <div>
                     <h4 class="text-lg font-bold mb-4">Locations</h4>
-                    <ul class="space-y-2 text-gray-400">
-                        <li>Amamoma</li>
-                        <li>Kwaprow</li>
-                        <li>Ayensu</li>
-                        <li>Schoolbus Road</li>
-                        <li>Oldsite</li>
+                    <ul class="space-y-2 text-gray-400" id="locationList">
+                        @if(isset($locations))
+                            @foreach($locations->slice(0, 5) as $location)
+                                <li>{{ $location }}</li>
+                            @endforeach
+                        @endif
                     </ul>
                 </div>
                 <div>
@@ -241,267 +386,157 @@
                 </div>
             </div>
             <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-                <p>&copy; 2023 University of Cape Coast Hostel Booking System. All rights reserved.</p>
+                <p>&copy; {{ date('Y') }} University of Cape Coast Hostel Booking System. All rights reserved.</p>
             </div>
         </div>
     </footer>
 
-    <!-- Booking Modal -->
-    <div id="bookingModal" class="modal">
-        <div class="modal-content container mx-auto px-4 py-16">
-            <div class="bg-white rounded-xl shadow-2xl max-w-4xl mx-auto overflow-hidden">
-                <div class="p-8">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-2xl font-bold text-gray-800">Book Hostel</h3>
-                        <button id="closeModal" class="text-gray-500 hover:text-gray-700 text-2xl">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div>
-                            <h4 id="modalHostelName" class="text-xl font-semibold text-gray-800 mb-2">Atlantic View Hostel</h4>
-                            <p id="modalHostelLocation" class="text-gray-600 mb-4"><i class="fas fa-map-marker-alt text-blue-500 mr-2"></i>Amamoma</p>
-                            <div id="modalHostelImages" class="mb-6">
-                                <img id="modalMainImage" src="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" alt="Hostel" class="w-full h-48 object-cover rounded-lg mb-3">
-                                <div class="flex space-x-2">
-                                    <img src="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=300&q=80" alt="Hostel" class="w-24 h-20 object-cover rounded cursor-pointer border-2 border-blue-500">
-                                    <img src="https://images.unsplash.com/photo-1555854877-bab0e564b8d5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=300&q=80" alt="Room" class="w-24 h-20 object-cover rounded cursor-pointer">
-                                    <img src="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=300&q=80" alt="Facility" class="w-24 h-20 object-cover rounded cursor-pointer">
-                                </div>
-                            </div>
-                            <div class="mb-6">
-                                <h5 class="font-semibold text-gray-700 mb-2">Amenities</h5>
-                                <div id="modalAmenities" class="flex flex-wrap gap-2">
-                                    <!-- Amenities will be added here -->
-                                </div>
-                            </div>
-                        </div>
-
-                        <div>
-                            <div class="bg-gray-50 p-6 rounded-lg mb-6">
-                                <div class="flex justify-between items-center mb-4">
-                                    <p class="text-gray-700">Price per semester</p>
-                                    <p id="modalPrice" class="text-2xl font-bold text-blue-700">₵1,200</p>
-                                </div>
-                                <div class="flex justify-between items-center mb-4">
-                                    <p class="text-gray-700">Available Rooms</p>
-                                    <p id="modalAvailable" class="text-lg font-semibold text-green-600">8 Rooms</p>
-                                </div>
-                                <div class="flex justify-between items-center">
-                                    <p class="text-gray-700">Room Type</p>
-                                    <p id="modalRoomType" class="font-medium">Single Room</p>
-                                </div>
-                            </div>
-
-                            <div class="mb-6">
-                                <h5 class="font-semibold text-gray-700 mb-3">Booking Information</h5>
-                                <div class="space-y-4">
-                                    <div>
-                                        <label class="block text-gray-600 mb-1">Full Name</label>
-                                        <input type="text" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="Enter your full name">
-                                    </div>
-                                    <div>
-                                        <label class="block text-gray-600 mb-1">Student ID</label>
-                                        <input type="text" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="Enter your student ID">
-                                    </div>
-                                    <div>
-                                        <label class="block text-gray-600 mb-1">Phone Number</label>
-                                        <input type="tel" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="Enter your phone number">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="mb-6">
-                                <h5 class="font-semibold text-gray-700 mb-3">Payment Method</h5>
-                                <div class="grid grid-cols-2 gap-3 mb-4">
-                                    <div class="border-2 border-blue-500 rounded-lg p-4 text-center cursor-pointer">
-                                        <i class="fas fa-credit-card text-blue-500 text-xl mb-2"></i>
-                                        <p class="font-medium">Card Payment</p>
-                                    </div>
-                                    <div class="border border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-gray-400">
-                                        <i class="fas fa-mobile-alt text-gray-500 text-xl mb-2"></i>
-                                        <p class="font-medium">Mobile Money</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <button id="confirmBooking" class="w-full bg-green-600 text-white py-4 rounded-lg font-semibold text-lg hover:bg-green-700 transition flex items-center justify-center">
-                                <i class="fas fa-lock mr-3"></i> Pay ₵1,200 to Confirm Booking
-                            </button>
-                            <p class="text-center text-gray-500 text-sm mt-3">Your booking will be confirmed upon payment</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Login Modal -->
-    <div id="loginModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-8">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-2xl font-bold text-gray-800">Student Login</h3>
-                <button id="closeLoginModal" class="text-gray-500 hover:text-gray-700 text-2xl">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-
-            <div class="space-y-6">
-                <div>
-                    <label class="block text-gray-600 mb-1">Student ID / Email</label>
-                    <input type="text" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="Enter your student ID or email">
-                </div>
-                <div>
-                    <label class="block text-gray-600 mb-1">Password</label>
-                    <input type="password" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="Enter your password">
-                </div>
-                <button class="w-full bg-blue-700 text-white py-3 rounded-lg font-semibold hover:bg-blue-800 transition">
-                    Login to Student Portal
-                </button>
-                <p class="text-center text-gray-500">
-                    Don't have an account? <a href="#" class="text-blue-600 font-medium">Register here</a>
-                </p>
-            </div>
-        </div>
-    </div>
-
     <script>
-        // Sample hostel data
-        const hostels = [
-            {
-                id: 1,
-                name: "Atlantic View Hostel",
-                location: "amamoma",
-                locationName: "Amamoma",
-                price: 1200,
-                available: 8,
-                rating: 4.5,
-                images: [
-                    "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
-                    "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
-                    "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80"
-                ],
-                amenities: ["WiFi", "24/7 Security", "Study Room", "Laundry", "Parking"],
-                description: "Modern hostel with sea view, located just 10 minutes walk from campus.",
-                roomType: "Single Room"
-            },
-            {
-                id: 2,
-                name: "Kwaprow Lodge",
-                location: "kwaprow",
-                locationName: "Kwaprow",
-                price: 850,
-                available: 12,
-                rating: 4.2,
-                images: [
-                    "https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
-                    "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
-                    "https://images.unsplash.com/photo-1560185127-6ed189bf02f4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80"
-                ],
-                amenities: ["WiFi", "24/7 Security", "Common Room", "Cafeteria"],
-                description: "Affordable student accommodation with a friendly community atmosphere.",
-                roomType: "Shared Room (2 beds)"
-            },
-            {
-                id: 3,
-                name: "Ayensu Residences",
-                location: "ayensu",
-                locationName: "Ayensu",
-                price: 1100,
-                available: 5,
-                rating: 4.7,
-                images: [
-                    "https://images.unsplash.com/photo-1578683010236-d716f9a3f461?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
-                    "https://images.unsplash.com/photo-1560185127-6ed189bf02f4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
-                    "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80"
-                ],
-                amenities: ["WiFi", "24/7 Security", "Gym", "Study Room", "Laundry", "Parking", "Cafeteria"],
-                description: "Premium student accommodation with modern facilities and gym access.",
-                roomType: "Single Room with AC"
-            },
-            {
-                id: 4,
-                name: "Schoolbus Road Hostel",
-                location: "schoolbus",
-                locationName: "Schoolbus Road",
-                price: 750,
-                available: 15,
-                rating: 4.0,
-                images: [
-                    "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
-                    "https://images.unsplash.com/photo-1560185127-6ed189bf02f4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
-                    "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80"
-                ],
-                amenities: ["WiFi", "Security", "Common Room"],
-                description: "Economical option for students on a budget, located near school bus stop.",
-                roomType: "Shared Room (4 beds)"
-            },
-            {
-                id: 5,
-                name: "Oldsite Comfort Hostel",
-                location: "oldsite",
-                locationName: "Oldsite",
-                price: 950,
-                available: 6,
-                rating: 4.3,
-                images: [
-                    "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
-                    "https://images.unsplash.com/photo-1560185127-6ed189bf02f4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
-                    "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80"
-                ],
-                amenities: ["WiFi", "24/7 Security", "Study Room", "Laundry", "Parking"],
-                description: "Comfortable accommodation in the historic Oldsite area, close to lecture halls.",
-                roomType: "Single Room"
-            },
-            {
-                id: 6,
-                name: "Cape Coast Suites",
-                location: "amamoma",
-                locationName: "Amamoma",
-                price: 1400,
-                available: 3,
-                rating: 4.8,
-                images: [
-                    "https://images.unsplash.com/photo-1578683010236-d716f9a3f461?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
-                    "https://images.unsplash.com/photo-1560185127-6ed189bf02f4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
-                    "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80"
-                ],
-                amenities: ["WiFi", "24/7 Security", "Gym", "Pool", "Study Room", "Laundry", "Parking", "Cafeteria"],
-                description: "Luxury student accommodation with premium amenities including swimming pool.",
-                roomType: "Executive Suite"
-            }
-        ];
+        // API endpoints
+        const API = {
+            hostels: '{{ route("hostels.index") }}',
+            locations: '{{ route("hostels.locations") }}'
+        };
+
+        // Server-side data passed from Blade
+        const serverData = {
+            hostels: @json($transformedHostels ?? []),
+            locations: @json($locations ?? []),
+            stats: @json($stats ?? null)
+        };
 
         // DOM elements
         const hostelsContainer = document.getElementById('hostelsContainer');
-        const locationButtons = document.querySelectorAll('.location-btn');
+        const locationButtonsContainer = document.getElementById('locationFilters');
+        const statsContainer = document.getElementById('statsContainer');
         const searchInput = document.getElementById('searchInput');
         const priceFilter = document.getElementById('priceFilter');
         const applyFilters = document.getElementById('applyFilters');
-        const bookingModal = document.getElementById('bookingModal');
-        const closeModal = document.getElementById('closeModal');
-        const closeLoginModal = document.getElementById('closeLoginModal');
-        const confirmBooking = document.getElementById('confirmBooking');
+        const loadingSpinner = document.getElementById('loadingSpinner');
 
         // Current filter state
         let currentFilter = {
-            location: 'all',
-            price: '',
-            search: ''
+            location: '{{ request("location", "all") }}',
+            price: '{{ request("price_range", "") }}',
+            search: '{{ request("search", "") }}',
+            page: 1
         };
 
+        // Store all hostels data
+        let allHostels = serverData.hostels || [];
+        let locations = serverData.locations || [];
+
         // Initialize the page
-        function init() {
-            renderHostels(hostels);
-            setupEventListeners();
+        async function init() {
+            showLoading();
+            try {
+                // If no server data, fetch via AJAX
+                if (allHostels.length === 0) {
+                    await Promise.all([fetchHostels(), fetchLocations()]);
+                } else {
+                    // Use server data but still fetch locations if not available
+                    if (locations.length === 0) {
+                        await fetchLocations();
+                    }
+                }
+                updateStats();
+            } catch (error) {
+                console.error('Initialization error:', error);
+                showError('Failed to load data. Please refresh the page.');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Fetch hostels from API
+        async function fetchHostels() {
+            try {
+                const params = new URLSearchParams({
+                    location: currentFilter.location !== 'all' ? currentFilter.location : '',
+                    price_range: currentFilter.price,
+                    search: currentFilter.search
+                });
+
+                const response = await fetch(`${API.hostels}?${params}`);
+                const data = await response.json();
+
+                if (data.data) {
+                    allHostels = data.data;
+                    renderHostels(allHostels);
+                } else {
+                    allHostels = data.hostels?.data || [];
+                    renderHostels(allHostels);
+                }
+            } catch (error) {
+                console.error('Error fetching hostels:', error);
+                throw error;
+            }
+        }
+
+        // Fetch locations for filter
+        async function fetchLocations() {
+            try {
+                const response = await fetch(API.locations);
+                const data = await response.json();
+
+                if (Array.isArray(data)) {
+                    locations = data;
+                } else if (data.locations) {
+                    locations = data.locations;
+                }
+
+                renderLocationFilters();
+                updateLocationList();
+            } catch (error) {
+                console.error('Error fetching locations:', error);
+            }
+        }
+
+        // Render location filter buttons
+        function renderLocationFilters() {
+            // Only update if dynamic (not initial server render)
+            if (locationButtonsContainer.querySelectorAll('.location-btn').length <= 1) {
+                let html = `<a href="{{ route('hostels.index', array_merge(request()->except('location'), ['location' => 'all'])) }}" 
+                           class="location-btn ${!currentFilter.location || currentFilter.location === 'all' ? 'active' : ''} px-4 py-2 bg-blue-100 text-blue-800 rounded-lg hover:bg-blue-200 transition">
+                            All Locations
+                        </a>`;
+
+                locations.forEach(location => {
+                    if (location && location.trim()) {
+                        html += `
+                            <a href="{{ route('hostels.index') }}?location=${encodeURIComponent(location)}" 
+                               class="location-btn px-4 py-2 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 transition" 
+                               data-location="${location.toLowerCase()}">
+                                <i class="fas fa-map-marker-alt mr-2"></i>${location}
+                            </a>
+                        `;
+                    }
+                });
+
+                // Only append if we have locations from AJAX
+                if (locations.length > 0) {
+                    locationButtonsContainer.innerHTML = html;
+                }
+            }
+        }
+
+        // Update location list in footer
+        function updateLocationList() {
+            const locationList = document.getElementById('locationList');
+            if (locationList && locations.length > 0) {
+                let html = '';
+                locations.slice(0, 5).forEach(location => {
+                    if (location && location.trim()) {
+                        html += `<li>${location}</li>`;
+                    }
+                });
+                locationList.innerHTML = html;
+            }
         }
 
         // Render hostels to the page
         function renderHostels(hostelsArray) {
-            hostelsContainer.innerHTML = '';
-
-            if (hostelsArray.length === 0) {
+            if (!hostelsArray || hostelsArray.length === 0) {
                 hostelsContainer.innerHTML = `
                     <div class="col-span-full text-center py-12">
                         <i class="fas fa-search text-gray-400 text-5xl mb-4"></i>
@@ -512,220 +547,253 @@
                 return;
             }
 
+            let html = '';
             hostelsArray.forEach(hostel => {
-                const hostelCard = document.createElement('div');
-                hostelCard.className = 'hostel-card bg-white rounded-xl shadow-md overflow-hidden border border-gray-200';
-                hostelCard.innerHTML = `
-                    <div class="relative">
-                        <img src="${hostel.images[0]}" alt="${hostel.name}" class="w-full h-48 object-cover">
-                        <div class="absolute top-4 right-4 bg-blue-700 text-white px-3 py-1 rounded-lg font-semibold">
-                            ₵${hostel.price}
-                        </div>
-                        <div class="absolute top-4 left-4 bg-white text-gray-800 px-3 py-1 rounded-lg font-medium text-sm">
-                            ${hostel.locationName}
-                        </div>
-                    </div>
-                    <div class="p-6">
-                        <div class="flex justify-between items-start mb-3">
-                            <h3 class="text-xl font-bold text-gray-800">${hostel.name}</h3>
-                            <div class="flex items-center">
-                                <i class="fas fa-star text-yellow-500 mr-1"></i>
-                                <span class="font-medium">${hostel.rating}</span>
-                            </div>
-                        </div>
-                        <p class="text-gray-600 mb-4">${hostel.description}</p>
+                const imageUrl = hostel.primary_image?.path
+                    ? `{{ Storage::url('') }}${hostel.primary_image.path}`
+                    : hostel.images?.[0] || 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
 
-                        <div class="mb-4">
-                            <p class="text-gray-700 font-medium mb-2">Amenities:</p>
-                            <div class="flex flex-wrap gap-2">
-                                ${hostel.amenities.slice(0, 3).map(amenity => `
-                                    <span class="bg-gray-100 text-gray-800 text-xs px-3 py-1 rounded-full">${amenity}</span>
-                                `).join('')}
-                                ${hostel.amenities.length > 3 ? `<span class="bg-gray-100 text-gray-800 text-xs px-3 py-1 rounded-full">+${hostel.amenities.length - 3}</span>` : ''}
-                            </div>
-                        </div>
+                const minPrice = hostel.min_price || hostel.rooms?.[0]?.room_cost || 0;
+                const availableCount = hostel.available_rooms_count || hostel.rooms?.length || 0;
 
-                        <div class="flex justify-between items-center mb-4">
-                            <div>
-                                <p class="text-gray-700"><i class="fas fa-bed text-blue-500 mr-2"></i>${hostel.roomType}</p>
+                html += `
+                    <div class="hostel-card bg-white rounded-xl shadow-md overflow-hidden border border-gray-200">
+                        <div class="relative h-48">
+                            <img src="${imageUrl}" alt="${hostel.name}" class="w-full h-full object-cover">
+                            <div class="absolute top-4 right-4 bg-blue-700 text-white px-3 py-1 rounded-lg font-semibold">
+                                ₵${minPrice}
                             </div>
-                            <div class="text-green-600 font-semibold">
-                                <i class="fas fa-check-circle mr-1"></i> ${hostel.available} Available
+                            <div class="absolute top-4 left-4 bg-white text-gray-800 px-3 py-1 rounded-lg font-medium text-sm">
+                                ${hostel.location}
                             </div>
+                            ${hostel.is_featured ? `
+                                <div class="absolute bottom-4 left-4 bg-yellow-500 text-white px-3 py-1 rounded-lg font-medium text-sm">
+                                    Featured
+                                </div>
+                            ` : ''}
                         </div>
+                        <div class="p-6">
+                            <div class="flex justify-between items-start mb-3">
+                                <h3 class="text-xl font-bold text-gray-800">${hostel.name}</h3>
+                                <div class="flex items-center">
+                                    <i class="fas fa-star text-yellow-500 mr-1"></i>
+                                    <span class="font-medium">${hostel.rating || '0.0'}</span>
+                                </div>
+                            </div>
+                            <p class="text-gray-600 mb-4">${hostel.description?.substring(0, 100)}${hostel.description?.length > 100 ? '...' : ''}</p>
 
-                        <button class="book-btn w-full bg-blue-700 text-white py-3 rounded-lg font-semibold hover:bg-blue-800 transition" data-id="${hostel.id}">
-                            <i class="fas fa-calendar-check mr-2"></i> Book Now
-                        </button>
+                            <div class="mb-4">
+                                <p class="text-gray-700 font-medium mb-2">Amenities:</p>
+                                <div class="flex flex-wrap gap-2">
+                                    ${hostel.amenities?.slice(0, 3).map(amenity => `
+                                        <span class="bg-gray-100 text-gray-800 text-xs px-3 py-1 rounded-full">${amenity}</span>
+                                    `).join('')}
+                                    ${hostel.amenities?.length > 3 ? `<span class="bg-gray-100 text-gray-800 text-xs px-3 py-1 rounded-full">+${hostel.amenities.length - 3}</span>` : ''}
+                                </div>
+                            </div>
+
+                            <div class="flex justify-between items-center mb-4">
+                                <div>
+                                    <p class="text-gray-700"><i class="fas fa-bed text-blue-500 mr-2"></i>From ₵${minPrice}/year</p>
+                                </div>
+                                <div class="text-green-600 font-semibold">
+                                    <i class="fas fa-check-circle mr-1"></i> ${availableCount} Available
+                                </div>
+                            </div>
+
+                            <a href="{{ url('hostels') }}/${hostel.id}"
+                               class="block w-full bg-blue-700 text-white py-3 rounded-lg font-semibold hover:bg-blue-800 transition text-center">
+                                <i class="fas fa-calendar-check mr-2"></i> View Details
+                            </a>
+                        </div>
                     </div>
                 `;
-                hostelsContainer.appendChild(hostelCard);
             });
 
-            // Add event listeners to book buttons
-            document.querySelectorAll('.book-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const hostelId = parseInt(this.getAttribute('data-id'));
-                    openBookingModal(hostelId);
-                });
-            });
+            hostelsContainer.innerHTML = html;
         }
 
-        // Filter hostels based on current filters
-        function filterHostels() {
-            let filteredHostels = [...hostels];
-
-            // Filter by location
-            if (currentFilter.location !== 'all') {
-                filteredHostels = filteredHostels.filter(hostel => hostel.location === currentFilter.location);
+        // Update statistics
+        function updateStats() {
+            // If we have server stats, use them
+            if (serverData.stats) {
+                statsContainer.innerHTML = `
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                        <div class="flex items-center">
+                            <div class="bg-blue-100 p-3 rounded-lg mr-4">
+                                <i class="fas fa-building text-blue-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-gray-500 text-sm">Total Hostels</p>
+                                <p class="text-2xl font-bold text-gray-800">${serverData.stats.total_hostels}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                        <div class="flex items-center">
+                            <div class="bg-green-100 p-3 rounded-lg mr-4">
+                                <i class="fas fa-bed text-green-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-gray-500 text-sm">Available Rooms</p>
+                                <p class="text-2xl font-bold text-gray-800">${serverData.stats.total_rooms}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                        <div class="flex items-center">
+                            <div class="bg-purple-100 p-3 rounded-lg mr-4">
+                                <i class="fas fa-map-marked-alt text-purple-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-gray-500 text-sm">Locations</p>
+                                <p class="text-2xl font-bold text-gray-800">${serverData.stats.locations_count}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                        <div class="flex items-center">
+                            <div class="bg-yellow-100 p-3 rounded-lg mr-4">
+                                <i class="fas fa-users text-yellow-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-gray-500 text-sm">Students Booked</p>
+                                <p class="text-2xl font-bold text-gray-800">1850+</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                return;
             }
 
-            // Filter by price
-            if (currentFilter.price) {
-                if (currentFilter.price === '0-500') {
-                    filteredHostels = filteredHostels.filter(hostel => hostel.price < 500);
-                } else if (currentFilter.price === '500-1000') {
-                    filteredHostels = filteredHostels.filter(hostel => hostel.price >= 500 && hostel.price <= 1000);
-                } else if (currentFilter.price === '1000-1500') {
-                    filteredHostels = filteredHostels.filter(hostel => hostel.price >= 1000 && hostel.price <= 1500);
-                } else if (currentFilter.price === '1500+') {
-                    filteredHostels = filteredHostels.filter(hostel => hostel.price > 1500);
-                }
-            }
+            // Otherwise calculate from client-side data
+            const totalHostels = allHostels.length;
+            const totalRooms = allHostels.reduce((sum, hostel) => sum + (hostel.rooms?.length || 0), 0);
+            const uniqueLocations = [...new Set(allHostels.map(h => h.location).filter(Boolean))].length;
+            const totalBookings = 1850;
 
-            // Filter by search term
-            if (currentFilter.search) {
-                const searchTerm = currentFilter.search.toLowerCase();
-                filteredHostels = filteredHostels.filter(hostel =>
-                    hostel.name.toLowerCase().includes(searchTerm) ||
-                    hostel.description.toLowerCase().includes(searchTerm) ||
-                    hostel.amenities.some(amenity => amenity.toLowerCase().includes(searchTerm)) ||
-                    hostel.locationName.toLowerCase().includes(searchTerm)
-                );
-            }
-
-            renderHostels(filteredHostels);
+            statsContainer.innerHTML = `
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                    <div class="flex items-center">
+                        <div class="bg-blue-100 p-3 rounded-lg mr-4">
+                            <i class="fas fa-building text-blue-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-gray-500 text-sm">Total Hostels</p>
+                            <p class="text-2xl font-bold text-gray-800">${totalHostels}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                    <div class="flex items-center">
+                        <div class="bg-green-100 p-3 rounded-lg mr-4">
+                            <i class="fas fa-bed text-green-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-gray-500 text-sm">Available Rooms</p>
+                            <p class="text-2xl font-bold text-gray-800">${totalRooms}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                    <div class="flex items-center">
+                        <div class="bg-purple-100 p-3 rounded-lg mr-4">
+                            <i class="fas fa-map-marked-alt text-purple-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-gray-500 text-sm">Locations</p>
+                            <p class="text-2xl font-bold text-gray-800">${uniqueLocations}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                    <div class="flex items-center">
+                        <div class="bg-yellow-100 p-3 rounded-lg mr-4">
+                            <i class="fas fa-users text-yellow-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-gray-500 text-sm">Students Booked</p>
+                            <p class="text-2xl font-bold text-gray-800">${totalBookings}+</p>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
 
-        // Open booking modal with hostel details
-        function openBookingModal(hostelId) {
-            const hostel = hostels.find(h => h.id === hostelId);
-            if (!hostel) return;
+        // Apply filters handler (for AJAX)
+        async function applyFiltersHandler() {
+            showLoading();
+            try {
+                await fetchHostels();
+            } catch (error) {
+                console.error('Error applying filters:', error);
+            } finally {
+                hideLoading();
+            }
+        }
 
-            // Update modal content
-            document.getElementById('modalHostelName').textContent = hostel.name;
-            document.getElementById('modalHostelLocation').innerHTML = `<i class="fas fa-map-marker-alt text-blue-500 mr-2"></i>${hostel.locationName}`;
-            document.getElementById('modalPrice').textContent = `₵${hostel.price}`;
-            document.getElementById('modalAvailable').textContent = `${hostel.available} Rooms`;
-            document.getElementById('modalRoomType').textContent = hostel.roomType;
+        // Show error message
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg z-50';
+            errorDiv.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-exclamation-circle mr-2"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            document.body.appendChild(errorDiv);
+            setTimeout(() => errorDiv.remove(), 5000);
+        }
 
-            // Update main image
-            const mainImage = document.getElementById('modalMainImage');
-            mainImage.src = hostel.images[0];
-            mainImage.alt = hostel.name;
+        // Loading spinner functions
+        function showLoading() {
+            loadingSpinner.classList.remove('hidden');
+        }
 
-            // Update amenity badges
-            const amenitiesContainer = document.getElementById('modalAmenities');
-            amenitiesContainer.innerHTML = hostel.amenities.map(amenity =>
-                `<span class="bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full">${amenity}</span>`
-            ).join('');
-
-            // Add click events to thumbnail images
-            const thumbnails = document.querySelectorAll('#modalHostelImages .w-24');
-            thumbnails.forEach((thumb, index) => {
-                if (index < hostel.images.length) {
-                    thumb.src = hostel.images[index];
-                    thumb.addEventListener('click', function() {
-                        mainImage.src = this.src;
-                        // Update active thumbnail
-                        thumbnails.forEach(t => t.classList.remove('border-2', 'border-blue-500'));
-                        this.classList.add('border-2', 'border-blue-500');
-                    });
-                }
-            });
-
-            // Show modal
-            bookingModal.style.display = 'block';
-            document.body.style.overflow = 'hidden';
+        function hideLoading() {
+            loadingSpinner.classList.add('hidden');
         }
 
         // Setup event listeners
         function setupEventListeners() {
-            // Location filter buttons
-            locationButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    // Remove active class from all buttons
-                    locationButtons.forEach(btn => {
-                        btn.classList.remove('active', 'bg-blue-100', 'text-blue-800');
-                        btn.classList.add('bg-gray-100', 'text-gray-800');
-                    });
-
-                    // Add active class to clicked button
-                    this.classList.remove('bg-gray-100', 'text-gray-800');
-                    this.classList.add('active', 'bg-blue-100', 'text-blue-800');
-
-                    // Update current filter
-                    currentFilter.location = this.getAttribute('data-location');
-                    filterHostels();
-                });
-            });
-
-            // Search input
+            // Search input with debounce for AJAX
+            let searchTimeout;
             searchInput.addEventListener('input', function() {
-                currentFilter.search = this.value;
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    currentFilter.search = this.value;
+                    currentFilter.page = 1;
+                    // Could trigger AJAX here, but form submission handles it
+                }, 500);
             });
 
-            // Price filter
+            // Price filter change
             priceFilter.addEventListener('change', function() {
                 currentFilter.price = this.value;
+                currentFilter.page = 1;
+                // Could trigger AJAX here, but form submission handles it
             });
 
-            // Apply filters button
-            applyFilters.addEventListener('click', filterHostels);
-
-            // Close booking modal
-            closeModal.addEventListener('click', function() {
-                bookingModal.style.display = 'none';
-                document.body.style.overflow = 'auto';
+            // Apply filters button (form submission)
+            applyFilters.addEventListener('click', function() {
+                // Form will submit naturally
             });
 
-            // Close modal when clicking outside
-            window.addEventListener('click', function(event) {
-                if (event.target === bookingModal) {
-                    bookingModal.style.display = 'none';
-                    document.body.style.overflow = 'auto';
-                }
-                if (event.target === loginModal) {
-                    loginModal.classList.add('hidden');
-                    document.body.style.overflow = 'auto';
-                }
-            });
-
-          
-
-            // Close login modal
-            closeLoginModal.addEventListener('click', function() {
-                loginModal.classList.add('hidden');
-                document.body.style.overflow = 'auto';
-            });
-
-            // Confirm booking button
-            confirmBooking.addEventListener('click', function() {
-                alert('Booking confirmed! Payment gateway would open in a real application.');
-                bookingModal.style.display = 'none';
-                document.body.style.overflow = 'auto';
-            });
-
-            // Allow Enter key to trigger search
+            // Enter key in search
             searchInput.addEventListener('keyup', function(event) {
                 if (event.key === 'Enter') {
-                    filterHostels();
+                    currentFilter.search = this.value;
+                    // Form will submit naturally
                 }
             });
         }
 
         // Initialize the application
-        init();
+        document.addEventListener('DOMContentLoaded', () => {
+            init();
+            setupEventListeners();
+        });
     </script>
 </body>
 </html>

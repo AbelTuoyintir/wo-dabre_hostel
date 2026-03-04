@@ -1,11 +1,8 @@
-## Tasks
-- [x] Fix StudentMiddleware.php - broken logic that blocks non-admin users
-- [x] Fix AdminMiddleware.php - redundant match case
-=======
-# TODO List - Fix Middleware and Payment Issues
+# TODO: Fix guestShow.blade.php Issues
 
-## Tasks
-- [x] Fix StudentMiddleware.php - broken logic that blocks non-admin users
-- [x] Fix AdminMiddleware.php - redundant match case
-- [ ] Fix routes/payment.php - add all missing routes for PaymentController
-- [ ] Verify payment flow works end-to-end
+## Issues to Fix:
+1. [x] Image column name: change `path` to `image_path` for hostel and room images
+2. [x] Contact fields: change `contact_phone` to `phone`, `contact_email` to `email`
+3. [x] Similar hostels variable: change `$similarHostels` to `$relatedHostels` in the view
+4. [x] Reviews count: add accessor or use `$reviewCount` from controller
+5. [x] Rating: use `$averageRating` instead of `$hostel->rating` for consistency

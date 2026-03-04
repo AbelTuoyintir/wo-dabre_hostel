@@ -15,22 +15,10 @@ use App\Http\Controllers\StudentDashboard;
 | Web Routes
 |--------------------------------------------------------------------------
 */
-
-Route::get('/', function () {
-    return view('welcome');
-});
-
-
-// Public/Student Booking Routes
-
-
-Route::prefix('hostels')->name('hostels.')->group(function () {
-    Route::get('/', [HostelController::class, 'index'])->name('index');
-    Route::get('/search', [HostelController::class, 'search'])->name('search');
-    Route::get('/locations', [HostelController::class, 'getLocations'])->name('locations');
-    Route::get('/{hostel}', [HostelController::class, 'show'])->name('show');
-    Route::get('/{hostel}/rooms', [HostelController::class, 'rooms'])->name('rooms');
-});
+// Public hostel routes (for the welcome page)
+Route::get('/', [HostelController::class, 'index'])->name('hostels.index');
+Route::get('/hostels/locations', [HostelController::class, 'getLocations'])->name('hostels.locations');
+Route::get('/hostels/{hostel}', [HostelController::class, 'guestShow'])->name('hostels.guestshow');
 
 
 

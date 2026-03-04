@@ -119,6 +119,11 @@ class Hostel extends Model
             ->count();
     }
 
+    public function getReviewsCountAttribute()
+    {
+        return $this->reviews()->count();
+    }
+
     public function updateRating()
     {
         $this->rating = $this->reviews()->avg('rating') ?? 0;
