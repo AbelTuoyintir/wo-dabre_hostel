@@ -164,13 +164,13 @@
                 <div class="mt-6">
                     <h3 class="font-medium text-gray-700 mb-3">Filter by Location:</h3>
                     <div class="flex flex-wrap gap-3" id="locationFilters">
-                        <a href="{{ route('hostels.index', array_merge(request()->except('location'), ['location' => 'all'])) }}" 
+                        <a href="{{ route('hostels.index', array_merge(request()->except('location'), ['location' => 'all'])) }}"
                            class="location-btn {{ !request('location') || request('location') == 'all' ? 'active' : '' }} px-4 py-2 bg-blue-100 text-blue-800 rounded-lg hover:bg-blue-200 transition">
                             All Locations
                         </a>
                         @if(isset($locations))
                             @foreach($locations as $location)
-                                <a href="{{ route('hostels.index', array_merge(request()->except('location'), ['location' => $location])) }}" 
+                                <a href="{{ route('hostels.index', array_merge(request()->except('location'), ['location' => $location])) }}"
                                    class="location-btn {{ request('location') == $location ? 'active' : '' }} px-4 py-2 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 transition">
                                     <i class="fas fa-map-marker-alt mr-2"></i>{{ $location }}
                                 </a>
@@ -251,10 +251,10 @@
                 @if(isset($transformedHostels) && count($transformedHostels) > 0)
                     @foreach($transformedHostels as $hostel)
                         @php
-                            $imageUrl = $hostel['primary_image'] && $hostel['primary_image']->path 
-                                ? Storage::url($hostel['primary_image']->path)
-                                : ($hostel['images'] && count($hostel['images']) > 0 
-                                    ? Storage::url($hostel['images']->first()->path)
+                            $imageUrl = !empty($hostel['primary_image']['image_path'])
+                                ? Storage::url($hostel['primary_image']['image_path'])
+                                : (!empty($hostel['images']) && count($hostel['images']) > 0
+                                    ? Storage::url($hostel['images']->first()['image_path'])
                                     : 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');
                             $minPrice = $hostel['min_price'] ?? 0;
                             $availableCount = $hostel['available_rooms_count'] ?? 0;
@@ -262,9 +262,7 @@
                         <div class="hostel-card bg-white rounded-xl shadow-md overflow-hidden border border-gray-200">
                             <div class="relative h-48">
                                 <img src="{{ $imageUrl }}" alt="{{ $hostel['name'] }}" class="w-full h-full object-cover">
-                                <div class="absolute top-4 right-4 bg-blue-700 text-white px-3 py-1 rounded-lg font-semibold">
-                                    ₵{{ number_format($minPrice) }}
-                                </div>
+
                                 <div class="absolute top-4 left-4 bg-white text-gray-800 px-3 py-1 rounded-lg font-medium text-sm">
                                     {{ $hostel['location'] }}
                                 </div>
@@ -496,7 +494,7 @@
         function renderLocationFilters() {
             // Only update if dynamic (not initial server render)
             if (locationButtonsContainer.querySelectorAll('.location-btn').length <= 1) {
-                let html = `<a href="{{ route('hostels.index', array_merge(request()->except('location'), ['location' => 'all'])) }}" 
+                let html = `<a href="{{ route('hostels.index', array_merge(request()->except('location'), ['location' => 'all'])) }}"
                            class="location-btn ${!currentFilter.location || currentFilter.location === 'all' ? 'active' : ''} px-4 py-2 bg-blue-100 text-blue-800 rounded-lg hover:bg-blue-200 transition">
                             All Locations
                         </a>`;
@@ -504,8 +502,8 @@
                 locations.forEach(location => {
                     if (location && location.trim()) {
                         html += `
-                            <a href="{{ route('hostels.index') }}?location=${encodeURIComponent(location)}" 
-                               class="location-btn px-4 py-2 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 transition" 
+                            <a href="{{ route('hostels.index') }}?location=${encodeURIComponent(location)}"
+                               class="location-btn px-4 py-2 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 transition"
                                data-location="${location.toLowerCase()}">
                                 <i class="fas fa-map-marker-alt mr-2"></i>${location}
                             </a>
@@ -548,11 +546,12 @@
             }
 
             let html = '';
-            hostelsArray.forEach(hostel => {
-                const imageUrl = hostel.primary_image?.path
-                    ? `{{ Storage::url('') }}${hostel.primary_image.path}`
-                    : hostel.images?.[0] || 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+            hostelsArray.forEach(host const imageUrl =el => {
 
+                    ? `{{ Storage::url('') }}${hostel.primary_image.image_path}`
+                    : hostel.images?.[0]?.image_path
+                        ? `{{ Storage::url('') }}${hostel.images[0].image_path}`
+                        : 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
                 const minPrice = hostel.min_price || hostel.rooms?.[0]?.room_cost || 0;
                 const availableCount = hostel.available_rooms_count || hostel.rooms?.length || 0;
 

@@ -18,7 +18,7 @@ Route::prefix('bookings')->name('bookings.')->group(function () {
         ->name('create');
     
     // Guest booking store
-    Route::post('/', [BookingController::class, 'store'])
+    Route::post('/booking/public', [BookingController::class, 'store'])
         ->name('store');
     
     // ===== STUDENT ROUTES (Authentication required) =====
@@ -40,6 +40,7 @@ Route::prefix('bookings')->name('bookings.')->group(function () {
     // SINGLE CALLBACK URL - Handles both guest and student payments
     Route::get('/payment/callback/{gateway}', [BookingController::class, 'handlePaymentCallback'])
         ->name('payment.callback');
+    
     
     // View booking details (works for both, but will redirect to login if not authenticated)
     Route::get('/{booking}', [BookingController::class, 'show'])

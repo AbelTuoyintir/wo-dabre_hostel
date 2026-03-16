@@ -85,16 +85,6 @@ class HostelController extends Controller
             });
         }
 
-        // Distance based sorting (if coordinates provided)
-        if ($request->filled('lat') && $request->filled('lng')) {
-            $lat = $request->lat;
-            $lng = $request->lng;
-
-            $query->selectRaw(
-                '*, ( 6371 * acos( cos( radians(?) ) * cos( radians( latitude ) ) * cos( radians( longitude ) - radians(?) ) + sin( radians(?) ) * sin( radians( latitude ) ) ) ) AS distance',
-                [$lat, $lng, $lat]
-            )->orderBy('distance');
-        }
 
         // Sorting options
         switch ($request->sort) {
@@ -143,10 +133,10 @@ class HostelController extends Controller
                     'rating' => $hostel->rating,
                     'is_featured' => $hostel->is_featured,
                     'primary_image' => $hostel->primaryImage ? [
-                        'path' => $hostel->primaryImage->path
+                        'image_path' => $hostel->primaryImage->image_path
                     ] : null,
                     'images' => $hostel->images->map(function($image) {
-                        return ['path' => $image->path];
+                        return ['image_path' => $image->image_path];
                     }),
                     'amenities' => $hostel->amenities,
                     'rooms' => $hostel->rooms->map(function($room) {
@@ -190,8 +180,12 @@ class HostelController extends Controller
                 'description' => $hostel->description,
                 'rating' => $hostel->rating,
                 'is_featured' => $hostel->is_featured,
-                'primary_image' => $hostel->primaryImage,
-                'images' => $hostel->images,
+                'primary_image' => $hostel->primaryImage ? [
+                    'image_path' => $hostel->primaryImage->image_path
+                ] : null,
+                'images' => $hostel->images->map(function($image) {
+                    return ['image_path' => $image->image_path];
+                }),
                 'amenities' => $hostel->amenities,
                 'rooms' => $hostel->rooms,
                 'min_price' => $hostel->rooms->min('room_cost'),
@@ -422,7 +416,10 @@ class HostelController extends Controller
             'primaryImage',
             'rooms' => function($q) {
                 $q->where('status', 'available')
-                ->whereColumn('current_occupancy', '<', 'capacity')
+                ->where(function($query) {
+                    $query->whereNull('current_occupancy')
+                            ->orWhereColumn('current_occupancy', '<', 'capacity');
+                })
                 ->with('images');
             }
         ])->findOrFail($id);
