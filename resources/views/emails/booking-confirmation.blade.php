@@ -70,7 +70,7 @@
 
         @if(isset($is_new_account) && $is_new_account)
         <div class="credentials">
-            <h3 style="margin-top: 0; color: #0369a1;">🎉 Welcome to UCC Hostel Booking System!</h3>
+            <h3 style="margin-top: 0; color: #0369a1;">Welcome to UCC Hostel Booking System!</h3>
             <p>An account has been created for you. Here are your login details:</p>
             
             <table style="width: 100%; margin: 15px 0;">
@@ -130,8 +130,6 @@
         <h3>Important Information</h3>
         <ul style="padding-left: 20px;">
             <li>Please bring a valid ID and your student ID for check-in</li>
-            <li>Check-in time: 2:00 PM</li>
-            <li>Check-out time: 12:00 PM</li>
             <li>For any inquiries, contact the hostel management</li>
         </ul>
 

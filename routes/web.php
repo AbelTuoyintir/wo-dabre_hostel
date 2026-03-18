@@ -18,7 +18,7 @@ use App\Http\Controllers\StudentDashboard;
 // Public hostel routes (for the welcome page)
 Route::get('/', [HostelController::class, 'index'])->name('hostels.index');
 Route::get('/hostels/locations', [HostelController::class, 'getLocations'])->name('hostels.locations');
-Route::get('/hostels/{hostel}', [HostelController::class, 'guestShow'])->name('hostels.guestshow');
+Route::get('/hostels/{hostel}', [HostelController::class, 'guestShow'])->name('hostels.guest.show');
 
 
 

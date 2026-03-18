@@ -134,13 +134,13 @@
                             <i class="fas fa-map-marker-alt text-red-500 mr-2"></i>{{ $hostel->location }}
                         </p>
                     </div>
-                    <div class="text-right">
+                    {{-- <div class="text-right">
                         <div class="bg-blue-100 px-4 py-2 rounded-lg">
                             <p class="text-sm text-gray-600">Starting from</p>
                             <p class="text-2xl font-bold text-blue-600">₵{{ number_format($hostel->min_price ?? 0, 2) }}</p>
                             <p class="text-xs text-gray-500">per academic year</p>
                         </div>
-                    </div>
+                    </div> --}}
                 </div>
 
                 <!-- Rating -->
@@ -219,16 +219,26 @@
                         <div class="border rounded-lg p-4 hover:shadow-lg transition">
                             <!-- Room Image -->
                             <div class="relative h-40 mb-4 -mx-4 -mt-4 rounded-t-lg overflow-hidden bg-gray-100">
-                                @if($room->images && $room->images->count() > 0)
-                                    <img src="{{ Storage::url($room->images->first()->image_path) }}" 
-                                         alt="Room {{ $room->number }}"
-                                         class="w-full h-full object-cover">
+                                 @if($room->roomImages && $room->roomImages->count() > 0)
+                                    @php
+                                        $firstImage = $room->roomImages->first();
+                                        $imagePath = $firstImage->image_path ?? $firstImage->path ?? null;
+                                    @endphp
+                                    @if($imagePath)
+                                        <img src="{{ Storage::url($imagePath) }}" 
+                                            alt="Room {{ $room->number }}"
+                                            class="w-full h-full object-cover"
+                                            onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center\'><i class=\'fas fa-door-open text-gray-400 text-4xl\'></i></div>';">
+                                    @else
+                                        <div class="w-full h-full flex items-center justify-center">
+                                            <i class="fas fa-door-open text-gray-400 text-4xl"></i>
+                                        </div>
+                                    @endif
                                 @else
                                     <div class="w-full h-full flex items-center justify-center">
                                         <i class="fas fa-door-open text-gray-400 text-4xl"></i>
                                     </div>
-                                @endif
-                                <div class="absolute top-2 left-2 bg-blue-600 text-white text-sm font-semibold px-3 py-1 rounded-full">
+                                @endif                                <div class="absolute top-2 left-2 bg-blue-600 text-white text-sm font-semibold px-3 py-1 rounded-full">
                                     Room {{ $room->number }}
                                 </div>
                                 <div class="absolute bottom-2 right-2">

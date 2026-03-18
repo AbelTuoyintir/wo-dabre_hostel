@@ -122,4 +122,11 @@ class Room extends Model
     {
         return $this->attributes['room_cost'] ?? null;
     }
+    /**
+ * Get the images for the room
+    */
+      public function roomImages()
+    {
+        return $this->hasMany(HostelImage::class);
+    }
 }

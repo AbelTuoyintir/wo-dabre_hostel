@@ -297,12 +297,12 @@
                                 </div>
 
                                 <div class="flex justify-between items-center mb-4">
-                                    <div>
+                                    {{-- <div>
                                         <p class="text-gray-700"><i class="fas fa-bed text-blue-500 mr-2"></i>From ₵{{ number_format($minPrice) }}/year</p>
-                                    </div>
-                                    <div class="text-green-600 font-semibold">
+                                    </div> --}}
+                                    {{-- <div class="text-green-600 font-semibold">
                                         <i class="fas fa-check-circle mr-1"></i> {{ $availableCount }} Available
-                                    </div>
+                                    </div> --}}
                                 </div>
 
                                 <a href="{{ route('hostels.guestshow', $hostel['id']) }}"

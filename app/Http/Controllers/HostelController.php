@@ -409,61 +409,63 @@ class HostelController extends Controller
     /**
  * Display the specified hostel for guests
  */
-    public function guestShow($id)
-    {
-        $hostel = Hostel::with([
-            'images',
-            'primaryImage',
-            'rooms' => function($q) {
-                $q->where('status', 'available')
-                ->where(function($query) {
-                    $query->whereNull('current_occupancy')
-                            ->orWhereColumn('current_occupancy', '<', 'capacity');
-                })
-                ->with('images');
-            }
-        ])->findOrFail($id);
-
-        if (!$hostel->is_approved || $hostel->status !== 'active') {
-            abort(404);
+   public function guestShow($id)
+{
+    $hostel = Hostel::with([
+        'images',        // For hostel images
+        'primaryImage',
+        'rooms' => function($q) {
+            $q->where('status', 'available')
+              ->where(function($query) {
+                  $query->whereNull('current_occupancy')
+                        ->orWhereColumn('current_occupancy', '<', 'capacity');
+              })
+              ->with('roomImages'); // Load room images using the new relationship
         }
+    ])->findOrFail($id);
 
-        // Get available rooms
-        $availableRooms = $hostel->rooms;
-
-        // Calculate min price
-        $hostel->min_price = $availableRooms->min('room_cost');
-
-        // Get similar hostels in same location
-        $similarHostels = Hostel::where('is_approved', true)
-            ->where('status', 'active')
-            ->where('location', $hostel->location)
-            ->where('id', '!=', $hostel->id)
-            ->with(['primaryImage'])
-            ->limit(3)
-            ->get()
-            ->map(function($similar) {
-                $similar->min_price = $similar->rooms()
-                    ->where('status', 'available')
-                    ->whereColumn('current_occupancy', '<', 'capacity')
-                    ->min('room_cost');
-                return $similar;
-            });
-
-        // Get locations for footer
-        $locations = Cache::remember('hostel_locations', 3600, function() {
-            return Hostel::where('is_approved', true)
-                ->where('status', 'active')
-                ->select('location')
-                ->distinct()
-                ->orderBy('location')
-                ->pluck('location')
-                ->take(5);
-        });
-
-        return view('admin.hostels.guestShow', compact('hostel', 'availableRooms', 'similarHostels', 'locations'));
+    if (!$hostel->is_approved || $hostel->status !== 'active') {
+        abort(404);
     }
 
+    // Get available rooms
+    $availableRooms = $hostel->rooms;
+
+    // Calculate min price
+    $hostel->min_price = $availableRooms->min('room_cost');
+
+    //show the number of available space for each room.
+    // $availableRooms = Room::where()
+
+    // Get similar hostels in same location
+    $similarHostels = Hostel::where('is_approved', true)
+        ->where('status', 'active')
+        ->where('location', $hostel->location)
+        ->where('id', '!=', $hostel->id)
+        ->with(['primaryImage'])
+        ->limit(3)
+        ->get()
+        ->map(function($similar) {
+            $similar->min_price = $similar->rooms()
+                ->where('status', 'available')
+                ->whereColumn('current_occupancy', '<', 'capacity')
+                ->min('room_cost');
+            return $similar;
+        });
+
+    // Get locations for footer
+    $locations = Cache::remember('hostel_locations', 3600, function() {
+        return Hostel::where('is_approved', true)
+            ->where('status', 'active')
+            ->select('location')
+            ->distinct()
+            ->orderBy('location')
+            ->pluck('location')
+            ->take(5);
+    });
+
+    return view('admin.hostels.guestShow', compact('hostel', 'availableRooms', 'similarHostels', 'locations'));
+}
     // /**
     //  * Show hostel reviews page
     //  */

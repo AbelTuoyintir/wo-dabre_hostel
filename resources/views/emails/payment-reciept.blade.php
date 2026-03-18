@@ -129,8 +129,8 @@
                         @php
                             $methodDisplay = match($payment->payment_method) {
                                 'card' => '💳 Card Payment',
-                                'mobile_money' => '📱 Mobile Money',
-                                'bank_transfer' => '🏦 Bank Transfer',
+                                'mobile_money' => 'Mobile Money',
+                                'bank_transfer' => 'Bank Transfer',
                                 default => ucfirst($payment->payment_method ?? 'N/A')
                             };
                         @endphp

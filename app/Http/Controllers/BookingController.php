@@ -628,19 +628,23 @@ class BookingController extends Controller
             throw new \Exception('Gender mismatch. This room is for ' . $room->gender . ' students only.');
         }
 
-        // If room gender is 'any' and this is the first occupant, update room gender
-        if ($room->gender === 'any' && $room->current_occupancy === 0) {
+        // ===== FIX 1: Update room gender if 'any' and first occupant =====
+        \Log::info('Room gender check', [
+            'room_gender' => $room->gender,
+            'current_occupancy' => $room->current_occupancy,
+            'user_gender' => $user->gender
+        ]);
+
+        if ($room->gender === 'any' && $room->current_occupancy == 0) {
             $room->gender = $user->gender;
-            $room->save();
+            $room->save(); // Make sure to save
             \Log::info('Room gender updated to ' . $user->gender);
         }
 
         // Calculate total amount
         $totalAmount = (float) ($bookingData['final_total'] ?? 
-                                 ((float)($bookingData['room_cost'] ?? 0) + 
-                                  (float)($bookingData['agent_fee'] ?? 150) + 
-                                  (float)($bookingData['system_charge'] ?? 20) +
-                                  (float)($bookingData['student_fee'] ?? 0)));
+                                ((float)($bookingData['room_cost'] ?? 0) + 
+                                (float)($bookingData['agent_fee'] ?? 150));
 
         // Create booking number
         $bookingNumber = 'BN-' . strtoupper(Str::random(8));
@@ -681,9 +685,24 @@ class BookingController extends Controller
 
         \Log::info('Payment record created');
 
-        // Update room occupancy
-        $room->increment('current_occupancy');
-        \Log::info('Room occupancy incremented');
+        // ===== FIX 2: Update room occupancy properly =====
+        // Get current occupancy, default to 0 if null
+        $currentOccupancy = $room->current_occupancy ?? 0;
+        $newOccupancy = $currentOccupancy + 1;
+        
+        // Update using query builder to ensure it works even if model is stale
+        DB::table('rooms')
+            ->where('id', $room->id)
+            ->update(['current_occupancy' => $newOccupancy]);
+        
+        // Refresh the room model
+        $room->refresh();
+        
+        \Log::info('Room occupancy updated', [
+            'old_occupancy' => $currentOccupancy,
+            'new_occupancy' => $room->current_occupancy,
+            'capacity' => $room->capacity
+        ]);
 
         // Clear session data
         session()->forget(['pending_booking', 'payment_reference']);
