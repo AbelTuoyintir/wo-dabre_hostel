@@ -1,4 +1,4 @@
-@extends('layouts.student')
+made @extends('layouts.student')
 
 @section('title', 'My Bookings')
 @section('content')
@@ -83,17 +83,53 @@
                     <div class="flex-1">
                         <div class="flex items-start space-x-4">
                             <!-- Hostel Image -->
-                            <div class="hidden sm:block">
-                                @if($booking->hostel && $booking->hostel->primaryImage)
-                                    <img src="{{ Storage::url($booking->hostel->primaryImage->path) }}"
-                                         alt="{{ $booking->hostel->name }}"
-                                         class="w-20 h-20 object-cover rounded-lg">
-                                @else
-                                    <div class="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center">
-                                        <i class="fas fa-building text-gray-400 text-2xl"></i>
-                                    </div>
-                                @endif
-                            </div>
+                            @if($booking->hostel && $booking->hostel->primaryImage)
+                                <img src="{{ $booking->hostel->primaryImage->url }}" 
+                                     alt="{{ $booking->hostel->name }}"
+                            @if($booking->hostel && $booking->hostel->primaryImage)
+                                     onerror="this.nextElementSibling.style.display='flex';this.style.display='none';">
+                                <img src="{{ $booking->hostel->primaryImage->url }}" 
+                                     alt="{{ $booking->hostel->name }}"
+                                     class="w-20 h-20 object-cover rounded-lg flex-shrink-0 shadow"
+                            @else
+                                <div class="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0 shadow">
+                                    <i class="fas fa-building text-gray-400 text-2xl"></i>
+                                </div>
+                            @endif
+                                     onerror="this.nextElementSibling.style.display='flex';this.style.display='none';">
+                                <div class="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0 hidden shadow">
+                                    <i class="fas fa-building text-gray-400 text-2xl"></i>
+                                </div>
+                            @else
+                                <div class="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0 shadow">
+                                    <i class="fas fa-building text-gray-400 text-2xl"></i>
+                                </div>
+                            @endif
+vendor\laravel\framework\src\Illuminate\Routing\AbstractRouteCollection.php:131
+The GET method is not supported for route student/profile/password. Supported methods: PUT.
+
+LARAVEL
+12.50.0
+PHP
+8.4.16
+UNHANDLED
+CODE 0
+405
+GET
+https://wo-dabre.test/student/profile/password
+
+Exception trace
+31 vendor frames
+
+public\index.php
+public\index.php:20
+
+15
+16// Bootstrap Laravel and handle the request...
+17/** @var Application $app */
+18$app = require_once __DIR__.'/../bootstrap/app.php';
+19
+
 
                             <!-- Details -->
                             <div class="flex-1">

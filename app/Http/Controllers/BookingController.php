@@ -225,74 +225,70 @@ class BookingController extends Controller
      * Store booking for authenticated students
      */
     public function StudentStore(Request $request)
-    {
-        $rules = [
-            'room_id' => 'required|exists:rooms,id',
-            'hostel_id' => 'required|exists:hostels,id',
-            'check_in_date' => 'required|date',
-            'check_out_date' => 'required|date|after:check_in_date',
-            'room_cost' => 'required|numeric|min:0',
-        ];
+{
+    $rules = [
+        'room_id' => 'required|exists:rooms,id',
+        'hostel_id' => 'required|exists:hostels,id',
+        'check_in_date' => 'required|date',
+        'check_out_date' => 'required|date|after:check_in_date',
+        'room_cost' => 'required|numeric|min:0',
+    ];
 
-        $validated = $request->validate($rules);
+    $validated = $request->validate($rules);
 
-        if (!Auth::check()) {
-            return redirect()->route('login')->with('error', 'Please login to continue.');
-        }
-
-        $user = Auth::user();
-        $room = Room::findOrFail($validated['room_id']);
-
-        if (empty($user->gender)) {
-            return redirect()->route('student.profile')
-                ->with('error', 'Please update your profile with your gender before booking.');
-        }
-
-        $genderError = $this->validateGenderForBooking($room, $user);
-        if ($genderError) {
-            return redirect()->route('student.hostels.show', $validated['hostel_id'])
-                ->with('error', $genderError);
-        }
-
-        if (!$this->checkRoomAvailability($room->id, $validated['check_in_date'], $validated['check_out_date'])) {
-            return redirect()->route('student.hostels.show', $validated['hostel_id'])
-                ->with('error', 'Room is not available for selected dates.');
-        }
-
-        $studentFee = config('app.student_fee_amount', 150);
-        $systemCharge = 20;
-        $totalAmount = $validated['room_cost'] + $studentFee + $systemCharge;
-
-        \Log::info('Student booking - Cost calculation:', [
-            'user_id' => $user->id,
-            'room_id' => $room->id,
-            'total_amount' => $totalAmount
-        ]);
-
-        session(['pending_booking' => [
-            'user_id' => $user->id,
-            'room_id' => $room->id,
-            'hostel_id' => $room->hostel_id,
-            'check_in_date' => $validated['check_in_date'],
-            'check_out_date' => $validated['check_out_date'],
-            'room_cost' => $validated['room_cost'],
-            'student_fee' => $studentFee,
-            'system_charge' => $systemCharge,
-            'total_amount' => $totalAmount,
-            'room_gender' => $room->gender,
-            'room_occupancy' => $room->current_occupancy,
-            'is_authenticated' => true,
-            'user_data' => [
-                'name' => $user->name,
-                'email' => $user->email,
-                'phone' => $user->phone,
-                'gender' => $user->gender,
-            ],
-        ]]);
-
-        return $this->initializeStudentPayment();
+    if (!Auth::check()) {
+        return redirect()->route('login')->with('error', 'Please login to continue.');
     }
 
+    $user = Auth::user();
+    $room = Room::findOrFail($validated['room_id']);
+
+    if (empty($user->gender)) {
+        return redirect()->route('student.profile')
+            ->with('error', 'Please update your profile with your gender before booking.');
+    }
+
+    $genderError = $this->validateGenderForBooking($room, $user);
+    if ($genderError) {
+        return redirect()->route('student.hostels.show', $validated['hostel_id'])
+            ->with('error', $genderError);
+    }
+
+    if (!$this->checkRoomAvailability($room->id, $validated['check_in_date'], $validated['check_out_date'])) {
+        return redirect()->route('student.hostels.show', $validated['hostel_id'])
+            ->with('error', 'Room is not available for selected dates.');
+    }
+
+    // Calculate total amount - ONLY room cost (no fees)
+    $totalAmount = $validated['room_cost']; // No student fee, no system charge
+
+    \Log::info('Student booking - Cost calculation:', [
+        'user_id' => $user->id,
+        'room_id' => $room->id,
+        'total_amount' => $totalAmount
+    ]);
+
+    session(['pending_booking' => [
+        'user_id' => $user->id,
+        'room_id' => $room->id,
+        'hostel_id' => $room->hostel_id,
+        'check_in_date' => $validated['check_in_date'],
+        'check_out_date' => $validated['check_out_date'],
+        'room_cost' => $validated['room_cost'],
+        'total_amount' => $totalAmount,
+        'room_gender' => $room->gender,
+        'room_occupancy' => $room->current_occupancy,
+        'is_authenticated' => true,
+        'user_data' => [
+            'name' => $user->name,
+            'email' => $user->email,
+            'phone' => $user->phone,
+            'gender' => $user->gender,
+        ],
+    ]]);
+
+    return $this->initializeStudentPayment();
+}
     /**
      * Initialize Paystack payment for guest
      */
@@ -628,23 +624,18 @@ class BookingController extends Controller
             throw new \Exception('Gender mismatch. This room is for ' . $room->gender . ' students only.');
         }
 
-        // ===== FIX 1: Update room gender if 'any' and first occupant =====
-        \Log::info('Room gender check', [
-            'room_gender' => $room->gender,
-            'current_occupancy' => $room->current_occupancy,
-            'user_gender' => $user->gender
-        ]);
-
-        if ($room->gender === 'any' && $room->current_occupancy == 0) {
+        // If room gender is 'any' and this is the first occupant, update room gender
+        if ($room->gender === 'any' && ($room->current_occupancy ?? 0) === 0) {
             $room->gender = $user->gender;
-            $room->save(); // Make sure to save
+            $room->save();
             \Log::info('Room gender updated to ' . $user->gender);
         }
 
-        // Calculate total amount
+        // Calculate total amount - WITHOUT system charge
         $totalAmount = (float) ($bookingData['final_total'] ?? 
-                                ((float)($bookingData['room_cost'] ?? 0) + 
-                                (float)($bookingData['agent_fee'] ?? 150));
+                            (((float)($bookingData['room_cost'] ?? 0) + 
+                                (float)($bookingData['agent_fee'] ?? 150))));
+        // NOTE: system_charge is NOT included in the total amount
 
         // Create booking number
         $bookingNumber = 'BN-' . strtoupper(Str::random(8));
@@ -685,23 +676,14 @@ class BookingController extends Controller
 
         \Log::info('Payment record created');
 
-        // ===== FIX 2: Update room occupancy properly =====
-        // Get current occupancy, default to 0 if null
+        // Update room occupancy
         $currentOccupancy = $room->current_occupancy ?? 0;
-        $newOccupancy = $currentOccupancy + 1;
-        
-        // Update using query builder to ensure it works even if model is stale
-        DB::table('rooms')
-            ->where('id', $room->id)
-            ->update(['current_occupancy' => $newOccupancy]);
-        
-        // Refresh the room model
-        $room->refresh();
+        $room->current_occupancy = $currentOccupancy + 1;
+        $room->save();
         
         \Log::info('Room occupancy updated', [
             'old_occupancy' => $currentOccupancy,
-            'new_occupancy' => $room->current_occupancy,
-            'capacity' => $room->capacity
+            'new_occupancy' => $room->current_occupancy
         ]);
 
         // Clear session data
@@ -736,7 +718,7 @@ class BookingController extends Controller
     {
         $user = Auth::user();
         $bookings = Booking::where('user_id', $user->id)
-            ->with(['room.hostel'])
+            ->with(['room.hostel.primaryImage', 'hostel.primaryImage'])
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
@@ -752,7 +734,7 @@ class BookingController extends Controller
             abort(403);
         }
 
-        $booking->load(['room.hostel', 'payment']);
+        $booking->load(['room.hostel.primaryImage', 'hostel.primaryImage', 'payment']);
 
         return view('student.bookings.show', compact('booking'));
     }

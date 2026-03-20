@@ -17,6 +17,7 @@ use App\Models\Complaint;
 use Unicodeveloper\Paystack\Facades\Paystack;
 use App\Mail\PaymentReceiptMail;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Hash;
 
 
 class StudentController extends Controller
@@ -839,7 +840,6 @@ public function viewHostel(Hostel $hostel)
             'name' => 'required|string|max:255',
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:500',
-            'password' => 'nullable|string|min:8|confirmed',
             'email' => 'required|email|unique:users,email,' . $user->id,
         ]);
 
@@ -847,5 +847,27 @@ public function viewHostel(Hostel $hostel)
 
         return redirect()->route('student.profile')
             ->with('success', 'Profile updated successfully.');
+    }
+
+    public function updatePassword(Request $request)
+    {
+        $user = Auth::user();
+
+        $validated = $request->validate([
+            'current_password' => 'nullable|required_with:new_password|current_password',
+            'new_password' => 'nullable|string|min:8|confirmed',
+        ]);
+
+        if (!$request->filled('new_password')) {
+            return redirect()->route('student.profile')
+                ->with('error', 'Enter a new password to update your password.');
+        }
+
+        $user->update([
+            'password' => Hash::make($validated['new_password']),
+        ]);
+
+        return redirect()->route('student.profile')
+            ->with('success', 'Password updated successfully.');
     }
 }

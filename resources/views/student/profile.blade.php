@@ -87,7 +87,7 @@
         </div>
 
         <div class="p-6">
-            <form action="{{ route('student.profile.update') }}" method="POST">
+            <form action="{{ route('student.profile.update.password') }}" method="POST">
                 @csrf
                 @method('PUT')
 

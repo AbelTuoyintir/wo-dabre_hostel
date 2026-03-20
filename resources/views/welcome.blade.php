@@ -305,7 +305,7 @@
                                     </div> --}}
                                 </div>
 
-                                <a href="{{ route('hostels.guestshow', $hostel['id']) }}"
+                                <a href="{{ route('hostels.guest.show', $hostel['id']) }}"
                                    class="block w-full bg-blue-700 text-white py-3 rounded-lg font-semibold hover:bg-blue-800 transition text-center">
                                     <i class="fas fa-calendar-check mr-2"></i> View Details
                                 </a>

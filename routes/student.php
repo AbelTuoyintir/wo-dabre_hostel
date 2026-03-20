@@ -44,4 +44,6 @@ Route::middleware(['auth', 'student'])->prefix('student')->name('student.')->gro
     // Profile
     Route::get('/profile', [StudentController::class, 'profile'])->name('profile');
     Route::put('/profile', [StudentController::class, 'updateProfile'])->name('profile.update');
+    Route::get('/profile/password', fn() => redirect()->route('student.profile'));
+    Route::put('/profile/password', [StudentController::class, 'updatePassword'])->name('profile.update.password');
 });

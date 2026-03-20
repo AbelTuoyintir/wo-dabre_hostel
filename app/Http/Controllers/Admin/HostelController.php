@@ -331,7 +331,7 @@ class HostelController extends Controller
         try {
             // Delete images from storage
             foreach ($hostel->images as $image) {
-                Storage::disk('public')->delete($image->path);
+                Storage::disk('public')->delete($image->image_path);
                 $image->delete();
             }
 
@@ -393,7 +393,7 @@ class HostelController extends Controller
             abort(403);
         }
 
-        Storage::disk('public')->delete($image->path);
+        Storage::disk('public')->delete($image->image_path);
         $image->delete();
 
         if ($image->is_primary) {
