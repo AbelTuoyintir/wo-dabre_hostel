@@ -1,8 +1,7 @@
-# TODO: Fix guestShow.blade.php Issues
+# Fix Undefined property: stdClass::$id in admin/report.blade.php
 
-## Issues to Fix:
-1. [x] Image column name: change `path` to `image_path` for hostel and room images
-2. [x] Contact fields: change `contact_phone` to `phone`, `contact_email` to `email`
-3. [x] Similar hostels variable: change `$similarHostels` to `$relatedHostels` in the view
-4. [x] Reviews count: add accessor or use `$reviewCount` from controller
-5. [x] Rating: use `$averageRating` instead of `$hostel->rating` for consistency
+## Steps:
+- [x] Step 1: Edit app/Http/Controllers/Admin/AdminController.php to include 'hostels.id' in the selectRaw query for $bookingsByHostel
+- [x] Step 2: Verify the change by checking the page
+- [x] Step 3: Mark complete
+

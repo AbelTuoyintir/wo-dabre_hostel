@@ -109,7 +109,7 @@
                                 $highestRevenue = $revenueByMonth->sortByDesc('revenue')->first();
                             @endphp
                             @if($highestRevenue)
-                                {{ \Carbon\Carbon::create()->month($highestRevenue->month)->format('F') }}
+                                {{ \Carbon\Carbon::createFromFormat('m', $highestRevenue->month)->isoFormat('MMM') }}
                                 <small class="text-muted">(¢{{ number_format($highestRevenue->revenue, 0) }})</small>
                             @else
                                 -
@@ -181,7 +181,7 @@
                     <tbody>
                         @php
                             $revenueData = $revenueByMonth->sortByDesc(function($item) {
-                                return $item->year . '-' . str_pad($item->month, 2, '0', STR_PAD_LEFT);
+                                return $item->year . '-' . str_pad((int)$item->month, 2, '0', STR_PAD_LEFT);
                             })->values();
                         @endphp
                         @forelse ($revenueData as $index => $row)
@@ -192,7 +192,7 @@
                             <tr>
                                 <td>
                                     <div class="period-cell">
-                                        <span class="month-badge">{{ \Carbon\Carbon::create()->month($row->month)->format('M') }}</span>
+                                        <span class="month-badge">{{ \Carbon\Carbon::createFromFormat('m', $row->month)->isoFormat('MMM') }}</span>
                                         <span class="year-text">{{ $row->year }}</span>
                                     </div>
                                 </td>
@@ -611,14 +611,14 @@
 .table-card {
     background: white;
     border-radius: var(--radius-xl);
-    box-shadow: var(--shadow);
     border: 1px solid var(--gray-100);
     overflow: hidden;
+    box-shadow: var(--shadow);
 }
 
 .table-header {
     padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid var(--gray-100);
+    border-bottom: 1px solid var(--gray-200);
     display: flex;
     justify-content: space-between;
     align-items: center;

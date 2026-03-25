@@ -280,7 +280,7 @@ class AdminController extends Controller
         // Top 10 hostels by bookings
         $bookingsByHostel = DB::table('bookings')
             ->join('hostels', 'bookings.hostel_id', '=', 'hostels.id')
-            ->selectRaw('hostels.name, COUNT(bookings.id) as bookings_count')
+->selectRaw('hostels.id, hostels.name, COUNT(bookings.id) as bookings_count')
             ->groupBy('hostels.id', 'hostels.name')
             ->orderBy('bookings_count', 'desc')
             ->limit(10)

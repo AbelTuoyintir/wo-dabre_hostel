@@ -171,14 +171,15 @@ class BookingController extends Controller
             \Log::info('Date calculation', ['nights' => $nights]);
 
             // Charges
-            $agentFee = config('app.student_fee_amount', 150); 
+            $agentFee = 150;
             $systemCharge = 20; // ₵20
             $roomCost = $validated['room_cost'];
             $subTotal = $roomCost + $agentFee + $systemCharge;
             $paystackFee = $subTotal * 0.021; 
             $finalTotal = $subTotal + $paystackFee;
+            $netAmount = $roomCost + $agentFee; // platform fee retained for payment, room_cost for hostel
 
-            \Log::info('Final calculation', ['final_total' => $finalTotal]);
+            \Log::info('Final calculation', ['final_total' => $finalTotal, 'net_amount' => $netAmount]);
 
             // Generate random password for guest
             $tempPassword = $this->generateRandomPassword();
@@ -191,8 +192,7 @@ class BookingController extends Controller
                 'check_out_date' => $validated['check_out_date'],
                 'room_cost' => $roomCost,
                 'agent_fee' => $agentFee,
-                'system_charge' => $systemCharge,
-                'paystack_fee' => $paystackFee,
+                'net_amount' => $netAmount,
                 'final_total' => $finalTotal,
                 'room_gender' => $room->gender,
                 'room_occupancy' => $room->current_occupancy,
@@ -259,26 +259,28 @@ class BookingController extends Controller
             ->with('error', 'Room is not available for selected dates.');
     }
 
-    // Calculate total amount - ONLY room cost (no fees)
-    $totalAmount = $validated['room_cost']; // No student fee, no system charge
+    // Calculate net amount - room cost + agent fee only
+    $agentFee = 0;
+    $netAmount = $validated['room_cost'];
 
     \Log::info('Student booking - Cost calculation:', [
         'user_id' => $user->id,
         'room_id' => $room->id,
-        'total_amount' => $totalAmount
+        'net_amount' => $netAmount
     ]);
 
-    session(['pending_booking' => [
-        'user_id' => $user->id,
-        'room_id' => $room->id,
-        'hostel_id' => $room->hostel_id,
-        'check_in_date' => $validated['check_in_date'],
-        'check_out_date' => $validated['check_out_date'],
-        'room_cost' => $validated['room_cost'],
-        'total_amount' => $totalAmount,
-        'room_gender' => $room->gender,
-        'room_occupancy' => $room->current_occupancy,
-        'is_authenticated' => true,
+        session(['pending_booking' => [
+            'user_id' => $user->id,
+            'room_id' => $room->id,
+            'hostel_id' => $room->hostel_id,
+            'check_in_date' => $validated['check_in_date'],
+            'check_out_date' => $validated['check_out_date'],
+            'room_cost' => $validated['room_cost'],
+            'agent_fee' => $agentFee,
+            'net_amount' => $netAmount,
+            'room_gender' => $room->gender,
+            'room_occupancy' => $room->current_occupancy,
+            'is_authenticated' => true,
         'user_data' => [
             'name' => $user->name,
             'email' => $user->email,
@@ -324,10 +326,8 @@ class BookingController extends Controller
                         'hostel_id' => $pendingBooking['hostel_id'],
                         'check_in_date' => $pendingBooking['check_in_date'],
                         'check_out_date' => $pendingBooking['check_out_date'],
-                        'room_cost' => $pendingBooking['room_cost'],
-                        'agent_fee' => $pendingBooking['agent_fee'],
-                        'system_charge' => $pendingBooking['system_charge'],
-                        'paystack_fee' => $pendingBooking['paystack_fee'],
+                    'room_cost' => $pendingBooking['room_cost'],
+                    'net_amount' => $pendingBooking['net_amount'],
                         'final_total' => $pendingBooking['final_total'],
                         'room_gender' => $pendingBooking['room_gender'],
                         'room_occupancy' => $pendingBooking['room_occupancy'],
@@ -386,9 +386,8 @@ class BookingController extends Controller
                         'check_in_date' => $pendingBooking['check_in_date'],
                         'check_out_date' => $pendingBooking['check_out_date'],
                         'room_cost' => $pendingBooking['room_cost'],
-                        'student_fee' => $pendingBooking['student_fee'],
-                        'system_charge' => $pendingBooking['system_charge'],
-                        'total_amount' => $pendingBooking['total_amount'],
+                        'agent_fee' => $pendingBooking['agent_fee'],
+                        'net_amount' => $pendingBooking['net_amount'],
                         'room_gender' => $pendingBooking['room_gender'],
                         'room_occupancy' => $pendingBooking['room_occupancy'],
                     ],
@@ -631,11 +630,10 @@ class BookingController extends Controller
             \Log::info('Room gender updated to ' . $user->gender);
         }
 
-        // Calculate total amount - WITHOUT system charge
-        $totalAmount = (float) ($bookingData['final_total'] ?? 
-                            (((float)($bookingData['room_cost'] ?? 0) + 
-                                (float)($bookingData['agent_fee'] ?? 150))));
-        // NOTE: system_charge is NOT included in the total amount
+// Calculate net amount for DB storage: room_cost only (subtract agent_fee)
+        $roomCost = (float) ($bookingData['room_cost'] ?? 0);
+        $agentFee = (float) ($bookingData['agent_fee'] ?? 0);
+        $totalAmount = $roomCost;  // hostel net: total paid minus agent_fee
 
         // Create booking number
         $bookingNumber = 'BN-' . strtoupper(Str::random(8));
@@ -809,7 +807,7 @@ class BookingController extends Controller
 
         $roomCost = $validated['room_cost'] ?? Room::find($validated['room_id'])->room_cost ?? 0;
 
-        $agentFee = config('app.agent_fee', 150);
+        $agentFee = 150;
         $systemCharge = 20;
 
         $subTotal = $roomCost + $agentFee + $systemCharge;
@@ -820,7 +818,7 @@ class BookingController extends Controller
             'success' => true,
             'nights' => $nights,
             'room_cost' => round($roomCost, 2),
-            'agent_fee' => round($agentFee, 2),
+'agent_fee' => 0,
             'system_charge' => round($systemCharge, 2),
             'paystack_fee' => round($paystackFee, 2),
             'total' => round($finalTotal, 2),
@@ -870,6 +868,47 @@ class BookingController extends Controller
     }
 
     /**
+     * Paystack refund webhook handler
+     */
+    public function handleRefundWebhook(Request $request)
+    {
+        // Verify webhook signature
+        $signature = $request->header('x-paystack-signature');
+        $payload = $request->getContent();
+
+        if (!$this->verifyPaystackSignature($signature, $payload)) {
+            return response()->json(['error' => 'Invalid signature'], 401);
+        }
+
+        $event = json_decode($payload, true);
+
+        if ($event['event'] === 'refund.processed') {
+            $data = $event['data'];
+
+            // Find payment by transaction reference
+            $payment = Payment::where('transaction_id', $data['transaction']['reference'])->first();
+
+            if ($payment) {
+                $payment->update([
+                    'refund_status' => 'processed',
+                    'refund_data' => json_encode($data)
+                ]);
+            }
+        }
+
+        return response()->json(['status' => 'success']);
+    }
+
+    /**
+     * Verify Paystack webhook signature
+     */
+    private function verifyPaystackSignature($signature, $payload)
+    {
+        $secretKey = config('paystack.secret');
+        return hash_hmac('sha512', $payload, $secretKey) === $signature;
+    }
+
+    /**
      * Send booking confirmation email
      */
     private function sendBookingConfirmation($booking, $user, $plainPassword = null)
@@ -898,3 +937,4 @@ class BookingController extends Controller
         }
     }
 }
+

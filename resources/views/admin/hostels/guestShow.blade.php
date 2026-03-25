@@ -1,68 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $hostel->name }} - UCC Hostel Booking</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        * {
-            font-family: 'Poppins', sans-serif;
-        }
-        .hostel-card:hover {
-            transform: translateY(-5px);
-            transition: transform 0.3s ease;
-        }
-        .loader {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #3498db;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    </style>
-</head>
-<body class="bg-gray-50">
-    <!-- Header -->
-    <header class="bg-blue-900 text-white shadow-lg">
-        <div class="container mx-auto px-4 py-6">
-            <div class="flex flex-col md:flex-row justify-between items-center">
-                <div class="flex items-center space-x-3 mb-4 md:mb-0">
-                    <div class="bg-white text-blue-900 p-2 rounded-lg">
-                        <i class="fas fa-university text-2xl"></i>
-                    </div>
-                    <a href="{{ url('/') }}" class="hover:opacity-90">
-                        <h1 class="text-2xl font-bold">UCC Hostel Booking</h1>
-                        <p class="text-blue-200">University of Cape Coast Student Accommodation</p>
-                    </a>
-                </div>
-                <div class="flex items-center space-x-4">
-                    @guest
-                        <a href="{{ route('register') }}"
-                           class="hidden md:flex items-center space-x-2 bg-blue-800 text-white px-4 py-2 rounded-lg hover:bg-blue-900 transition">
-                            <i class="fas fa-user-graduate"></i>
-                            <span>Create Account</span>
-                        </a>
-                        <a href="{{ route('login') }}"
-                           class="bg-white text-blue-900 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition">
-                            <i class="fas fa-sign-in-alt mr-2"></i> Student Login
-                        </a>
-                    @endguest
-                </div>
-            </div>
-        </div>
-    </header>
+@extends('layouts.home')
+
+@section('title', 'UCC Hostel Booking System')
+
+@section('content')
+<div class="bg-gray-50">
 
     <!-- Back Button -->
     <div class="container mx-auto px-4 py-4">
@@ -362,61 +303,6 @@
         </div>
         @endif
     </main>
-
-    <!-- Footer -->
-    <footer class="bg-gray-900 text-white mt-16">
-        <div class="container mx-auto px-4 py-12">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-                <div>
-                    <div class="flex items-center space-x-3 mb-4">
-                        <div class="bg-white text-blue-900 p-2 rounded-lg">
-                            <i class="fas fa-university text-xl"></i>
-                        </div>
-                        <h3 class="text-xl font-bold">UCC Hostel Booking</h3>
-                    </div>
-                    <p class="text-gray-400">The official hostel booking platform for University of Cape Coast students.</p>
-                </div>
-                <div>
-                    <h4 class="text-lg font-bold mb-4">Quick Links</h4>
-                    <ul class="space-y-2 text-gray-400">
-                        <li><a href="#" class="hover:text-white transition">About Us</a></li>
-                        <li><a href="#" class="hover:text-white transition">Contact</a></li>
-                        <li><a href="#" class="hover:text-white transition">FAQs</a></li>
-                        <li><a href="#" class="hover:text-white transition">Privacy Policy</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="text-lg font-bold mb-4">Locations</h4>
-                    <ul class="space-y-2 text-gray-400">
-                        @foreach($locations ?? [] as $location)
-                            <li>{{ $location }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="text-lg font-bold mb-4">Contact Info</h4>
-                    <ul class="space-y-3 text-gray-400">
-                        <li class="flex items-center">
-                            <i class="fas fa-map-marker-alt mr-3 text-blue-400"></i>
-                            <span>University of Cape Coast, Ghana</span>
-                        </li>
-                        <li class="flex items-center">
-                            <i class="fas fa-phone mr-3 text-blue-400"></i>
-                            <span>+233 24 123 4567</span>
-                        </li>
-                        <li class="flex items-center">
-                            <i class="fas fa-envelope mr-3 text-blue-400"></i>
-                            <span>hostelbooking@ucc.edu.gh</span>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-                <p>&copy; {{ date('Y') }} University of Cape Coast Hostel Booking System. All rights reserved.</p>
-            </div>
-        </div>
-    </footer>
-
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-</body>
-</html>
+</div>
+@endsection

@@ -83,19 +83,9 @@
                         </div>
 
                         <div class="flex justify-between">
-                            <span>Agent Fee</span>
-                            <span id="agentFee">₵150.00</span>
-                        </div>
 
-                        <div class="flex justify-between">
-                            <span>System Charge</span>
-                            <span id="systemCharge">₵20.00</span>
-                        </div>
 
-                        <div class="flex justify-between">
-                            <span>Paystack Fee (1.95%)</span>
-                            <span id="paystackFee">-</span>
-                        </div>
+                        {{-- Hidden fees - not shown to users --}}
 
                         <div class="border-t my-2"></div>
 
@@ -156,13 +146,11 @@ async function calculateTotal() {
     document.getElementById('roomCostDisplay').textContent =
         '₵' + data.room_cost.toFixed(2);
 
-    document.getElementById('paystackFee').textContent =
-        '₵' + data.paystack_fee.toFixed(2);
-
+    // Fees hidden - total is full amount
     document.getElementById('totalAmount').textContent =
         '₵' + data.total.toFixed(2);
 
-    // SEND ONLY ROOM COST TO BACKEND
+    // SEND ROOM COST TO BACKEND
     document.getElementById('roomCost').value = data.room_cost;
 
     priceSummary.classList.remove('hidden');
