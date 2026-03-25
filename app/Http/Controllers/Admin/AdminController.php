@@ -9,8 +9,12 @@ use App\Models\Booking;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AdminController extends Controller
 {
@@ -258,8 +262,32 @@ class AdminController extends Controller
 
     public function bookings(): View
     {
-        $bookings = Booking::with(['user', 'hostel'])->latest()->paginate(15);
+        $bookings = $this->bookingsQuery(request())
+            ->paginate(15)
+            ->withQueryString();
+
         return view('admin.bookings.booking', compact('bookings'));
+    }
+
+    public function exportReport(Request $request, string $type): Response|RedirectResponse|StreamedResponse
+    {
+        if ($type !== 'bookings') {
+            return redirect()->back()->with('error', 'That report export is not available yet.');
+        }
+
+        $format = strtolower((string) $request->get('format', 'csv'));
+        $bookings = $this->bookingsQuery($request)->get();
+
+        if ($format === 'pdf') {
+            return $this->downloadBookingsPdf($bookings);
+        }
+
+        return $this->downloadBookingsCsv($bookings);
+    }
+
+    public function exportBookings(Request $request): Response|RedirectResponse|StreamedResponse
+    {
+        return $this->exportReport($request, 'bookings');
     }
 
     /**
@@ -295,5 +323,208 @@ class AdminController extends Controller
             ->get();
 
         return view('admin.report', compact('revenueByMonth', 'bookingsByHostel', 'userRegistrations'));
+    }
+
+    private function bookingsQuery(Request $request): Builder
+    {
+        $query = Booking::with(['user', 'hostel', 'room'])->latest();
+
+        if ($request->filled('status')) {
+            $query->where('booking_status', $request->status);
+        }
+
+        if ($request->filled('payment')) {
+            $query->where('payment_status', $request->payment);
+        }
+
+        if ($request->filled('from')) {
+            $query->whereDate('check_in_date', '>=', $request->from);
+        }
+
+        if ($request->filled('to')) {
+            $query->whereDate('check_out_date', '<=', $request->to);
+        }
+
+        return $query;
+    }
+
+    private function downloadBookingsCsv(Collection $bookings): StreamedResponse
+    {
+        $filename = 'bookings-report-' . now()->format('Y-m-d-His') . '.csv';
+
+        return response()->streamDownload(function () use ($bookings) {
+            $file = fopen('php://output', 'w');
+            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
+            fputcsv($file, [
+                'Booking Number',
+                'Customer Name',
+                'Customer Email',
+                'Hostel',
+                'Room',
+                'Check In',
+                'Check Out',
+                'Total Amount',
+                'Amount Paid',
+                'Balance Due',
+                'Booking Status',
+                'Payment Status',
+                'Payment Method',
+                'Created At',
+            ]);
+
+            foreach ($bookings as $booking) {
+                fputcsv($file, [
+                    $booking->booking_number,
+                    $booking->user?->name ?? 'N/A',
+                    $booking->user?->email ?? 'N/A',
+                    $booking->hostel?->name ?? 'N/A',
+                    $booking->room?->number ?? $booking->room_number ?? 'N/A',
+                    optional($booking->check_in_date)->format('Y-m-d'),
+                    optional($booking->check_out_date)->format('Y-m-d'),
+                    number_format((float) $booking->total_amount, 2, '.', ''),
+                    number_format((float) $booking->amount_paid, 2, '.', ''),
+                    number_format((float) $booking->balance_due, 2, '.', ''),
+                    $booking->booking_status,
+                    $booking->payment_status,
+                    $booking->payment_method ?? 'N/A',
+                    optional($booking->created_at)->format('Y-m-d H:i:s'),
+                ]);
+            }
+
+            fclose($file);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
+    }
+
+    private function downloadBookingsPdf(Collection $bookings): Response
+    {
+        $lines = [
+            'Bookings Report',
+            'Generated: ' . now()->format('Y-m-d H:i:s'),
+            'Total records: ' . $bookings->count(),
+            str_repeat('=', 95),
+        ];
+
+        foreach ($bookings as $booking) {
+            $customer = $booking->user?->name ?? 'N/A';
+            $email = $booking->user?->email ?? 'N/A';
+            $hostel = $booking->hostel?->name ?? 'N/A';
+            $room = $booking->room?->number ?? $booking->room_number ?? 'N/A';
+            $stay = trim(
+                (optional($booking->check_in_date)->format('Y-m-d') ?? 'N/A')
+                . ' to '
+                . (optional($booking->check_out_date)->format('Y-m-d') ?? 'N/A')
+            );
+
+            $entryLines = [
+                'Booking: ' . ($booking->booking_number ?? 'N/A') . ' | Customer: ' . $customer,
+                'Email: ' . $email,
+                'Hostel: ' . $hostel . ' | Room: ' . $room,
+                'Stay: ' . $stay,
+                'Amount: GHS ' . number_format((float) $booking->total_amount, 2)
+                . ' | Paid: GHS ' . number_format((float) $booking->amount_paid, 2)
+                . ' | Balance: GHS ' . number_format((float) $booking->balance_due, 2),
+                'Status: ' . ucfirst((string) $booking->booking_status)
+                . ' | Payment: ' . ucfirst((string) $booking->payment_status),
+                str_repeat('-', 95),
+            ];
+
+            foreach ($entryLines as $entryLine) {
+                foreach (explode("\n", wordwrap($entryLine, 95, "\n", true)) as $wrappedLine) {
+                    $lines[] = $wrappedLine;
+                }
+            }
+        }
+
+        $pdfContent = $this->buildSimplePdf($lines);
+        $filename = 'bookings-report-' . now()->format('Y-m-d-His') . '.pdf';
+
+        return response($pdfContent, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
+    private function buildSimplePdf(array $lines): string
+    {
+        $linesPerPage = 48;
+        $pages = array_chunk($lines, $linesPerPage);
+        $objects = [
+            1 => '<< /Type /Catalog /Pages 2 0 R >>',
+            3 => '<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>',
+        ];
+
+        $kids = [];
+        $objectNumber = 4;
+
+        foreach ($pages as $pageLines) {
+            $pageObjectNumber = $objectNumber++;
+            $contentObjectNumber = $objectNumber++;
+            $kids[] = $pageObjectNumber . ' 0 R';
+
+            $streamLines = [
+                'BT',
+                '/F1 10 Tf',
+                '40 780 Td',
+                '14 TL',
+            ];
+
+            foreach ($pageLines as $line) {
+                $streamLines[] = '(' . $this->escapePdfText($line) . ') Tj';
+                $streamLines[] = 'T*';
+            }
+
+            $streamLines[] = 'ET';
+            $stream = implode("\n", $streamLines);
+
+            $objects[$pageObjectNumber] = '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] '
+                . '/Resources << /Font << /F1 3 0 R >> >> /Contents ' . $contentObjectNumber . ' 0 R >>';
+
+            $objects[$contentObjectNumber] = '<< /Length ' . strlen($stream) . " >>\nstream\n"
+                . $stream . "\nendstream";
+        }
+
+        $objects[2] = '<< /Type /Pages /Kids [' . implode(' ', $kids) . '] /Count ' . count($kids) . ' >>';
+        ksort($objects);
+
+        $pdf = "%PDF-1.4\n";
+        $offsets = [0 => 0];
+
+        foreach ($objects as $number => $object) {
+            $offsets[$number] = strlen($pdf);
+            $pdf .= $number . " 0 obj\n" . $object . "\nendobj\n";
+        }
+
+        $xrefOffset = strlen($pdf);
+        $maxObject = max(array_keys($objects));
+
+        $pdf .= "xref\n0 " . ($maxObject + 1) . "\n";
+        $pdf .= "0000000000 65535 f \n";
+
+        for ($i = 1; $i <= $maxObject; $i++) {
+            $pdf .= sprintf("%010d 00000 n \n", $offsets[$i] ?? 0);
+        }
+
+        $pdf .= "trailer\n<< /Size " . ($maxObject + 1) . " /Root 1 0 R >>\n";
+        $pdf .= "startxref\n" . $xrefOffset . "\n%%EOF";
+
+        return $pdf;
+    }
+
+    private function escapePdfText(string $text): string
+    {
+        $encoded = @iconv('UTF-8', 'windows-1252//TRANSLIT//IGNORE', $text);
+
+        if ($encoded === false) {
+            $encoded = preg_replace('/[^\x20-\x7E]/', '?', $text) ?? $text;
+        }
+
+        return str_replace(
+            ["\\", "(", ")", "\r"],
+            ["\\\\", "\\(", "\\)", ''],
+            $encoded
+        );
     }
 }

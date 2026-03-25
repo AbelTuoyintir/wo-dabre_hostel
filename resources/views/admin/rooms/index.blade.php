@@ -14,13 +14,48 @@
             </span>
         </div>
         <div class="flex items-center gap-3">
-            <a href="{{ route('admin.rooms.export') }}"
-               class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                </svg>
-                Export
-            </a>
+            @php
+                $exportFilters = request()->only([
+                    'search',
+                    'hostel_id',
+                    'status',
+                    'gender',
+                    'min_price',
+                    'max_price',
+                    'furnished',
+                    'private_bathroom',
+                ]);
+            @endphp
+
+            <div x-data="{ open: false }" class="relative">
+                <button type="button"
+                        @click="open = !open"
+                        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                    </svg>
+                    Export
+                    <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+
+                <div x-show="open"
+                     @click.away="open = false"
+                     x-transition
+                     class="absolute right-0 mt-2 w-44 bg-white rounded-lg shadow-lg border border-gray-200 z-20 overflow-hidden">
+                    <a href="{{ route('admin.rooms.export', array_merge(['format' => 'csv'], $exportFilters)) }}"
+                       class="flex items-center justify-between px-4 py-3 text-sm text-gray-700 hover:bg-gray-50">
+                        <span>Export as CSV</span>
+                        <span class="text-xs font-semibold text-green-700">CSV</span>
+                    </a>
+                    <a href="{{ route('admin.rooms.export', array_merge(['format' => 'pdf'], $exportFilters)) }}"
+                       class="flex items-center justify-between px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 border-t border-gray-100">
+                        <span>Export as PDF</span>
+                        <span class="text-xs font-semibold text-red-700">PDF</span>
+                    </a>
+                </div>
+            </div>
             <a href="{{ route('admin.rooms.create') }}"
                class="inline-flex items-center px-4 py-2 border border-transparent rounded-md bg-blue-600 text-sm font-medium text-white hover:bg-blue-700">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

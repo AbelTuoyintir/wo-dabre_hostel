@@ -27,10 +27,10 @@ Route::middleware(['auth', 'admin'])
         Route::delete('/hostels/{hostel}/images/{image}', [HostelController::class, 'destroyImage'])->name('hostels.image.destroy');
 
         // Rooms (Admin management)
-        Route::resource('rooms', RoomController::class);
+        Route::get('/rooms/export', [RoomController::class, 'export'])->name('rooms.export');
         Route::patch('/rooms/{room}/status', [RoomController::class, 'updateStatus'])->name('rooms.status');
         Route::post('/rooms/bulk-update', [RoomController::class, 'bulkUpdate'])->name('rooms.bulk-update');
-        Route::get('/rooms/export', [RoomController::class, 'export'])->name('rooms.export');
+        Route::resource('rooms', RoomController::class);
 
         // Admin Bookings Management
         Route::get('/bookings', [AdminController::class, 'bookings'])->name('bookings.index');

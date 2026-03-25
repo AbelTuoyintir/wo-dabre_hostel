@@ -8,14 +8,40 @@
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold text-gray-800">Manage Bookings</h1>
 
+        @php
+            $exportFilters = request()->only(['status', 'payment', 'from', 'to']);
+        @endphp
+
         <!-- Export Button -->
-        <a href="{{ route('admin.reports.export', 'bookings') }}"
-           class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-            </svg>
-            Export Report
-        </a>
+        <div x-data="{ open: false }" class="relative">
+            <button type="button"
+                    @click="open = !open"
+                    class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                Export Report
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </button>
+
+            <div x-show="open"
+                 @click.away="open = false"
+                 x-transition
+                 class="absolute right-0 mt-2 w-44 bg-white rounded-lg shadow-lg border border-gray-200 z-20 overflow-hidden">
+                <a href="{{ route('admin.reports.export', array_merge(['type' => 'bookings', 'format' => 'csv'], $exportFilters)) }}"
+                   class="flex items-center justify-between px-4 py-3 text-sm text-gray-700 hover:bg-gray-50">
+                    <span>Export as CSV</span>
+                    <span class="text-xs font-semibold text-green-700">CSV</span>
+                </a>
+                <a href="{{ route('admin.reports.export', array_merge(['type' => 'bookings', 'format' => 'pdf'], $exportFilters)) }}"
+                   class="flex items-center justify-between px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 border-t border-gray-100">
+                    <span>Export as PDF</span>
+                    <span class="text-xs font-semibold text-red-700">PDF</span>
+                </a>
+            </div>
+        </div>
     </div>
 
     <!-- Filters -->

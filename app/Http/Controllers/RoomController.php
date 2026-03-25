@@ -5,11 +5,15 @@ namespace App\Http\Controllers;
 use App\Models\Room;
 use App\Models\Hostel;
 use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use App\Models\HostelImage;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class RoomController extends Controller
 {
@@ -19,47 +23,10 @@ class RoomController extends Controller
     public function index(Request $request)
     {
         // Admin only - no manager checks needed
-        $query = Room::with('hostel');
-
-        // Apply filters
-        if ($request->filled('hostel_id')) {
-            $query->where('hostel_id', $request->hostel_id);
-        }
-
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->filled('gender')) {
-            $query->whereIn('gender', [$request->gender, 'any']);
-        }
-
-        if ($request->filled('min_price')) {
-            $query->where('room_cost', '>=', $request->min_price);
-        }
-
-        if ($request->filled('max_price')) {
-            $query->where('room_cost', '<=', $request->max_price);
-        }
-
-        if ($request->filled('furnished')) {
-            $query->where('furnished', $request->furnished);
-        }
-
-        if ($request->filled('private_bathroom')) {
-            $query->where('private_bathroom', $request->private_bathroom);
-        }
-
-        if ($request->filled('search')) {
-            $query->where(function($q) use ($request) {
-                $q->where('number', 'like', '%' . $request->search . '%')
-                  ->orWhereHas('hostel', function($hq) use ($request) {
-                      $hq->where('name', 'like', '%' . $request->search . '%');
-                  });
-            });
-        }
-
-        $rooms = $query->latest()->paginate(15)->withQueryString();
+        $rooms = $this->roomsQuery($request)
+            ->latest()
+            ->paginate(15)
+            ->withQueryString();
 
         // Get all hostels for filter dropdown
         $hostels = Hostel::all();
@@ -632,7 +599,19 @@ $path = $image->store('rooms/gallery', 'public');
     /**
      * Export rooms list
      */
-    public function export(Request $request)
+    public function export(Request $request): Response|StreamedResponse
+    {
+        $rooms = $this->roomsQuery($request)->latest()->get();
+        $format = strtolower((string) $request->get('format', 'csv'));
+
+        if ($format === 'pdf') {
+            return $this->downloadRoomsPdf($rooms);
+        }
+
+        return $this->downloadRoomsCsv($rooms);
+    }
+
+    private function roomsQuery(Request $request): Builder
     {
         $query = Room::with('hostel');
 
@@ -644,27 +623,68 @@ $path = $image->store('rooms/gallery', 'public');
             $query->where('status', $request->status);
         }
 
-        $rooms = $query->get();
+        if ($request->filled('gender')) {
+            $query->whereIn('gender', [$request->gender, 'any']);
+        }
 
-        $filename = 'rooms-export-' . now()->format('Y-m-d') . '.csv';
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => "attachment; filename=\"$filename\"",
-        ];
+        if ($request->filled('min_price')) {
+            $query->where('room_cost', '>=', $request->min_price);
+        }
 
-        $callback = function() use ($rooms) {
+        if ($request->filled('max_price')) {
+            $query->where('room_cost', '<=', $request->max_price);
+        }
+
+        if ($request->filled('furnished')) {
+            $query->where('furnished', $request->furnished);
+        }
+
+        if ($request->filled('private_bathroom')) {
+            $query->where('private_bathroom', $request->private_bathroom);
+        }
+
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('number', 'like', '%' . $request->search . '%')
+                    ->orWhereHas('hostel', function ($hq) use ($request) {
+                        $hq->where('name', 'like', '%' . $request->search . '%');
+                    });
+            });
+        }
+
+        return $query;
+    }
+
+    private function downloadRoomsCsv(Collection $rooms): StreamedResponse
+    {
+        $filename = 'rooms-export-' . now()->format('Y-m-d-His') . '.csv';
+
+        return response()->streamDownload(function () use ($rooms) {
             $file = fopen('php://output', 'w');
+            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
             fputcsv($file, [
-                'ID', 'Room Number', 'Hostel', 'Capacity', 'Current Occupancy',
-                'Floor', 'Size (sqm)', 'Gender', 'Status', 'Price/Month',
-                'Furnished', 'Private Bathroom', 'Window Type', 'Created At'
+                'ID',
+                'Room Number',
+                'Hostel',
+                'Capacity',
+                'Current Occupancy',
+                'Floor',
+                'Size (sqm)',
+                'Gender',
+                'Status',
+                'Price/Month',
+                'Furnished',
+                'Private Bathroom',
+                'Window Type',
+                'Created At',
             ]);
 
             foreach ($rooms as $room) {
                 fputcsv($file, [
                     $room->id,
                     $room->number,
-                    $room->hostel->name ?? 'N/A',
+                    $room->hostel?->name ?? 'N/A',
                     $room->capacity,
                     $room->current_occupancy,
                     $room->floor ?? 'N/A',
@@ -675,15 +695,134 @@ $path = $image->store('rooms/gallery', 'public');
                     $room->furnished ? 'Yes' : 'No',
                     $room->private_bathroom ? 'Yes' : 'No',
                     $room->window_type ?? 'N/A',
-                    $room->created_at->format('Y-m-d H:i:s')
+                    optional($room->created_at)->format('Y-m-d H:i:s'),
                 ]);
             }
 
             fclose($file);
-        };
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
+    }
 
-        return response()->stream($callback, 200, $headers);
+    private function downloadRoomsPdf(Collection $rooms): Response
+    {
+        $lines = [
+            'Rooms Report',
+            'Generated: ' . now()->format('Y-m-d H:i:s'),
+            'Total records: ' . $rooms->count(),
+            str_repeat('=', 95),
+        ];
+
+        foreach ($rooms as $room) {
+            $entryLines = [
+                'Room: ' . ($room->number ?? 'N/A') . ' | Hostel: ' . ($room->hostel?->name ?? 'N/A'),
+                'Status: ' . ucfirst((string) $room->status) . ' | Gender: ' . ucfirst((string) $room->gender),
+                'Capacity: ' . ($room->current_occupancy ?? 0) . '/' . ($room->capacity ?? 0)
+                . ' | Price: ' . ($room->room_cost !== null ? '$' . number_format((float) $room->room_cost, 2) : 'N/A'),
+                'Floor: ' . ($room->floor ?? 'N/A') . ' | Size: ' . ($room->size_sqm ?? 'N/A') . ' sqm',
+                'Furnished: ' . ($room->furnished ? 'Yes' : 'No')
+                . ' | Private Bathroom: ' . ($room->private_bathroom ? 'Yes' : 'No'),
+                'Window Type: ' . ($room->window_type ?? 'N/A')
+                . ' | Created At: ' . (optional($room->created_at)->format('Y-m-d H:i:s') ?? 'N/A'),
+                str_repeat('-', 95),
+            ];
+
+            foreach ($entryLines as $entryLine) {
+                foreach (explode("\n", wordwrap($entryLine, 95, "\n", true)) as $wrappedLine) {
+                    $lines[] = $wrappedLine;
+                }
+            }
+        }
+
+        $pdfContent = $this->buildSimplePdf($lines);
+        $filename = 'rooms-export-' . now()->format('Y-m-d-His') . '.pdf';
+
+        return response($pdfContent, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
+    private function buildSimplePdf(array $lines): string
+    {
+        $linesPerPage = 48;
+        $pages = array_chunk($lines, $linesPerPage);
+        $objects = [
+            1 => '<< /Type /Catalog /Pages 2 0 R >>',
+            3 => '<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>',
+        ];
+
+        $kids = [];
+        $objectNumber = 4;
+
+        foreach ($pages as $pageLines) {
+            $pageObjectNumber = $objectNumber++;
+            $contentObjectNumber = $objectNumber++;
+            $kids[] = $pageObjectNumber . ' 0 R';
+
+            $streamLines = [
+                'BT',
+                '/F1 10 Tf',
+                '40 780 Td',
+                '14 TL',
+            ];
+
+            foreach ($pageLines as $line) {
+                $streamLines[] = '(' . $this->escapePdfText($line) . ') Tj';
+                $streamLines[] = 'T*';
+            }
+
+            $streamLines[] = 'ET';
+            $stream = implode("\n", $streamLines);
+
+            $objects[$pageObjectNumber] = '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] '
+                . '/Resources << /Font << /F1 3 0 R >> >> /Contents ' . $contentObjectNumber . ' 0 R >>';
+
+            $objects[$contentObjectNumber] = '<< /Length ' . strlen($stream) . " >>\nstream\n"
+                . $stream . "\nendstream";
+        }
+
+        $objects[2] = '<< /Type /Pages /Kids [' . implode(' ', $kids) . '] /Count ' . count($kids) . ' >>';
+        ksort($objects);
+
+        $pdf = "%PDF-1.4\n";
+        $offsets = [0 => 0];
+
+        foreach ($objects as $number => $object) {
+            $offsets[$number] = strlen($pdf);
+            $pdf .= $number . " 0 obj\n" . $object . "\nendobj\n";
+        }
+
+        $xrefOffset = strlen($pdf);
+        $maxObject = max(array_keys($objects));
+
+        $pdf .= "xref\n0 " . ($maxObject + 1) . "\n";
+        $pdf .= "0000000000 65535 f \n";
+
+        for ($i = 1; $i <= $maxObject; $i++) {
+            $pdf .= sprintf("%010d 00000 n \n", $offsets[$i] ?? 0);
+        }
+
+        $pdf .= "trailer\n<< /Size " . ($maxObject + 1) . " /Root 1 0 R >>\n";
+        $pdf .= "startxref\n" . $xrefOffset . "\n%%EOF";
+
+        return $pdf;
+    }
+
+    private function escapePdfText(string $text): string
+    {
+        $encoded = @iconv('UTF-8', 'windows-1252//TRANSLIT//IGNORE', $text);
+
+        if ($encoded === false) {
+            $encoded = preg_replace('/[^\x20-\x7E]/', '?', $text) ?? $text;
+        }
+
+        return str_replace(
+            ["\\", "(", ")", "\r"],
+            ["\\\\", "\\(", "\\)", ''],
+            $encoded
+        );
     }
 }
-
 
