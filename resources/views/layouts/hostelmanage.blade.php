@@ -12,6 +12,11 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+
+     <!--add logo to the site-->
+    <link rel="icon" href="{{ asset('wodabre-logo.png') }}" type="image/x-icon">
+    <link rel="shortcut icon" href="{{ asset('wodabre-logo.png') }}" type="image/x-icon">
 
     <!-- SweetAlert2 CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
@@ -476,8 +481,7 @@
             <div class="p-4 sm:p-6 border-b border-white border-opacity-20">
                 <div class="flex items-center space-x-3">
                     <div class="bg-white bg-opacity-20 p-2 rounded-lg flex-shrink-0">
-                        <i class="fas fa-hotel text-xl sm:text-2xl"></i>
-                    </div>
+                        <img src="{{ asset('wodabre-logo.png') }}" alt="Wo-dabre Logo" class="w-9 h-9">
                     <div class="min-w-0 flex-1">
                         <h2 class="text-base sm:text-xl font-bold truncate">{{ config('app.name') }}</h2>
                         <p class="text-[10px] sm:text-xs text-white text-opacity-80 truncate">Hostel Manager Portal</p>

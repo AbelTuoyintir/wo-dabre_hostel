@@ -7,9 +7,12 @@ use App\Models\Room;
 use App\Models\Booking;
 use App\Models\Complaint;
 use App\Models\User;
+use App\Models\OccupantMessage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Carbon\Carbon;
 use App\Models\Payment;
@@ -561,15 +564,15 @@ class HostelManagerDashboard extends Controller
     public function occupants(Request $request): View
     {
         $user = Auth::user();
-        $hostelIds = Hostel::where('user_id', $user->id)->pluck('id');
+        $hostelIds = $user->managedHostels()->pluck('id');
 
         $query = User::whereHas('bookings', function($q) use ($hostelIds) {
                 $q->whereIn('hostel_id', $hostelIds)
-                ->whereIn('status', ['confirmed', 'pending']);
+                ->whereIn('booking_status', ['confirmed', 'pending']);
             })
             ->with(['bookings' => function($q) use ($hostelIds) {
                 $q->whereIn('hostel_id', $hostelIds)
-                ->whereIn('status', ['confirmed', 'pending'])
+                ->whereIn('booking_status', ['confirmed', 'pending'])
                 ->with('room', 'hostel');
             }]);
 
@@ -589,17 +592,26 @@ class HostelManagerDashboard extends Controller
 
         // Calculate stats
         $stats = [
-            'total' => $query->count(),
-            'male' => User::whereHas('bookings', fn($q) => $q->whereIn('hostel_id', $hostelIds))->where('gender', 'male')->count(),
-            'female' => User::whereHas('bookings', fn($q) => $q->whereIn('hostel_id', $hostelIds))->where('gender', 'female')->count(),
-            'active' => User::whereHas('bookings', fn($q) => $q->whereIn('hostel_id', $hostelIds)->where('status', 'confirmed'))->count(),
+'total' => $query->count(),
+            'male' => User::whereHas('bookings', fn($q) => $q->whereIn('hostel_id', $hostelIds)->whereIn('booking_status', ['confirmed', 'pending']))->where('gender', 'male')->count(),
+            'female' => User::whereHas('bookings', fn($q) => $q->whereIn('hostel_id', $hostelIds)->whereIn('booking_status', ['confirmed', 'pending']))->where('gender', 'female')->count(),
+            'active' => User::whereHas('bookings', fn($q) => $q->whereIn('hostel_id', $hostelIds)->where('booking_status', 'confirmed'))->count(),
             'checkout_today' => Booking::whereIn('hostel_id', $hostelIds)
                 ->whereDate('check_out', now())
-                ->where('status', 'confirmed')
+                ->where('booking_status', 'confirmed')
                 ->count(),
         ];
 
-        $hostels = Hostel::where('user_id', $user->id)->get();
+        $hostels = $user->managedHostels()->get();
+
+        // Add hostel filter
+        if ($request->filled('hostel_id')) {
+            $query->whereHas('bookings', function($q) use ($request) {
+                $q->where('hostel_id', $request->hostel_id)
+                  ->whereIn('booking_status', ['confirmed', 'pending']);
+            });
+            $occupants = $query->paginate(15);
+        }
 
         return view('hostel-manager.occupants.index', compact('occupants', 'hostels', 'stats'));
     }
@@ -620,6 +632,63 @@ class HostelManagerDashboard extends Controller
             ->get();
 
         return view('hostel-manager.occupants.show', compact('user', 'bookings'));
+    }
+
+    public function contactOccupant(Request $request, User $user): RedirectResponse
+    {
+        $manager = Auth::user();
+        $hostelIds = $manager->managedHostels()->pluck('hostels.id');
+
+        if (!$user->bookings()->whereIn('hostel_id', $hostelIds)->exists()) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'subject' => 'required|string|max:255',
+            'message' => 'required|string|max:5000',
+        ]);
+
+        if (!$user->email) {
+            return redirect()->back()->with('error', 'This occupant does not have an email address on file.');
+        }
+
+        $messageLog = OccupantMessage::create([
+            'manager_id' => $manager->id,
+            'occupant_id' => $user->id,
+            'recipient_email' => $user->email,
+            'subject' => $validated['subject'],
+            'message' => $validated['message'],
+            'status' => 'pending',
+        ]);
+
+        try {
+            Mail::raw($validated['message'], function ($message) use ($user, $manager, $validated) {
+                $message->to($user->email, $user->name)
+                    ->subject($validated['subject']);
+
+                if (!empty($manager->email)) {
+                    $message->replyTo($manager->email, $manager->name);
+                }
+            });
+        } catch (\Throwable $exception) {
+            $messageLog->update([
+                'status' => 'failed',
+                'failed_at' => now(),
+                'error_message' => $exception->getMessage(),
+            ]);
+
+            report($exception);
+
+            return redirect()->back()->with('error', 'Unable to send the message right now. Please try again later.');
+        }
+
+        $messageLog->update([
+            'status' => 'sent',
+            'sent_at' => now(),
+            'error_message' => null,
+        ]);
+
+        return redirect()->back()->with('success', 'Message sent to ' . $user->name . '.');
     }
 
     public function exportOccupants(Request $request)
@@ -945,6 +1014,19 @@ class HostelManagerDashboard extends Controller
         $payment->load(['booking.user', 'booking.room', 'booking.hostel']);
 
         return view('hostel-manager.payments.show', compact('payment'));
+    }
+
+    public function viewPaymentReceipt(Payment $payment): View
+    {
+        $user = Auth::user();
+
+        if (!$user->managedHostels()->where('hostels.id', $payment->booking->hostel_id)->exists()) {
+            abort(403);
+        }
+
+        $payment->load(['booking.user', 'booking.room', 'booking.hostel']);
+
+        return view('hostel-manager.payments.reciept', compact('payment'));
     }
 
     public function updatePaymentStatus(Request $request, Payment $payment)

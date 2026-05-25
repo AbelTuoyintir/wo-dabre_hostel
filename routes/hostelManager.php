@@ -19,6 +19,7 @@ Route::middleware(['auth', 'hostel.manager'])->prefix('hostel-manager')->name('h
 
     // Room Management
     Route::get('/rooms', [HostelManagerDashboard::class, 'rooms'])->name('rooms');
+    Route::get('/rooms/export', [HostelManagerDashboard::class, 'exportRooms'])->name('rooms.export');
     Route::get('/rooms/create', [HostelManagerDashboard::class, 'createRoom'])->name('rooms.create');
     Route::post('/rooms', [HostelManagerDashboard::class, 'storeRoom'])->name('rooms.store');
     Route::get('/rooms/{room}', [HostelManagerDashboard::class, 'showRoom'])->name('rooms.show');
@@ -26,12 +27,12 @@ Route::middleware(['auth', 'hostel.manager'])->prefix('hostel-manager')->name('h
     Route::put('/rooms/{room}', [HostelManagerDashboard::class, 'updateRoom'])->name('rooms.update');
     Route::delete('/rooms/{room}', [HostelManagerDashboard::class, 'destroyRoom'])->name('rooms.destroy');
     Route::patch('/rooms/{room}/status', [HostelManagerDashboard::class, 'updateRoomStatus'])->name('rooms.status');
-    Route::get('/rooms/export', [HostelManagerDashboard::class, 'exportRooms'])->name('rooms.export');
 
     // Occupants (Students) Management
     Route::get('/occupants', [HostelManagerDashboard::class, 'occupants'])->name('occupants');
-    Route::get('/occupants/{user}', [HostelManagerDashboard::class, 'showOccupant'])->name('occupants.show');
     Route::get('/occupants/export', [HostelManagerDashboard::class, 'exportOccupants'])->name('occupants.export');
+    Route::post('/occupants/{user}/contact', [HostelManagerDashboard::class, 'contactOccupant'])->name('occupants.contact');
+    Route::get('/occupants/{user}', [HostelManagerDashboard::class, 'showOccupant'])->name('occupants.show');
 
     // Complaints Management
     Route::get('/complaints', [HostelManagerDashboard::class, 'complaints'])->name('complaints');
@@ -41,16 +42,17 @@ Route::middleware(['auth', 'hostel.manager'])->prefix('hostel-manager')->name('h
 
     // Bookings Management
     Route::get('/bookings', [HostelManagerDashboard::class, 'bookings'])->name('bookings');
+    Route::get('/bookings/export', [HostelManagerDashboard::class, 'exportBookings'])->name('bookings.export');
     Route::get('/bookings/{booking}', [HostelManagerDashboard::class, 'showBooking'])->name('bookings.show');
     Route::patch('/bookings/{booking}/status', [HostelManagerDashboard::class, 'updateBookingStatus'])->name('bookings.status');
     Route::delete('/bookings/{booking}', [HostelManagerDashboard::class, 'destroyBooking'])->name('bookings.destroy');
-    Route::get('/bookings/export', [HostelManagerDashboard::class, 'exportBookings'])->name('bookings.export');
 
     // Payments Management
     Route::get('/payments', [HostelManagerDashboard::class, 'payments'])->name('payments');
+    Route::get('/payments/export', [HostelManagerDashboard::class, 'exportPayments'])->name('payments.export');
+    Route::get('/payments/{payment}/receipt', [HostelManagerDashboard::class, 'viewPaymentReceipt'])->name('payments.receipt');
     Route::get('/payments/{payment}', [HostelManagerDashboard::class, 'showPayment'])->name('payments.show');
     Route::patch('/payments/{payment}/status', [HostelManagerDashboard::class, 'updatePaymentStatus'])->name('payments.status');
-    Route::get('/payments/export', [HostelManagerDashboard::class, 'exportPayments'])->name('payments.export');
 
     // Reports
     Route::get('/reports', [HostelManagerDashboard::class, 'reports'])->name('reports');

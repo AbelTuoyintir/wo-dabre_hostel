@@ -6,6 +6,10 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <title>{{ config('app.name', 'Laravel') }}</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <!--add logo to the site-->
+        <link rel="icon" href="{{ asset('wodabre-logo.png') }}" type="image/x-icon">
+        <link rel="shortcut icon" href="{{ asset('wodabre-logo.png') }}" type="image/x-icon">
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -17,9 +21,35 @@
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="font-sans antialiased">
-        <div class="min-h-screen flex bg-gray-100">
-             @include('layouts.navigation')
+    <body class="font-sans antialiased" x-data="{ sidebarOpen: false }">
+        <div class="min-h-screen lg:h-screen flex bg-gray-100 overflow-hidden">
+            @include('layouts.navigation')
+
+            <div x-cloak
+                 x-show="sidebarOpen"
+                 x-transition.opacity
+                 @click="sidebarOpen = false"
+                 class="fixed inset-0 z-40 bg-slate-900/40 lg:hidden"></div>
+
+            <div class="flex min-w-0 flex-1 flex-col">
+                @php
+                    $pageTitle = trim($__env->yieldContent('page-title')) ?: config('app.name', 'Laravel');
+                @endphp
+
+                <header class="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur lg:hidden">
+                    <div class="flex items-center justify-between px-4 py-3">
+                        <button @click="sidebarOpen = true"
+                                type="button"
+                                class="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white p-2 text-slate-700 shadow-sm transition hover:bg-slate-50"
+                                aria-label="Open menu">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                            </svg>
+                        </button>
+                        <h1 class="max-w-[70%] truncate text-sm font-semibold text-slate-800">{{ $pageTitle }}</h1>
+                        <div class="w-9"></div>
+                    </div>
+                </header>
 
             <!-- Page Heading -->
             @isset($header)
@@ -31,9 +61,10 @@
             @endisset
 
             <!-- Page Content -->
-           <main class="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
-                @yield('content')
-            </main>
+                <main class="min-w-0 flex-1 overflow-y-auto p-3 sm:p-6 lg:p-8">
+                    @yield('content')
+                </main>
+            </div>
         </div>
 
         <!-- SweetAlert2 JS -->
@@ -186,5 +217,11 @@
                 return false;
             };
         </script>
+
+        <style>
+            [x-cloak] {
+                display: none !important;
+            }
+        </style>
     </body>
 </html>

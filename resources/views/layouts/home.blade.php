@@ -11,6 +11,10 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
+
+    <link rel="icon" href="{{ asset('wodabre-logo.png') }}" type="image/x-icon">
+    <link rel="shortcut icon" href="{{ asset('wodabre-logo.png') }}" type="image/x-icon">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -73,8 +77,9 @@
         <div class="container mx-auto px-4 py-6">
             <div class="flex flex-col md:flex-row justify-between items-center">
                 <div class="flex items-center space-x-3 mb-4 md:mb-0">
-                    <div class="bg-white text-blue-900 p-2 rounded-lg">
-                        <i class="fas fa-university text-2xl"></i>
+                    <div class="bg-white text-blue-900 p-2 rounded-full">
+                        <!-- add wodabre logo here-->
+                        <img src="{{ asset('wodabre-logo.png') }}" alt="Wo-dabre Logo" class="w-10 h-10">
                     </div>
                     <div>
                         <h1 class="text-2xl font-bold">UCC Hostel Booking</h1>
@@ -219,9 +224,10 @@
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <div>
                     <div class="flex items-center space-x-3 mb-4">
-                        <div class="bg-white text-blue-900 p-2 rounded-lg">
-                            <i class="fas fa-university text-xl"></i>
-                        </div>
+                        <div class="bg-white text-blue-900 p-2 rounded-full">
+                        <!-- add wodabre logo here-->
+                        <img src="{{ asset('wodabre-logo.png') }}" alt="Wo-dabre Logo" class="w-10 h-10">
+                    </div>
                         <h3 class="text-xl font-bold">UCC Hostel Booking</h3>
                     </div>
                     <p class="text-gray-400">The official hostel booking platform for University of Cape Coast students.</p>

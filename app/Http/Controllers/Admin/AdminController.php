@@ -297,10 +297,10 @@ class AdminController extends Controller
     {
         // Revenue by month (last 12 months)
         $revenueByMonth = DB::table('bookings')
-            ->selectRaw("strftime('%Y', created_at) as year, strftime('%m', created_at) as month, SUM(total_amount) as revenue")
+            ->selectRaw('YEAR(created_at) as year, MONTH(created_at) as month, SUM(total_amount) as revenue')
             ->where('payment_status', 'paid')
             ->where('created_at', '>=', Carbon::now()->subMonths(12))
-            ->groupBy('year', 'month')
+            ->groupByRaw('YEAR(created_at), MONTH(created_at)')
             ->orderBy('year', 'desc')
             ->orderBy('month', 'desc')
             ->get();

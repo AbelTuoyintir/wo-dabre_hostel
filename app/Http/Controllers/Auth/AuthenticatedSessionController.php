@@ -73,14 +73,12 @@ class AuthenticatedSessionController extends Controller
                 return redirect()->route('hostel-manager.dashboard');
 
             case 'student':
-                if (!$user->has_paid_fees) {
-                    return redirect()->route('student.payment')
-                        ->with('warning', 'Please complete payment to access dashboard.');
-                }
                 return redirect()->route('student.dashboard');
 
             default:
-                return redirect(route('dashboard', absolute: false));
+                return redirect(route('hostels.index', absolute: false))->withErrors([
+                    'email' => 'Unknown user role. Contact administrator.'
+                ]);
         }
     }
 }

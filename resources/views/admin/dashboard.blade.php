@@ -95,7 +95,7 @@
                             </span>
                         </td>
                         <td class="px-4 py-2 text-right">
-                            ₦{{ number_format($booking->total_amount, 2) }}
+                            ₵{{ number_format($booking->total_amount, 2) }}
                         </td>
                         <td class="px-4 py-2">
                             {{ $booking->created_at->format('d M Y') }}

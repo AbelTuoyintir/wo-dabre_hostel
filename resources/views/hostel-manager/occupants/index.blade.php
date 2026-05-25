@@ -186,7 +186,11 @@
                                class="text-blue-600 hover:text-blue-800" title="View Details">
                                 <i class="fas fa-eye text-xs"></i>
                             </a>
-                            <button onclick="contactOccupant({{ $occupant->id }})"
+                            <button type="button"
+                                    onclick="contactOccupant(this)"
+                                    data-name="{{ $occupant->name }}"
+                                    data-email="{{ $occupant->email }}"
+                                    data-action="{{ route('hostel-manager.occupants.contact', $occupant) }}"
                                     class="text-green-600 hover:text-green-800" title="Contact">
                                 <i class="fas fa-envelope text-xs"></i>
                             </button>
@@ -274,24 +278,19 @@
 <script>
 let currentOccupantId = null;
 
-function contactOccupant(occupantId) {
-    currentOccupantId = occupantId;
-
-    // Get occupant details via AJAX (you'll need to implement this endpoint)
-    fetch(`/hostel-manager/occupants/${occupantId}/details`)
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('recipientName').value = data.name + ' (' + data.email + ')';
-            document.getElementById('contactForm').action = `/hostel-manager/occupants/${occupantId}/contact`;
-            document.getElementById('contactModal').style.display = 'block';
-            document.body.style.overflow = 'hidden';
-        });
+function contactOccupant(button) {
+    currentOccupantId = button.dataset.action;
+    document.getElementById('recipientName').value = `${button.dataset.name} (${button.dataset.email})`;
+    document.getElementById('contactForm').action = button.dataset.action;
+    document.getElementById('contactModal').style.display = 'block';
+    document.body.style.overflow = 'hidden';
 }
 
 function closeContactModal() {
     document.getElementById('contactModal').style.display = 'none';
     document.body.style.overflow = 'auto';
     currentOccupantId = null;
+    document.getElementById('contactForm').reset();
 }
 
 // Close modal when clicking outside

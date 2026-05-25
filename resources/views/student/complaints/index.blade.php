@@ -292,7 +292,7 @@
                     <select name="booking_id" id="booking_id"
                             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                         <option value="">Select a booking (optional)</option>
-                        @foreach(auth()->user()->bookings()->where('status', 'confirmed')->get() as $booking)
+                        @foreach(auth()->user()->bookings()->where('booking_status', 'confirmed')->get() as $booking)
                             <option value="{{ $booking->id }}">
                                 {{ $booking->room->hostel->name ?? 'Hostel' }} - Room {{ $booking->room->number ?? 'N/A' }}
                                 ({{ $booking->check_in->format('M d') }} - {{ $booking->check_out->format('M d') }})

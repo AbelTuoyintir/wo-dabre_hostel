@@ -38,7 +38,7 @@ class StudentController extends Controller
         $stats = [
             'total_bookings' => Booking::where('user_id', $user->id)->count(),
             'active_bookings' => Booking::where('user_id', $user->id)
-                ->where('status', 'confirmed')
+                ->where('booking_status', 'confirmed')
                 ->where('check_out_date', '>=', now())
                 ->count(),
             'total_paid' => Payment::whereHas('booking', fn($q) => $q->where('user_id', $user->id))
@@ -52,7 +52,7 @@ class StudentController extends Controller
 
         // Get active booking if any
         $activeBooking = Booking::where('user_id', $user->id)
-            ->where('status', 'confirmed')
+            ->where('booking_status', 'confirmed')
             ->where('check_out_date', '>=', now())
             ->with(['room.hostel'])
             ->first();
@@ -342,7 +342,7 @@ class StudentController extends Controller
 
         // Get bookings that can be reviewed (completed stays that haven't been reviewed yet)
         $reviewableBookings = Booking::where('user_id', Auth::id())
-            ->where('status', 'completed')
+            ->where('booking_status', 'checked_out')
             ->whereDoesntHave('review')
             ->with('room.hostel')
             ->latest()
@@ -362,7 +362,7 @@ class StudentController extends Controller
         if ($bookingId) {
             $booking = Booking::where('user_id', Auth::id())
                 ->where('id', $bookingId)
-                ->where('status', 'completed')
+                ->where('booking_status', 'checked_out')
                 ->with('room.hostel')
                 ->firstOrFail();
 
@@ -380,7 +380,7 @@ class StudentController extends Controller
             // Check if user has completed a booking at this hostel
             $hasCompletedBooking = Booking::where('user_id', Auth::id())
                 ->where('hostel_id', $hostelId)
-                ->where('status', 'completed')
+                ->where('booking_status', 'checked_out')
                 ->exists();
 
             if (!$hasCompletedBooking) {
@@ -436,7 +436,7 @@ class StudentController extends Controller
         // Verify user has completed a booking at this hostel
         $hasCompletedBooking = Booking::where('user_id', Auth::id())
             ->where('hostel_id', $validated['hostel_id'])
-            ->where('status', 'completed')
+            ->where('booking_status', 'checked_out')
             ->exists();
 
         if (!$hasCompletedBooking) {
@@ -678,7 +678,8 @@ public function viewHostel(Hostel $hostel)
             ->with(['hostel', 'room', 'payment']);
 
         if ($request->filled('status')) {
-            $query->where('status', $request->status);
+            $bookingStatus = $request->status === 'completed' ? 'checked_out' : $request->status;
+            $query->where('booking_status', $bookingStatus);
         }
 
         $sort = $request->get('sort', 'latest');

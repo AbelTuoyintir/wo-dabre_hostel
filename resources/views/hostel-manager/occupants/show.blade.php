@@ -16,7 +16,11 @@
                 <p class="text-xs text-gray-500">{{ $student->student_id ?? 'No ID' }}</p>
             </div>
             <div class="ml-auto flex items-center space-x-2">
-                <button onclick="contactOccupant({{ $student->id }})"
+                <button type="button"
+                        onclick="contactOccupant(this)"
+                        data-name="{{ $student->name }}"
+                        data-email="{{ $student->email }}"
+                        data-action="{{ route('hostel-manager.occupants.contact', $student) }}"
                         class="bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-1.5 rounded-lg transition flex items-center">
                     <i class="fas fa-envelope mr-1"></i> Contact
                 </button>
@@ -225,7 +229,11 @@
                     <h3 class="text-xs font-semibold text-gray-700 uppercase">Quick Actions</h3>
                 </div>
                 <div class="p-3 space-y-2">
-                    <button onclick="contactOccupant({{ $student->id }})"
+                    <button type="button"
+                            onclick="contactOccupant(this)"
+                            data-name="{{ $student->name }}"
+                            data-email="{{ $student->email }}"
+                            data-action="{{ route('hostel-manager.occupants.contact', $student) }}"
                             class="w-full text-left px-3 py-2 text-xs bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition flex items-center">
                         <i class="fas fa-envelope mr-2"></i>
                         Send Message
@@ -240,8 +248,76 @@
     </div>
 </div>
 
-<!-- Contact Modal (same as in index) -->
+<!-- Contact Modal -->
 <div id="contactModal" class="modal">
-    <!-- ... same modal content as index ... -->
+    <div class="modal-content container mx-auto px-4 py-16 max-w-md">
+        <div class="bg-white rounded-xl shadow-2xl overflow-hidden">
+            <div class="px-4 py-3 bg-gradient-to-r from-blue-500 to-purple-600">
+                <h3 class="text-sm font-semibold text-white flex items-center">
+                    <i class="fas fa-envelope mr-2 text-xs"></i>
+                    Contact Occupant
+                </h3>
+                <button onclick="closeContactModal()" class="absolute top-3 right-3 text-white hover:text-gray-200">
+                    <i class="fas fa-times text-sm"></i>
+                </button>
+            </div>
+
+            <form id="contactForm" method="POST" class="p-4">
+                @csrf
+
+                <div class="mb-3">
+                    <label class="block text-[10px] font-medium text-gray-500 uppercase mb-1">Recipient</label>
+                    <input type="text" id="recipientName" class="w-full px-3 py-2 text-xs bg-gray-50 border border-gray-300 rounded-lg" readonly disabled>
+                </div>
+
+                <div class="mb-3">
+                    <label class="block text-[10px] font-medium text-gray-500 uppercase mb-1">Subject</label>
+                    <input type="text" name="subject" class="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                           placeholder="Enter subject" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="block text-[10px] font-medium text-gray-500 uppercase mb-1">Message</label>
+                    <textarea name="message" rows="4" class="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                              placeholder="Type your message here..." required></textarea>
+                </div>
+
+                <div class="flex justify-end space-x-2">
+                    <button type="button" onclick="closeContactModal()"
+                            class="px-3 py-1.5 text-xs border border-gray-300 rounded-lg hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                            class="px-3 py-1.5 text-xs bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                        Send Message
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+function contactOccupant(button) {
+    document.getElementById('recipientName').value = `${button.dataset.name} (${button.dataset.email})`;
+    document.getElementById('contactForm').action = button.dataset.action;
+    document.getElementById('contactModal').style.display = 'block';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeContactModal() {
+    document.getElementById('contactModal').style.display = 'none';
+    document.body.style.overflow = 'auto';
+    document.getElementById('contactForm').reset();
+}
+
+window.addEventListener('click', function(event) {
+    const modal = document.getElementById('contactModal');
+    if (event.target === modal) {
+        closeContactModal();
+    }
+});
+</script>
+@endpush
