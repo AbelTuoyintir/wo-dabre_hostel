@@ -18,12 +18,29 @@
             </div>
 
             <div class="p-6">
+                @if(session('error'))
+                    <div class="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                        <i class="fas fa-circle-exclamation mr-1"></i>{{ session('error') }}
+                    </div>
+                @endif
+
+                @if($errors->any())
+                    <div class="mb-4 rounded-lg border border-red-200 bg-red-50 p-4">
+                        <p class="mb-2 text-sm font-semibold text-red-800">Please fix the following errors:</p>
+                        <ul class="list-disc space-y-1 pl-5 text-sm text-red-700">
+                            @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
                 <!-- Room Summary -->
                 <div class="bg-gray-50 p-4 rounded-lg mb-6">
                     <h2 class="text-lg font-semibold text-gray-900 mb-3">Booking Summary</h2>
                     <div class="flex items-start space-x-4">
                         @if($hostel->primaryImage)
-                            <img src="{{ Storage::url($hostel->primaryImage->path) }}" 
+                            <img src="{{ Storage::url($hostel->primaryImage->path) }}"
                                  alt="{{ $hostel->name }}"
                                  class="w-24 h-24 object-cover rounded-lg">
                         @else
@@ -46,13 +63,12 @@
                         </div>
                     </div>
 
-                    <!-- Price Display - FIXED: Using room_cost -->
                     <div class="mt-4 pt-4 border-t border-gray-200">
                         <div class="flex justify-between items-center">
                             <span class="text-gray-700 font-medium">Price (per academic year)</span>
                             <div class="text-right">
                                 @if(!empty($room->room_cost) && $room->room_cost > 0)
-                                    <span class="text-2xl font-bold text-blue-600">₵{{ number_format($room->room_cost, 2) }}</span>
+                                    <span class="text-2xl font-bold text-blue-600">?{{ number_format($room->room_cost, 2) }}</span>
                                     <span class="text-sm text-gray-500">/year</span>
                                 @else
                                     <span class="text-gray-400">Price not set</span>
@@ -62,200 +78,254 @@
                     </div>
                 </div>
 
-                <!-- Guest Registration Form - NOW FIXED -->
-            @if(!Auth::check())
-            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-                <h3 class="font-semibold text-yellow-800 mb-3">Create Account to Continue</h3>
-                <p class="text-sm text-yellow-700 mb-3">
-                    <i class="fas fa-info-circle mr-1"></i>
-                    An account will be created for you. Login credentials will be sent to your email after payment.
-                </p>
-                
-                <!-- FIXED: Form now contains ALL inputs -->
-                <form action="{{ route('bookings.store') }}" method="POST" id="bookingForm">
-                    @csrf
-                    <input type="hidden" name="room_id" value="{{ $room->id }}">
-                    <input type="hidden" name="hostel_id" value="{{ $hostel->id }}">
-                    <input type="hidden" name="room_cost" value="{{ $room->room_cost ?? 0 }}">
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
-                            <input type="text" name="name" value="{{ old('name') }}" 
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                required>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-                            <input type="email" name="email" value="{{ old('email') }}" 
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                required>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number *</label>
-                            <input type="tel" name="phone" value="{{ old('phone') }}" 
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                placeholder="e.g., 024XXXXXXX"
-                                required>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Gender *</label>
-                            <select name="gender" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
-                                <option value="">Select Gender</option>
-                                <option value="male">Male</option>
-                                <option value="female">Female</option>
-                            </select>
-                        </div>
-                    </div>
+                @if(!Auth::check())
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                    <h3 class="font-semibold text-yellow-800 mb-3">Create Account to Continue</h3>
+                    <p class="text-sm text-yellow-700 mb-3">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        An account will be created for you. Login credentials will be sent to your email after payment.
+                    </p>
 
-                    <!-- Date Selection -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 mb-6">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Check-in Date <span class="text-red-500">*</span>
-                            </label>
-                            <input type="date" 
-                                name="check_in_date" 
-                                id="check_in_date"
-                                min="{{ date('Y-m-d', strtotime('+1 day')) }}"
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                required>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Check-out Date <span class="text-red-500">*</span>
-                            </label>
-                            <input type="date" 
-                                name="check_out_date" 
-                                id="check_out_date"
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                required>
-                        </div>
-                    </div>
+                    <form action="{{ route('bookings.store') }}" method="POST" id="bookingForm" novalidate>
+                        @csrf
+                        <input type="hidden" name="room_id" value="{{ $room->id }}">
+                        <input type="hidden" name="hostel_id" value="{{ $hostel->id }}">
+                        <input type="hidden" name="room_cost" value="{{ $room->room_cost ?? 0 }}">
 
-                    <!-- Price Calculation -->
-                    <div id="priceSummary" class="bg-blue-50 p-4 rounded-lg mb-6 hidden">
-                        <h3 class="font-semibold text-blue-800 mb-3">Payment Summary</h3>
-                        <div class="space-y-2">
-                            <div class="flex justify-between text-sm">
-                                <span class="text-gray-600">Duration:</span>
-                                <span id="durationDisplay" class="font-medium">-</span>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+                                <input type="text" name="name" value="{{ old('name') }}"
+                                       class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 {{ $errors->has('name') ? 'border-red-400' : 'border-gray-300' }}"
+                                       required>
+                                @error('name')
+                                    <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                @enderror
                             </div>
-                            <div class="flex justify-between text-sm">
-                                <span class="text-gray-600">Accommodation Cost:</span>
-                                <span id="accommodationTotal" class="font-medium">-</span>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                                <input type="email" name="email" value="{{ old('email') }}"
+                                       class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 {{ $errors->has('email') ? 'border-red-400' : 'border-gray-300' }}"
+                                       required>
+                                @error('email')
+                                    <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                @enderror
                             </div>
-                            <div class="flex justify-between text-sm">
-                                <span class="text-gray-600">Student Fee (one-time):</span>
-                                <span class="font-medium">₵150.00</span>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number *</label>
+                                <input type="tel" name="phone" value="{{ old('phone') }}"
+                                       class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 {{ $errors->has('phone') ? 'border-red-400' : 'border-gray-300' }}"
+                                       placeholder="e.g., 024XXXXXXX"
+                                       required>
+                                @error('phone')
+                                    <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                @enderror
                             </div>
-                            <div class="flex justify-between text-sm">
-                                <span class="text-gray-600">Subtotal:</span>
-                                <span id="subtotal" class="font-medium">-</span>
-                            </div>
-                            <div class="flex justify-between text-sm">
-                                <span class="text-gray-600">Processing Fee (2%):</span>
-                                <span id="processingFee" class="font-medium">-</span>
-                            </div>
-                            <div class="border-t border-blue-200 my-2"></div>
-                            <div class="flex justify-between text-lg font-bold">
-                                <span>Total to Pay:</span>
-                                <span id="totalAmount" class="text-blue-600">-</span>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Gender *</label>
+                                <select name="gender" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 {{ $errors->has('gender') ? 'border-red-400' : 'border-gray-300' }}" required>
+                                    <option value="">Select Gender</option>
+                                    <option value="male" {{ old('gender') === 'male' ? 'selected' : '' }}>Male</option>
+                                    <option value="female" {{ old('gender') === 'female' ? 'selected' : '' }}>Female</option>
+                                </select>
+                                @error('gender')
+                                    <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                @enderror
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Submit Button -->
-                    <button type="submit" 
-                        id="submitBtn"
-                        disabled
-                        class="w-full px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
-                        <i class="fas fa-lock mr-2"></i>
-                        Proceed to Secure Payment
-                    </button>
-                </form>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 mb-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Check-in Date <span class="text-red-500">*</span>
+                                </label>
+                                <input type="date"
+                                       name="check_in_date"
+                                       id="check_in_date"
+                                       value="{{ old('check_in_date') }}"
+                                       min="{{ date('Y-m-d', strtotime('+1 day')) }}"
+                                       class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 {{ $errors->has('check_in_date') ? 'border-red-400' : 'border-gray-300' }}"
+                                       required>
+                                @error('check_in_date')
+                                    <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Check-out Date <span class="text-red-500">*</span>
+                                </label>
+                                <input type="date"
+                                       name="check_out_date"
+                                       id="check_out_date"
+                                       value="{{ old('check_out_date') }}"
+                                       class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 {{ $errors->has('check_out_date') ? 'border-red-400' : 'border-gray-300' }}"
+                                       required>
+                                @error('check_out_date')
+                                    <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
 
-                <p class="text-center text-xs text-gray-500 mt-4">
-                    <i class="fas fa-shield-alt mr-1"></i>
-                    Payments are processed securely by Paystack. Your payment information is encrypted.
-                </p>
+                        <p id="dateError" class="mb-4 hidden text-sm text-red-600"></p>
+
+                        <div id="priceSummary" class="bg-blue-50 p-4 rounded-lg mb-6 hidden">
+                            <h3 class="font-semibold text-blue-800 mb-3">Payment Summary</h3>
+                            <div class="space-y-2">
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Duration:</span>
+                                    <span id="durationDisplay" class="font-medium">-</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Accommodation Cost:</span>
+                                    <span id="accommodationTotal" class="font-medium">-</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Student Fee (one-time):</span>
+                                    <span class="font-medium">?150.00</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Subtotal:</span>
+                                    <span id="subtotal" class="font-medium">-</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Processing Fee (2%):</span>
+                                    <span id="processingFee" class="font-medium">-</span>
+                                </div>
+                                <div class="border-t border-blue-200 my-2"></div>
+                                <div class="flex justify-between text-lg font-bold">
+                                    <span>Total to Pay:</span>
+                                    <span id="totalAmount" class="text-blue-600">-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit"
+                                id="submitBtn"
+                                disabled
+                                class="w-full px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fas fa-lock mr-2"></i>
+                            Proceed to Secure Payment
+                        </button>
+                    </form>
+
+                    <p class="text-center text-xs text-gray-500 mt-4">
+                        <i class="fas fa-shield-alt mr-1"></i>
+                        Payments are processed securely by Paystack. Your payment information is encrypted.
+                    </p>
+                </div>
+                @endif
             </div>
-            @endif
         </div>
     </div>
 
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        console.log('DOM loaded - initializing booking form');
-        
         const checkIn = document.getElementById('check_in_date');
         const checkOut = document.getElementById('check_out_date');
         const priceSummary = document.getElementById('priceSummary');
         const submitBtn = document.getElementById('submitBtn');
+        const dateError = document.getElementById('dateError');
         const STUDENT_FEE = 150;
-        
-        // Get room cost from data attribute or hidden field
-        const roomCost = {{ $room->room_cost ?? 0 }};
-        
-        console.log('Room cost:', roomCost);
 
-        function calculateTotal() {
-            if (checkIn.value && checkOut.value) {
-                const start = new Date(checkIn.value);
-                const end = new Date(checkOut.value);
-                const diffTime = Math.abs(end - start);
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                
-                console.log('Days:', diffDays);
-                
-                if (diffDays > 0) {
-                    // Calculate pro-rated room cost (yearly rate / 365 * days)
-                    const accommodationTotal = roomCost ;
-                    const subtotal = accommodationTotal + STUDENT_FEE;
-                    const processingFee = subtotal * 0.02;
-                    const totalWithFee = subtotal + processingFee;
-                    
-                    console.log('Accommodation:', accommodationTotal);
-                    
-                    // Update display
-                    document.getElementById('durationDisplay').textContent = diffDays + ' nights';
-                    document.getElementById('accommodationTotal').textContent = '₵' + accommodationTotal.toFixed(2);
-                    document.getElementById('subtotal').textContent = '₵' + subtotal.toFixed(2);
-                    document.getElementById('processingFee').textContent = '₵' + processingFee.toFixed(2);
-                    document.getElementById('totalAmount').textContent = '₵' + totalWithFee.toFixed(2);
-                    
-                    priceSummary.classList.remove('hidden');
-                    submitBtn.disabled = false;
-                }
-            }
+        if (!checkIn || !checkOut || !priceSummary || !submitBtn || !dateError) {
+            return;
         }
 
-        // Update check-out min date when check-in changes
-        checkIn.addEventListener('change', function() {
-            const checkInDate = new Date(this.value);
+        const roomCost = {{ $room->room_cost ?? 0 }};
+
+        function showDateError(message) {
+            dateError.textContent = message;
+            dateError.classList.remove('hidden');
+        }
+
+        function clearDateError() {
+            dateError.textContent = '';
+            dateError.classList.add('hidden');
+        }
+
+        function resetSummary() {
+            priceSummary.classList.add('hidden');
+            submitBtn.disabled = true;
+        }
+
+        function updateCheckOutMinDate() {
+            if (!checkIn.value) {
+                return;
+            }
+
+            const checkInDate = new Date(checkIn.value);
+            if (Number.isNaN(checkInDate.getTime())) {
+                showDateError('Please select a valid check-in date.');
+                resetSummary();
+                return;
+            }
+
             const nextDay = new Date(checkInDate);
             nextDay.setDate(nextDay.getDate() + 1);
-            
+
             const year = nextDay.getFullYear();
             const month = String(nextDay.getMonth() + 1).padStart(2, '0');
             const day = String(nextDay.getDate()).padStart(2, '0');
-            
             checkOut.min = `${year}-${month}-${day}`;
-            
-            // Clear check-out if it's now invalid
-            if (checkOut.value && new Date(checkOut.value) <= checkInDate) {
-                checkOut.value = '';
-                priceSummary.classList.add('hidden');
-                submitBtn.disabled = true;
+        }
+
+        function calculateTotal() {
+            if (!checkIn.value || !checkOut.value) {
+                resetSummary();
+                return;
             }
-            
+
+            const start = new Date(checkIn.value);
+            const end = new Date(checkOut.value);
+
+            if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+                showDateError('Please select valid check-in and check-out dates.');
+                resetSummary();
+                return;
+            }
+
+            const diffDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+            if (diffDays <= 0) {
+                showDateError('Check-out date must be at least one day after check-in date.');
+                resetSummary();
+                return;
+            }
+
+            clearDateError();
+
+            const accommodationTotal = roomCost;
+            const subtotal = accommodationTotal + STUDENT_FEE;
+            const processingFee = subtotal * 0.02;
+            const totalWithFee = subtotal + processingFee;
+
+            document.getElementById('durationDisplay').textContent = diffDays + ' nights';
+            document.getElementById('accommodationTotal').textContent = '?' + accommodationTotal.toFixed(2);
+            document.getElementById('subtotal').textContent = '?' + subtotal.toFixed(2);
+            document.getElementById('processingFee').textContent = '?' + processingFee.toFixed(2);
+            document.getElementById('totalAmount').textContent = '?' + totalWithFee.toFixed(2);
+
+            priceSummary.classList.remove('hidden');
+            submitBtn.disabled = false;
+        }
+
+        checkIn.addEventListener('change', function() {
+            updateCheckOutMinDate();
+
+            if (checkOut.value && new Date(checkOut.value) <= new Date(checkIn.value)) {
+                checkOut.value = '';
+                showDateError('Check-out date must be after check-in date.');
+                resetSummary();
+                return;
+            }
+
             calculateTotal();
         });
 
         checkOut.addEventListener('change', calculateTotal);
-        
-        console.log('Booking form initialized');
+
+        updateCheckOutMinDate();
+        calculateTotal();
     });
     </script>
-</body>
+</div>
 @endsection
