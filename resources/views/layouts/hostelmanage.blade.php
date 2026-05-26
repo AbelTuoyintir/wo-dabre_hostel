@@ -476,13 +476,13 @@
         <div id="sidebarOverlay" class="overlay" onclick="closeSidebar()"></div>
 
         <!-- Sidebar -->
-        <aside class="sidebar text-white fixed h-full overflow-y-auto shadow-xl" id="sidebar">
+        <aside class="sidebar text-white fixed w-[45px] h-full overflow-y-auto shadow-xl" id="sidebar">
             <!-- Logo Area -->
             <div class="p-4 sm:p-6 border-b border-white border-opacity-20">
                 <div class="flex items-center space-x-3">
                     <div class="bg-white bg-opacity-20 p-2 rounded-lg flex-shrink-0">
                         <img src="{{ asset('wodabre-logo.png') }}" alt="Wo-dabre Logo" class="w-9 h-9">
-                    <div class="min-w-0 flex-1">
+                        <div class="min-w-0 flex-1">
                         <h2 class="text-base sm:text-xl font-bold truncate">{{ config('app.name') }}</h2>
                         <p class="text-[10px] sm:text-xs text-white text-opacity-80 truncate">Hostel Manager Portal</p>
                     </div>

@@ -13,7 +13,7 @@
 <!-- Hostel Details -->
 <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-6">
     <!-- Hostel Image Gallery -->
-    <div class="relative h-96 bg-gray-900">
+    <div class="relative m-10 h-96 bg-gray-900">
         @if($hostel->images && $hostel->images->count() > 0)
             <div x-data="{ activeImage: 0 }" class="relative h-full">
                 <img src="{{ Storage::url($hostel->images[0]->path) }}" 

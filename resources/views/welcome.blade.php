@@ -191,7 +191,7 @@
                                     <span class="font-bold text-xs text-slate-700">{{ $hostel['rating'] ?? '4.5' }}</span>
                                 </div>
                             </div>
-                            <p class="text-slate-500 text-xs mb-3 line-clamp-2">{{ Str::limit($hostel['description'], 80) }}</p>
+                            <p class="text-slate-500 text-xs mb-3 line-clamp-2">{{ \Illuminate\Support\Str::limit($hostel['description'], 80) }}</p>
                             @if($hostel['amenities'])
                                 <div class="flex flex-wrap gap-1.5 mb-4">
                                     @foreach(array_slice($hostel['amenities'], 0, 3) as $amenity)
@@ -204,8 +204,8 @@
                             @endif
                             <div class="flex justify-between items-center border-t border-slate-100 pt-3">
                                 <div>
-                                    <span class="text-xs text-slate-400">Starting from</span>
-                                    <p class="text-2xl font-black text-slate-800">₵{{ number_format($minPrice) }}<span class="text-xs font-normal text-slate-400">/yr</span></p>
+                                    <span class="text-xs text-slate-400">Rooms Available</span>
+                                    
                                 </div>
                                 <div class="flex items-center gap-1 text-green-600 text-xs font-bold">
                                     <span class="w-2 h-2 rounded-full bg-green-500"></span> 
