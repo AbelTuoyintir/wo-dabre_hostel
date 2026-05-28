@@ -15,8 +15,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
      <!--add logo to the site-->
-    <link rel="icon" href="{{ asset('wodabre-logo.png') }}" type="image/x-icon">
-    <link rel="shortcut icon" href="{{ asset('wodabre-logo.png') }}" type="image/x-icon">
+        <link rel="icon" href="{{ asset('/images/wodabre-logo.png') }}" type="image/x-icon">
+        <link rel="shortcut icon" href="{{ asset('/images/wodabre-logo.png') }}" type="image/x-icon">
 
     <!-- SweetAlert2 CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
