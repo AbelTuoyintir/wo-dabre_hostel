@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasRouteUuid;
 use App\Models\Review;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 
 class Hostel extends Model
 {
+    use HasRouteUuid;
+
     //
 
     protected $fillable = [
@@ -130,4 +133,3 @@ class Hostel extends Model
         $this->save();
     }
 }
-

@@ -22,37 +22,37 @@ Route::middleware(['auth', 'hostel.manager'])->prefix('hostel-manager')->name('h
     Route::get('/rooms/export', [HostelManagerDashboard::class, 'exportRooms'])->name('rooms.export');
     Route::get('/rooms/create', [HostelManagerDashboard::class, 'createRoom'])->name('rooms.create');
     Route::post('/rooms', [HostelManagerDashboard::class, 'storeRoom'])->name('rooms.store');
-    Route::get('/rooms/{room}', [HostelManagerDashboard::class, 'showRoom'])->name('rooms.show');
-    Route::get('/rooms/{room}/edit', [HostelManagerDashboard::class, 'editRoom'])->name('rooms.edit');
-    Route::put('/rooms/{room}', [HostelManagerDashboard::class, 'updateRoom'])->name('rooms.update');
-    Route::delete('/rooms/{room}', [HostelManagerDashboard::class, 'destroyRoom'])->name('rooms.destroy');
-    Route::patch('/rooms/{room}/status', [HostelManagerDashboard::class, 'updateRoomStatus'])->name('rooms.status');
+    Route::get('/rooms/{room:uuid}', [HostelManagerDashboard::class, 'showRoom'])->name('rooms.show');
+    Route::get('/rooms/{room:uuid}/edit', [HostelManagerDashboard::class, 'editRoom'])->name('rooms.edit');
+    Route::put('/rooms/{room:uuid}', [HostelManagerDashboard::class, 'updateRoom'])->name('rooms.update');
+    Route::delete('/rooms/{room:uuid}', [HostelManagerDashboard::class, 'destroyRoom'])->name('rooms.destroy');
+    Route::patch('/rooms/{room:uuid}/status', [HostelManagerDashboard::class, 'updateRoomStatus'])->name('rooms.status');
 
     // Occupants (Students) Management
     Route::get('/occupants', [HostelManagerDashboard::class, 'occupants'])->name('occupants');
     Route::get('/occupants/export', [HostelManagerDashboard::class, 'exportOccupants'])->name('occupants.export');
-    Route::post('/occupants/{user}/contact', [HostelManagerDashboard::class, 'contactOccupant'])->name('occupants.contact');
-    Route::get('/occupants/{user}', [HostelManagerDashboard::class, 'showOccupant'])->name('occupants.show');
+    Route::post('/occupants/{user:uuid}/contact', [HostelManagerDashboard::class, 'contactOccupant'])->name('occupants.contact');
+    Route::get('/occupants/{user:uuid}', [HostelManagerDashboard::class, 'showOccupant'])->name('occupants.show');
 
     // Complaints Management
     Route::get('/complaints', [HostelManagerDashboard::class, 'complaints'])->name('complaints');
-    Route::get('/complaints/{complaint}', [HostelManagerDashboard::class, 'showComplaint'])->name('complaints.show');
-    Route::patch('/complaints/{complaint}', [HostelManagerDashboard::class, 'updateComplaint'])->name('complaints.update');
-    Route::delete('/complaints/{complaint}', [HostelManagerDashboard::class, 'destroyComplaint'])->name('complaints.destroy');
+    Route::get('/complaints/{complaint:uuid}', [HostelManagerDashboard::class, 'showComplaint'])->name('complaints.show');
+    Route::patch('/complaints/{complaint:uuid}', [HostelManagerDashboard::class, 'updateComplaint'])->name('complaints.update');
+    Route::delete('/complaints/{complaint:uuid}', [HostelManagerDashboard::class, 'destroyComplaint'])->name('complaints.destroy');
 
     // Bookings Management
     Route::get('/bookings', [HostelManagerDashboard::class, 'bookings'])->name('bookings');
     Route::get('/bookings/export', [HostelManagerDashboard::class, 'exportBookings'])->name('bookings.export');
-    Route::get('/bookings/{booking}', [HostelManagerDashboard::class, 'showBooking'])->name('bookings.show');
-    Route::patch('/bookings/{booking}/status', [HostelManagerDashboard::class, 'updateBookingStatus'])->name('bookings.status');
-    Route::delete('/bookings/{booking}', [HostelManagerDashboard::class, 'destroyBooking'])->name('bookings.destroy');
+    Route::get('/bookings/{booking:uuid}', [HostelManagerDashboard::class, 'showBooking'])->name('bookings.show');
+    Route::patch('/bookings/{booking:uuid}/status', [HostelManagerDashboard::class, 'updateBookingStatus'])->name('bookings.status');
+    Route::delete('/bookings/{booking:uuid}', [HostelManagerDashboard::class, 'destroyBooking'])->name('bookings.destroy');
 
     // Payments Management
     Route::get('/payments', [HostelManagerDashboard::class, 'payments'])->name('payments');
     Route::get('/payments/export', [HostelManagerDashboard::class, 'exportPayments'])->name('payments.export');
-    Route::get('/payments/{payment}/receipt', [HostelManagerDashboard::class, 'viewPaymentReceipt'])->name('payments.receipt');
-    Route::get('/payments/{payment}', [HostelManagerDashboard::class, 'showPayment'])->name('payments.show');
-    Route::patch('/payments/{payment}/status', [HostelManagerDashboard::class, 'updatePaymentStatus'])->name('payments.status');
+    Route::get('/payments/{payment:uuid}/receipt', [HostelManagerDashboard::class, 'viewPaymentReceipt'])->name('payments.receipt');
+    Route::get('/payments/{payment:uuid}', [HostelManagerDashboard::class, 'showPayment'])->name('payments.show');
+    Route::patch('/payments/{payment:uuid}/status', [HostelManagerDashboard::class, 'updatePaymentStatus'])->name('payments.status');
 
     // Reports
     Route::get('/reports', [HostelManagerDashboard::class, 'reports'])->name('reports');
@@ -66,8 +66,8 @@ Route::middleware(['auth', 'hostel.manager'])->prefix('hostel-manager')->name('h
 
     // My Hostels
     Route::get('/hostels', [HostelManagerDashboard::class, 'myHostels'])->name('hostels');
-    Route::get('/hostels/{hostel}', [HostelManagerDashboard::class, 'showHostel'])->name('hostels.show');
-    Route::get('/hostels/{hostel}/edit', [HostelManagerDashboard::class, 'editHostel'])->name('hostels.edit');
-    Route::put('/hostels/{hostel}', [HostelManagerDashboard::class, 'updateHostel'])->name('hostels.update');
-    Route::patch('/hostels/{hostel}/toggle-status', [HostelManagerDashboard::class, 'toggleHostelStatus'])->name('hostels.toggle-status');
+    Route::get('/hostels/{hostel:uuid}', [HostelManagerDashboard::class, 'showHostel'])->name('hostels.show');
+    Route::get('/hostels/{hostel:uuid}/edit', [HostelManagerDashboard::class, 'editHostel'])->name('hostels.edit');
+    Route::put('/hostels/{hostel:uuid}', [HostelManagerDashboard::class, 'updateHostel'])->name('hostels.update');
+    Route::patch('/hostels/{hostel:uuid}/toggle-status', [HostelManagerDashboard::class, 'toggleHostelStatus'])->name('hostels.toggle-status');
 });

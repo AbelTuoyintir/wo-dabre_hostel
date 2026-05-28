@@ -167,7 +167,7 @@
 
                     <!-- Actions -->
                     <div class="flex items-center space-x-2 mt-4 md:mt-0 md:ml-4">
-                        <a href="{{ route('student.bookings.show', $booking) }}"
+                        <a href="{{ route('student.bookings.show', $booking->uuid ?? $booking->id) }}"
                            class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition">
                             View Details
                         </a>

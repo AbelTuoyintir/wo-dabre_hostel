@@ -159,7 +159,7 @@
                         <i class="fas fa-calendar mr-2 text-gray-400"></i>
                         {{ $complaint->booking->check_in->format('M d, Y') }} - {{ $complaint->booking->check_out->format('M d, Y') }}
                     </p>
-                    <a href="{{ route('student.bookings.show', $complaint->booking) }}"
+                    <a href="{{ route('student.bookings.show', $complaint->booking->uuid ?? $complaint->booking->id) }}"
                        class="mt-3 inline-block text-sm text-blue-600 hover:text-blue-800">
                         View Booking <i class="fas fa-arrow-right ml-1"></i>
                     </a>

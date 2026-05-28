@@ -14,7 +14,7 @@ Route::prefix('bookings')->name('bookings.')->group(function () {
     
     // ===== GUEST ROUTES (No authentication required) =====
     // Guest booking form
-    Route::get('/hostel/{hostel}/room/{room}/book', [BookingController::class, 'createBooking'])
+    Route::get('/hostel/{hostel:uuid}/room/{room:uuid}/book', [BookingController::class, 'createBooking'])
         ->name('create');
     
     // Guest booking store
@@ -24,7 +24,7 @@ Route::prefix('bookings')->name('bookings.')->group(function () {
     // ===== STUDENT ROUTES (Authentication required) =====
     Route::middleware(['auth'])->group(function () {
         // Student booking form
-        Route::get('/student/hostel/{hostel}/room/{room}/book', [BookingController::class, 'StudentCreateBooking'])
+        Route::get('/student/hostel/{hostel:uuid}/room/{room:uuid}/book', [BookingController::class, 'StudentCreateBooking'])
             ->name('create.student');
         
         // Student booking store
@@ -43,7 +43,7 @@ Route::prefix('bookings')->name('bookings.')->group(function () {
     
     
     // View booking details (works for both, but will redirect to login if not authenticated)
-    Route::get('/{booking}', [BookingController::class, 'show'])
+    Route::get('/{booking:uuid}', [BookingController::class, 'show'])
         ->name('show')
         ->middleware('auth'); // Add auth middleware to ensure only logged-in users can view
 });

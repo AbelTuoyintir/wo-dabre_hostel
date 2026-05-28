@@ -178,7 +178,7 @@
                                     </span>
                                 @endif
                             </div>
-                            <a href="{{ route('hostels.guest.show', $hostel['id']) }}" 
+                            <a href="{{ route('hostels.guest.show', $hostel['uuid'] ?? $hostel['id']) }}" 
                                class="absolute bottom-3 left-3 right-3 bg-white/95 text-slate-900 text-center py-2.5 rounded-xl text-sm font-bold hover:bg-purple-600 hover:text-white transition-all opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 duration-300 shadow-lg">
                                 View Details →
                             </a>

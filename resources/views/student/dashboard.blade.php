@@ -144,10 +144,17 @@
         </div>
 
         <div class="flex justify-end">
-            <a href="{{ route('student.bookings.show', $activeBooking) }}"
-               class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                View Details
-            </a>
+            @php
+                $bookingUuid = $activeBooking?->uuid;
+            @endphp
+            @if(!empty($bookingUuid))
+                <a href="{{ route('student.bookings.show', $activeBooking->uuid ?? $activeBooking->id) }}"
+                   class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    View Details
+                </a>
+            @else
+                <span class="text-sm text-gray-500">Booking details unavailable</span>
+            @endif
         </div>
     </div>
 
@@ -232,7 +239,7 @@
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm">
-                            <a href="{{ route('student.bookings.show', $booking) }}"
+                            <a href="{{ route('student.bookings.show', $booking->uuid ?? $booking->id) }}"
                                class="text-blue-600 hover:text-blue-900">
                                 View <i class="fas fa-arrow-right ml-1"></i>
                             </a>

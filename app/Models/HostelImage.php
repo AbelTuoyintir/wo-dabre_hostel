@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasRouteUuid;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 
 class HostelImage extends Model
 {
+    use HasRouteUuid;
+
     protected $fillable = [
         'hostel_id',
         'room_id',

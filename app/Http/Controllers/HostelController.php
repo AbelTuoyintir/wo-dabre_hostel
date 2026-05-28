@@ -127,6 +127,7 @@ class HostelController extends Controller
             $transformedHostels = $hostels->map(function($hostel) {
                 return [
                     'id' => $hostel->id,
+                    'uuid' => $hostel->uuid,
                     'name' => $hostel->name,
                     'location' => $hostel->location,
                     'description' => $hostel->description,
@@ -174,6 +175,7 @@ class HostelController extends Controller
         $transformedHostels = $hostels->map(function($hostel) {
             return [
                 'id' => $hostel->id,
+                'uuid' => $hostel->uuid,
                 'name' => $hostel->name,
                 'location' => $hostel->location,
                 'address' => $hostel->address,
@@ -210,7 +212,7 @@ class HostelController extends Controller
      */
     public function show($id)
     {
-        $hostel = Hostel::with([
+        $hostel = $this->resolveHostelByRouteKey($id)->load([
             'images',
             'reviews' => function($q) {
                 $q->with('user')
@@ -224,7 +226,7 @@ class HostelController extends Controller
                   ->whereColumn('current_occupancy', '<', 'capacity')
                   ->orderBy('price_per_month');
             }
-        ])->findOrFail($id);
+        ]);
 
         if (!$hostel->is_approved || $hostel->status !== 'active') {
             abort(404);
@@ -320,13 +322,14 @@ class HostelController extends Controller
             ->map(function($hostel) {
                 return [
                     'id' => $hostel->id,
+                    'uuid' => $hostel->uuid,
                     'name' => $hostel->name,
                     'location' => $hostel->location,
                     'address' => $hostel->address,
                     'image' => $hostel->primaryImage?->url ?? $hostel->primaryImage?->path,
                     'min_price' => $hostel->rooms()->min('price_per_month'),
                     'rating' => $hostel->rating,
-                    'url' => route('hostels.show', $hostel->id)
+                    'url' => route('hostels.guest.show', $hostel->uuid ?? $hostel->id)
                 ];
             });
 
@@ -411,7 +414,7 @@ class HostelController extends Controller
  */
    public function guestShow($id)
 {
-    $hostel = Hostel::with([
+    $hostel = $this->resolveHostelByRouteKey($id)->load([
         'images',        // For hostel images
         'primaryImage',
         'rooms' => function($q) {
@@ -422,7 +425,7 @@ class HostelController extends Controller
               })
               ->with('roomImages'); // Load room images using the new relationship
         }
-    ])->findOrFail($id);
+    ]);
 
     if (!$hostel->is_approved || $hostel->status !== 'active') {
         abort(404);
@@ -466,6 +469,14 @@ class HostelController extends Controller
 
     return view('admin.hostels.guestShow', compact('hostel', 'availableRooms', 'similarHostels', 'locations'));
 }
+
+    private function resolveHostelByRouteKey(string $value): Hostel
+    {
+        return Hostel::query()
+            ->where('uuid', $value)
+            ->orWhere('id', $value)
+            ->firstOrFail();
+    }
     // /**
     //  * Show hostel reviews page
     //  */

@@ -664,7 +664,7 @@ public function viewHostel(Hostel $hostel)
                     $q->whereColumn('current_occupancy', '<', 'capacity')
                       ->orWhereNull('current_occupancy');
                 })
-                ->min('price_per_month') ?? $h->rooms()->min('price_per_semester') / 4;
+                ->min('room_cost') ?? 0;
             return $h;
         });
 

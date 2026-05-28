@@ -368,7 +368,7 @@ class HostelController extends Controller
     /**
      * Set primary image
      */
-    public function setPrimaryImage(Hostel $hostel, Image $image)
+    public function setPrimaryImage(Hostel $hostel, HostelImage $image)
     {
         if ($image->hostel_id !== $hostel->id) {
             abort(403);
@@ -387,7 +387,7 @@ class HostelController extends Controller
     /**
      * Delete an image
      */
-    public function destroyImage(Hostel $hostel, Image $image)
+    public function destroyImage(Hostel $hostel, HostelImage $image)
     {
         if ($image->hostel_id !== $hostel->id) {
             abort(403);

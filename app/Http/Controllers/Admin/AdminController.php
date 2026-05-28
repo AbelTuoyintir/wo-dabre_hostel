@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Hostel;
 use App\Models\Booking;
+use App\Models\Payment;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -323,6 +324,20 @@ class AdminController extends Controller
             ->get();
 
         return view('admin.report', compact('revenueByMonth', 'bookingsByHostel', 'userRegistrations'));
+    }
+
+    public function showBooking(Booking $booking): View
+    {
+        $booking->load(['user', 'hostel', 'room', 'payment']);
+
+        return view('admin.bookings.show', compact('booking'));
+    }
+
+    public function viewPaymentReceipt(Payment $payment): View
+    {
+        $payment->load(['booking.user', 'booking.room', 'booking.hostel']);
+
+        return view('admin.payments.receipt', compact('payment'));
     }
 
     private function bookingsQuery(Request $request): Builder
