@@ -232,14 +232,25 @@ $room->images()->create([
         $stats = [
             'total_bookings' => $room->bookings()->count(),
             'active_bookings' => $room->bookings()
-                ->whereIn('status', ['confirmed', 'pending'])
+                ->whereIn('booking_status', ['confirmed', 'pending'])
                 ->where('check_out_date', '>', now())
                 ->count(),
             'occupancy_rate' => $room->occupancyRate(),
             'available_spaces' => $room->availableSpaces(),
         ];
 
-        $currentBooking = $room->currentBooking()->with('user')->first();
+
+        // The room's current booking depends on the relationship implementation.
+        // If the relationship/query uses a non-existent `status` column,
+        // it will crash the admin rooms show page. We avoid that here
+        // by fetching the current booking using correct booking_status field.
+        $currentBooking = $room->bookings()
+            ->whereIn('booking_status', ['confirmed', 'checked_in'])
+            ->where('check_out_date', '>=', now())
+            ->with('user')
+            ->latest()
+            ->first();
+
 
 
         return view('admin.rooms.show', compact('room', 'stats', 'currentBooking'));

@@ -542,4 +542,22 @@ class AdminController extends Controller
             $encoded
         );
     }
+
+    /**
+     * Update booking status from admin.
+     */
+    public function updateBookingStatus(Request $request, Booking $booking): RedirectResponse
+    {
+        $request->validate([
+            'booking_status' => 'required|in:pending,confirmed,checked_in,checked_out,cancelled',
+        ]);
+
+        $booking->update([
+            'booking_status' => $request->booking_status,
+        ]);
+
+        return redirect()->route('admin.bookings.show', $booking)
+            ->with('success', 'Booking status updated successfully.');
+    }
 }
+

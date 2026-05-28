@@ -175,15 +175,16 @@ class HostelController extends Controller
             'reviews.user'
         ]);
 
-        // Get booking statistics
+        // Get booking statistics (use actual bookings columns)
         $activeBookings = $hostel->bookings()
-            ->whereIn('status', ['confirmed', 'pending'])
-            ->where('check_out', '>', now())
+            ->whereIn('booking_status', ['confirmed', 'pending'])
+            ->where('check_out_date', '>', now())
             ->count();
 
         $pendingBookings = $hostel->bookings()
-            ->where('status', 'pending')
+            ->where('booking_status', 'pending')
             ->count();
+
 
         return view('admin.hostels.show', compact('hostel', 'activeBookings', 'pendingBookings'));
     }
