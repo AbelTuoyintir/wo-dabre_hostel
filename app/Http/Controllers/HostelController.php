@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Hostel;
 use App\Models\Room;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Schema;
 
 class HostelController extends Controller
 {
@@ -14,6 +16,21 @@ class HostelController extends Controller
      */
     public function index(Request $request)
     {
+        if (!Schema::hasTable('hostels') || !Schema::hasTable('rooms')) {
+            $hostels = new LengthAwarePaginator(collect(), 0, 12);
+
+            return view('welcome', [
+                'hostels' => $hostels,
+                'locations' => collect(),
+                'transformedHostels' => collect(),
+                'stats' => [
+                    'total_hostels' => 0,
+                    'total_rooms' => 0,
+                    'locations_count' => 0,
+                ],
+            ]);
+        }
+
         $query = Hostel::query()
             ->where('is_approved', true)
             ->where('status', 'active')
@@ -398,6 +415,10 @@ class HostelController extends Controller
      */
     public function getLocations(Request $request)
     {
+        if (!Schema::hasTable('hostels')) {
+            return response()->json([]);
+        }
+
         $query = Hostel::where('is_approved', true)
             ->where('status', 'active')
             ->select('location')

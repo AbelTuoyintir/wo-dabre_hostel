@@ -56,7 +56,7 @@ class AuthenticatedSessionController extends Controller
         if (!$user->is_active) {
             Auth::logout();
             return redirect()->route('login')->withErrors([
-                'email' => 'Your account is deactivated. Contact administrator.'
+                'email' => 'Your account is deactivated.'
             ]);
         }
 

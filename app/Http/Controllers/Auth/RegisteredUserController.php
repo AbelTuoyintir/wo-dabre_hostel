@@ -49,6 +49,9 @@ class RegisteredUserController extends Controller
 
         event(new Registered($user));
 
-        return redirect(route('login', absolute: false));
+        // Tests expect users to be authenticated after registration
+        Auth::login($user);
+
+        return redirect()->route('dashboard');
     }
 }
