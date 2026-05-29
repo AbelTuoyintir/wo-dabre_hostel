@@ -30,31 +30,62 @@ class AuthenticationTest extends TestCase
         $response->assertRedirect(route('student.dashboard')); // Changed from 'dashboard'
     }
 
-    public function test_hostel_manager_can_authenticate_and_go_to_manager_dashboard(): void
+   public function test_student_can_authenticate_and_go_to_student_dashboard(): void
     {
-        $user = User::factory()->hostelManager()->create();
-        
+        $user = User::factory()->create(['role' => 'student', 'is_active' => true]);
+
         $response = $this->post('/login', [
             'email' => $user->email,
             'password' => 'password',
         ]);
-        
+
+        $this->assertAuthenticated();
+        $response->assertRedirect(route('student.dashboard'));
+    }
+
+    public function test_hostel_manager_can_authenticate_and_go_to_manager_dashboard(): void
+    {
+        $user = User::factory()->create([
+            'role' => 'hostel_manager',
+            'hostel_id' => 1,  // or use factory state
+            'is_active' => true
+        ]);
+
+        $response = $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'password',
+        ]);
+
         $this->assertAuthenticated();
         $response->assertRedirect(route('hostel-manager.dashboard'));
     }
 
-     public function test_hostel_manager_can_authenticate_and_go_to_manager_dashboard(): void
+    public function test_admin_can_authenticate_and_go_to_admin_dashboard(): void
     {
-        $user = User::factory()->hostelManager()->create();
-        
+        $user = User::factory()->create(['role' => 'admin', 'is_active' => true]);
+
         $response = $this->post('/login', [
             'email' => $user->email,
             'password' => 'password',
         ]);
-        
+
         $this->assertAuthenticated();
         $response->assertRedirect(route('admin.dashboard'));
     }
+
+
+    //  public function test_hostel_manager_can_authenticate_and_go_to_manager_dashboard(): void
+    // {
+    //     $user = User::factory()->hostelManager()->create();
+        
+    //     $response = $this->post('/login', [
+    //         'email' => $user->email,
+    //         'password' => 'password',
+    //     ]);
+        
+    //     $this->assertAuthenticated();
+    //     $response->assertRedirect(route('admin.dashboard'));
+    // }
 
         public function test_users_can_not_authenticate_with_invalid_password(): void
         {
