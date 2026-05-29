@@ -109,7 +109,12 @@ class HostelController extends Controller
         }
 
         // Get unique locations for filter dropdown
+        // Guard for unit/feature tests that may not have run the full schema
         $locations = Cache::remember('hostel_locations', 3600, function() {
+            if (!\Illuminate\Support\Facades\Schema::hasTable('hostels')) {
+                return collect();
+            }
+
             return Hostel::where('is_approved', true)
                 ->where('status', 'active')
                 ->select('location')

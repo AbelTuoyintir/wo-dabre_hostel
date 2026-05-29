@@ -21,6 +21,8 @@ return new class extends Migration
             $table->enum('role', ['student', 'admin', 'hostel_manager'])->default('student');
             $table->boolean('is_active')->default(true);
             $table->timestamp('email_verified_at')->nullable();
+            // Tests insert users with hostel_id in memory; keep it nullable without FK to avoid sqlite FK-order issues
+            $table->unsignedBigInteger('hostel_id')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

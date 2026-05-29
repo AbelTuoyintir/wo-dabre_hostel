@@ -32,6 +32,18 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Single entrypoint expected by tests and auth flows (email verify, confirm password, registration)
+    Route::get('/dashboard', function () {
+        $user = auth()->user();
+
+        return match ($user->role) {
+            'admin' => redirect()->route('admin.dashboard'),
+            'hostel_manager' => redirect()->route('hostel-manager.dashboard'),
+            'student' => redirect()->route('student.dashboard'),
+            default => redirect()->route('hostels.index'),
+        };
+    })->name('dashboard');
 });
 
 
