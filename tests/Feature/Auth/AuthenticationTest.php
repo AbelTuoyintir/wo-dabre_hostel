@@ -19,28 +19,54 @@ class AuthenticationTest extends TestCase
 
     public function test_users_can_authenticate_using_the_login_screen(): void
     {
-        $user = User::factory()->create();
-
+        $user = User::factory()->student()->create();
+        
         $response = $this->post('/login', [
             'email' => $user->email,
             'password' => 'password',
         ]);
 
         $this->assertAuthenticated();
-        $response->assertRedirect(route('dashboard', absolute: false));
+        $response->assertRedirect(route('student.dashboard')); // Changed from 'dashboard'
     }
 
-    public function test_users_can_not_authenticate_with_invalid_password(): void
+    public function test_hostel_manager_can_authenticate_and_go_to_manager_dashboard(): void
     {
-        $user = User::factory()->create();
-
-        $this->post('/login', [
+        $user = User::factory()->hostelManager()->create();
+        
+        $response = $this->post('/login', [
             'email' => $user->email,
-            'password' => 'wrong-password',
+            'password' => 'password',
         ]);
-
-        $this->assertGuest();
+        
+        $this->assertAuthenticated();
+        $response->assertRedirect(route('hostel-manager.dashboard'));
     }
+
+     public function test_hostel_manager_can_authenticate_and_go_to_manager_dashboard(): void
+    {
+        $user = User::factory()->hostelManager()->create();
+        
+        $response = $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'password',
+        ]);
+        
+        $this->assertAuthenticated();
+        $response->assertRedirect(route('admin.dashboard'));
+    }
+
+        public function test_users_can_not_authenticate_with_invalid_password(): void
+        {
+            $user = User::factory()->create();
+
+            $this->post('/login', [
+                'email' => $user->email,
+                'password' => 'wrong-password',
+            ]);
+
+            $this->assertGuest();
+        }
 
     public function test_users_can_logout(): void
     {
