@@ -88,6 +88,95 @@
         <div class="bg-white rounded-lg shadow border p-6">
             <h3 class="text-lg font-semibold mb-4">Manage Hostel Images</h3>
 
+            <script>
+                // Define functions before they're used in onclick handlers
+                let removedImages = [];
+
+                function markForRemoval(imageId) {
+                    if (confirm('Are you sure you want to remove this image?')) {
+                        removedImages = removedImages.filter(id => String(id) !== String(imageId));
+                        removedImages.push(imageId);
+                        updateRemovedImagesInput();
+                        const imageContainer = document.querySelector(`[data-image-id="${imageId}"]`);
+                        if (imageContainer) {
+                            imageContainer.style.opacity = '0.5';
+                            imageContainer.style.pointerEvents = 'none';
+                            imageContainer.classList.add('bg-gray-100');
+                            let removalBadge = imageContainer.querySelector('.marked-for-removal-badge');
+                            if (!removalBadge) {
+                                removalBadge = document.createElement('div');
+                                removalBadge.className = 'marked-for-removal-badge absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold z-10';
+                                imageContainer.appendChild(removalBadge);
+                            }
+                            removalBadge.textContent = 'Marked for Removal';
+                        }
+                    }
+                }
+
+                function updateRemovedImagesInput() {
+                    const container = document.getElementById('removed-images-container');
+                    container.innerHTML = '';
+                    removedImages.forEach(id => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'removed_images[]';
+                        input.value = id;
+                        container.appendChild(input);
+                    });
+                }
+
+                function setAsPrimary(imageId) {
+                    document.getElementById('primary_image_id').value = imageId;
+                    document.querySelectorAll('[data-image-id]').forEach(container => {
+                        container.classList.remove('bg-blue-50', 'border-blue-300');
+                        const existingBadge = container.querySelector('.bg-blue-500');
+                        if (existingBadge) {
+                            existingBadge.remove();
+                        }
+                    });
+                    const selectedContainer = document.querySelector(`[data-image-id="${imageId}"]`);
+                    selectedContainer.classList.add('bg-blue-50', 'border-blue-300');
+                    const badgeContainer = selectedContainer.querySelector('.absolute.top-3.left-3');
+                    if (badgeContainer) {
+                        badgeContainer.innerHTML = '<span class="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">Primary</span>';
+                    }
+                    alert('Primary image updated. Save the form to confirm changes.');
+                }
+
+                function previewNewCover(input) {
+                    const preview = document.getElementById('new-cover-preview');
+                    if (input.files && input.files[0]) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            preview.querySelector('img').src = e.target.result;
+                            preview.classList.remove('hidden');
+                        }
+                        reader.readAsDataURL(input.files[0]);
+                    }
+                }
+
+                function previewNewGallery(input) {
+                    const preview = document.getElementById('new-gallery-preview');
+                    preview.innerHTML = '';
+                    if (input.files && input.files.length > 0) {
+                        preview.classList.remove('hidden');
+                        for (let i = 0; i < input.files.length; i++) {
+                            const reader = new FileReader();
+                            reader.onload = function(e) {
+                                const div = document.createElement('div');
+                                div.className = 'relative';
+                                div.innerHTML = `
+                                    <img src="${e.target.result}" class="w-full h-24 object-cover rounded-lg">
+                                    <span class="absolute top-1 right-1 bg-green-500 text-white text-xs px-1 rounded">New</span>
+                                `;
+                                preview.appendChild(div);
+                            }
+                            reader.readAsDataURL(input.files[i]);
+                        }
+                    }
+                }
+            </script>
+
             <!-- Current Images Display -->
             @if($hostel->images->count() > 0)
                 <div class="mb-6">
@@ -193,118 +282,6 @@
 </div>
 
 @push('scripts')
-<script>
-    // Store removed image IDs
-    let removedImages = [];
-
-    window.markForRemoval = function(imageId) {
-        // If a backend handler doesn’t remove immediately, we still mark it in the form.
-        if (confirm('Are you sure you want to remove this image?')) {
-
-            removedImages = removedImages.filter(id => String(id) !== String(imageId));
-            removedImages.push(imageId);
-
-            // Add to hidden inputs
-            updateRemovedImagesInput();
-
-            // Hide the image container (make it non-interactive)
-            const imageContainer = document.querySelector(`[data-image-id="${imageId}"]`);
-            if (imageContainer) {
-                imageContainer.style.opacity = '0.5';
-                imageContainer.style.pointerEvents = 'none';
-
-                // avoid duplicate styling/badges
-                imageContainer.classList.add('bg-gray-100');
-
-                let removalBadge = imageContainer.querySelector('.marked-for-removal-badge');
-                if (!removalBadge) {
-                    removalBadge = document.createElement('div');
-                    removalBadge.className = 'marked-for-removal-badge absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold z-10';
-                    imageContainer.appendChild(removalBadge);
-                }
-                removalBadge.textContent = 'Marked for Removal';
-            }
-        }
-    };
-
-
-    function updateRemovedImagesInput() {
-
-        const container = document.getElementById('removed-images-container');
-        container.innerHTML = '';
-
-        removedImages.forEach(id => {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'removed_images[]';
-            input.value = id;
-            container.appendChild(input);
-        });
-    }
-
-    function setAsPrimary(imageId) {
-        // Update hidden input
-        document.getElementById('primary_image_id').value = imageId;
-
-        // Update UI
-        document.querySelectorAll('[data-image-id]').forEach(container => {
-            container.classList.remove('bg-blue-50', 'border-blue-300');
-
-            // Remove existing primary badge if any
-            const existingBadge = container.querySelector('.bg-blue-500');
-            if (existingBadge) {
-                existingBadge.remove();
-            }
-        });
-
-        // Add primary styling to selected image
-        const selectedContainer = document.querySelector(`[data-image-id="${imageId}"]`);
-        selectedContainer.classList.add('bg-blue-50', 'border-blue-300');
-
-        // Add primary badge
-        const badgeContainer = selectedContainer.querySelector('.absolute.top-3.left-3');
-        if (badgeContainer) {
-            badgeContainer.innerHTML = '<span class="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">Primary</span>';
-        }
-
-        alert('Primary image updated. Save the form to confirm changes.');
-    }
-
-    function previewNewCover(input) {
-        const preview = document.getElementById('new-cover-preview');
-        if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                preview.querySelector('img').src = e.target.result;
-                preview.classList.remove('hidden');
-            }
-            reader.readAsDataURL(input.files[0]);
-        }
-    }
-
-    function previewNewGallery(input) {
-        const preview = document.getElementById('new-gallery-preview');
-        preview.innerHTML = '';
-
-        if (input.files && input.files.length > 0) {
-            preview.classList.remove('hidden');
-
-            for (let i = 0; i < input.files.length; i++) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const div = document.createElement('div');
-                    div.className = 'relative';
-                    div.innerHTML = `
-                        <img src="${e.target.result}" class="w-full h-24 object-cover rounded-lg">
-                        <span class="absolute top-1 right-1 bg-green-500 text-white text-xs px-1 rounded">New</span>
-                    `;
-                    preview.appendChild(div);
-                }
-                reader.readAsDataURL(input.files[i]);
-            }
-        }
-    }
-</script>
 @endpush
 
 @push('styles')
