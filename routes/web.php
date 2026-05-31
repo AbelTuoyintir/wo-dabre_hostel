@@ -23,15 +23,10 @@ Route::get('/hostels/{hostel:uuid}', [HostelController::class, 'guestShow'])->na
 
 
 Route::get('/storage-link', function () {
-    // Protect this route – only allow if you're logged in as admin OR use a secret token
-    if (!auth()->check() || !auth()->user()->is_admin) {
-        // Alternatively, use a secret token: if (request('token') !== env('STORAGE_LINK_TOKEN'))
-        abort(403, 'Unauthorized');
-    }
 
     try {
         Artisan::call('storage:link');
-        $output = Artisan::output();
+        $output = Artsisan::output();
         return response()->json([
             'success' => true,
             'message' => 'Storage link created successfully!',
