@@ -197,31 +197,39 @@
     // Store removed image IDs
     let removedImages = [];
 
-    function markForRemoval(imageId) {
+    window.markForRemoval = function(imageId) {
+        // If a backend handler doesn’t remove immediately, we still mark it in the form.
         if (confirm('Are you sure you want to remove this image?')) {
+
+            removedImages = removedImages.filter(id => String(id) !== String(imageId));
             removedImages.push(imageId);
 
             // Add to hidden inputs
             updateRemovedImagesInput();
 
-            // Hide the image container
+            // Hide the image container (make it non-interactive)
             const imageContainer = document.querySelector(`[data-image-id="${imageId}"]`);
             if (imageContainer) {
                 imageContainer.style.opacity = '0.5';
                 imageContainer.style.pointerEvents = 'none';
+
+                // avoid duplicate styling/badges
                 imageContainer.classList.add('bg-gray-100');
 
-                // Add "marked for removal" text
-                const removalBadge = document.createElement('div');
-                removalBadge.className = 'absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold z-10';
+                let removalBadge = imageContainer.querySelector('.marked-for-removal-badge');
+                if (!removalBadge) {
+                    removalBadge = document.createElement('div');
+                    removalBadge.className = 'marked-for-removal-badge absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold z-10';
+                    imageContainer.appendChild(removalBadge);
+                }
                 removalBadge.textContent = 'Marked for Removal';
-                imageContainer.style.position = 'relative';
-                imageContainer.appendChild(removalBadge);
             }
         }
-    }
+    };
+
 
     function updateRemovedImagesInput() {
+
         const container = document.getElementById('removed-images-container');
         container.innerHTML = '';
 
