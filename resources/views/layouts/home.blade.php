@@ -81,7 +81,7 @@
                         <img src="{{ asset('/images/wodabre-logo.png') }}" alt="Wo-dabre Logo" class="w-10 h-10">
                     </div>
                     <div>
-                        <h1 class="text-2xl font-bold">UCC Hostel Booking</h1>
+                        <h1 class="text-2xl font-bold">Wodabre Hostel Booking</h1>
                         <p class="text-blue-200">University of Cape Coast Student Accommodation</p>
                     </div>
                 </div>
@@ -227,7 +227,7 @@
                         <!-- add wodabre logo here-->
                         <img src="{{ asset('wodabre-logo.png') }}" alt="Wo-dabre Logo" class="w-10 h-10">
                     </div>
-                        <h3 class="text-xl font-bold">UCC Hostel Booking</h3>
+                        <h3 class="text-xl font-bold">Wodabre Hostel Booking</h3>
                     </div>
                     <p class="text-gray-400">The official hostel booking platform for University of Cape Coast students.</p>
                 </div>

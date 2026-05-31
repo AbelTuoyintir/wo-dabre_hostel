@@ -10,6 +10,7 @@
         <!--add logo to the site-->
         <link rel="icon" href="{{ asset('/images/wodabre-logo.png') }}" type="image/x-icon">
         <link rel="shortcut icon" href="{{ asset('/images/wodabre-logo.png') }}" type="image/x-icon">
+
         <script src="//unpkg.com/alpinejs" defer></script>
 
         <!-- Fonts -->
@@ -71,6 +72,7 @@
 
         <!-- SweetAlert2 JS -->
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
         <!-- Display Success Messages -->
         @if(session('success'))
