@@ -41,6 +41,8 @@ class HostelImage extends Model
 
     public function getUrlAttribute()
     {
-        return Storage::disk('public')->url($this->image_path);
+        // Use public path directly to avoid relying on storage::link / Storage disk URL generation.
+        return asset($this->image_path);
     }
+
 }

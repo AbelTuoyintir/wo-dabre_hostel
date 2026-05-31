@@ -139,6 +139,12 @@ class AdminController extends Controller
             'cover_image' => 'required|image|mimes:jpeg,png,jpg,gif|max:10240', // 10MB max
             'gallery_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240', // 10MB max per image
             'gallery_images' => 'nullable|array|max:5', // Maximum 5 gallery images
+
+            // short videos (optional)
+            'cover_video' => 'nullable|file|mimes:mp4,webm,ogg|max:20480', // 20MB
+            'gallery_videos.*' => 'nullable|file|mimes:mp4,webm,ogg|max:20480',
+            'gallery_videos' => 'nullable|array|max:5',
+
         ]);
 
         // Prepare data for creation
@@ -160,7 +166,18 @@ class AdminController extends Controller
 
         // Handle cover image upload (primary image)
         if ($request->hasFile('cover_image')) {
-            $coverPath = $request->file('cover_image')->store('hostels/covers', 'public');
+            // Create directory if not exists
+            $coverDir = public_path('hostels/covers');
+            if (!file_exists($coverDir)) {
+                mkdir($coverDir, 0755, true);
+            }
+
+            $file = $request->file('cover_image');
+            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $file->move($coverDir, $filename);
+
+            // Store relative path from public
+            $coverPath = 'hostels/covers/' . $filename;
 
             // Save as primary image
             $hostel->images()->create([
@@ -171,11 +188,41 @@ class AdminController extends Controller
             ]);
         }
 
+        // Handle cover video upload (primary video)
+        if ($request->hasFile('cover_video')) {
+            $coverVideoDir = public_path('hostels/covers/videos');
+            if (!file_exists($coverVideoDir)) {
+                mkdir($coverVideoDir, 0755, true);
+            }
+
+            $video = $request->file('cover_video');
+            $filename = time() . '_' . uniqid() . '.' . $video->getClientOriginalExtension();
+            $video->move($coverVideoDir, $filename);
+
+            $videoPath = 'hostels/covers/videos/' . $filename;
+
+            // Save as primary video
+            $hostel->images()->create([
+                'image_path' => $videoPath,
+                'type' => 'hostel',
+                'is_primary' => true,
+                'order' => 0,
+            ]);
+        }
+
         // Handle gallery images upload
         if ($request->hasFile('gallery_images')) {
-            $order = 1; // Start from 1 since cover image is at 0
+            $galleryDir = public_path('hostels/gallery');
+            if (!file_exists($galleryDir)) {
+                mkdir($galleryDir, 0755, true);
+            }
+
+            $order = 1; // Start from 1 since cover is at 0
             foreach ($request->file('gallery_images') as $image) {
-                $path = $image->store('hostels/gallery', 'public');
+                $filename = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+                $image->move($galleryDir, $filename);
+
+                $path = 'hostels/gallery/' . $filename;
 
                 // Save as gallery image
                 $hostel->images()->create([
@@ -186,6 +233,30 @@ class AdminController extends Controller
                 ]);
             }
         }
+
+        // Handle gallery videos upload
+        if ($request->hasFile('gallery_videos')) {
+            $galleryVideoDir = public_path('hostels/gallery/videos');
+            if (!file_exists($galleryVideoDir)) {
+                mkdir($galleryVideoDir, 0755, true);
+            }
+
+            $order = 1;
+            foreach ($request->file('gallery_videos') as $video) {
+                $filename = time() . '_' . uniqid() . '.' . $video->getClientOriginalExtension();
+                $video->move($galleryVideoDir, $filename);
+
+                $path = 'hostels/gallery/videos/' . $filename;
+
+                $hostel->images()->create([
+                    'image_path' => $path,
+                    'type' => 'hostel',
+                    'is_primary' => false,
+                    'order' => $order++
+                ]);
+            }
+        }
+
 
         return redirect()->route('admin.hostels.index')
             ->with('success', 'Hostel created successfully with images.');

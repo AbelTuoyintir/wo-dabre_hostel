@@ -172,11 +172,26 @@
                     <tr class="hover:bg-gray-50">
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center">
-                                @if($hostel->primaryImage)
-                                    <img class="h-10 w-10 rounded-lg object-cover"
-                                        src="{{ Storage::url($hostel->primaryImage->image_path) }}"
-                                        alt="{{ $hostel->name }}">
+                                @php
+                                    $primary = $hostel->primaryImage;
+                                    $primaryExt = $primary ? strtolower(pathinfo($primary->image_path, PATHINFO_EXTENSION)) : '';
+                                    $isVideo = in_array($primaryExt, ['mp4','webm','ogg']);
+                                @endphp
+
+                                @if($primary && $isVideo)
+                                    <video
+                                        src="{{ asset($primary->image_path) }}"
+                                        class="h-10 w-10 rounded-lg object-cover"
+                                        muted
+                                        playsinline
+                                        preload="metadata"
+                                    ></video>
+                                @elseif($primary)
+                                    <img src="{{ asset($primary->image_path) }}" 
+                                        alt="{{ $hostel->name }}" 
+                                        class="h-10 w-10 rounded-lg object-cover">
                                 @else
+
                                     <div class="h-10 w-10 rounded-lg bg-gray-200 flex items-center justify-center">
                                         <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>

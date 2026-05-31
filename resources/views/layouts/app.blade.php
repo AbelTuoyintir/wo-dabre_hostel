@@ -10,6 +10,7 @@
         <!--add logo to the site-->
         <link rel="icon" href="{{ asset('/images/wodabre-logo.png') }}" type="image/x-icon">
         <link rel="shortcut icon" href="{{ asset('/images/wodabre-logo.png') }}" type="image/x-icon">
+        <script src="//unpkg.com/alpinejs" defer></script>
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -20,6 +21,7 @@
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        
     </head>
     <body class="font-sans antialiased" x-data="{ sidebarOpen: false }">
         <div class="min-h-screen lg:h-screen flex bg-gray-100 overflow-hidden">

@@ -14,7 +14,7 @@
 
    <link rel="icon" href="{{ asset('/images/wodabre-logo.png') }}" type="image/x-icon">
     <link rel="shortcut icon" href="{{ asset('/images/wodabre-logo.png') }}" type="image/x-icon">
-    
+
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- SweetAlert2 CSS -->
@@ -76,7 +76,7 @@
         <div class="container mx-auto px-4 py-6">
             <div class="flex flex-col md:flex-row justify-between items-center">
                 <div class="flex items-center space-x-3 mb-4 md:mb-0">
-                    <div class="bg-white text-blue-900 p-2 rounded-full">
+                    <div class="bg-white text-blue-700 p-2 rounded-full">
                         <!-- add wodabre logo here-->
                         <img src="{{ asset('/images/wodabre-logo.png') }}" alt="Wo-dabre Logo" class="w-10 h-10">
                     </div>
