@@ -9,6 +9,7 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\HostelManagerDashboard;
 use App\Http\Controllers\StudentDashboard;
+use Illuminate\Support\Facades\Artisan;
 
 /*
 |--------------------------------------------------------------------------
@@ -21,7 +22,28 @@ Route::get('/hostels/locations', [HostelController::class, 'getLocations'])->nam
 Route::get('/hostels/{hostel:uuid}', [HostelController::class, 'guestShow'])->name('hostels.guest.show');
 
 
+Route::get('/storage-link', function () {
+    // Protect this route – only allow if you're logged in as admin OR use a secret token
+    if (!auth()->check() || !auth()->user()->is_admin) {
+        // Alternatively, use a secret token: if (request('token') !== env('STORAGE_LINK_TOKEN'))
+        abort(403, 'Unauthorized');
+    }
 
+    try {
+        Artisan::call('storage:link');
+        $output = Artisan::output();
+        return response()->json([
+            'success' => true,
+            'message' => 'Storage link created successfully!',
+            'output' => $output
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to create storage link: ' . $e->getMessage()
+        ], 500);
+    }
+})->name('storage.link');
 
 /*
 |--------------------------------------------------------------------------
