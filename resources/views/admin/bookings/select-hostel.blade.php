@@ -66,7 +66,7 @@
                     <div class="room-card">
                         <div class="room-image">
                             @if($room->images)
-                                <img src="{{ Storage::url($room->images[0]) }}" alt="Room {{ $room->room_number }}">
+                                <img src="{{ asset('storage/' . $room->images[0]) }}" alt="Room {{ $room->room_number }}">
                             @else
                                 <div class="room-image-placeholder">
                                     <i class="fas fa-bed"></i>

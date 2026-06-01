@@ -103,7 +103,7 @@
                             <!-- Booking Image -->
                             <div class="hidden sm:block">
                                 @if($payment->booking && $payment->booking->hostel && $payment->booking->hostel->primaryImage)
-                                    <img src="{{ Storage::url($payment->booking->hostel->primaryImage->image_path) }}"
+                                    <img src="{{ asset('storage/' . $payment->booking->hostel->primaryImage->image_path) }}"
                                          alt="{{ $payment->booking->hostel->name }}"
                                          class="w-16 h-16 object-cover rounded-lg">
                                 @else

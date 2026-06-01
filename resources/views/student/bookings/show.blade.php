@@ -41,7 +41,7 @@
 
                 <div class="flex items-start space-x-4 mb-4">
                     @if($booking->hostel && $booking->hostel->primaryImage)
-                        <img src="{{ Storage::url($booking->hostel->primaryImage->image_path) }}"
+                        <img src="{{ asset('storage/' . $booking->hostel->primaryImage->image_path) }}"
                              alt="{{ $booking->hostel->name }}"
                              class="w-20 h-20 object-cover rounded-lg">
                     @endif

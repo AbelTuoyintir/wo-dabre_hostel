@@ -61,7 +61,7 @@
                     <div class="relative h-56 overflow-hidden bg-slate-100">
                         @if($hostel->primaryImage)
                             <img
-                                src="{{ Storage::url($hostel->primaryImage->image_path) }}"
+                                src="{{ asset('storage/' . $hostel->primaryImage->image_path) }}"
                                 alt="{{ $hostel->name }}"
                                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                             >

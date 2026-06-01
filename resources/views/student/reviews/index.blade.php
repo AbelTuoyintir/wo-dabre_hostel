@@ -65,7 +65,7 @@
                     <div class="border rounded-lg p-4 hover:shadow-md transition">
                         <div class="flex items-start space-x-4">
                             @if($booking->room->hostel->primaryImage)
-                                <img src="{{ Storage::url($booking->room->hostel->primaryImage->image_path) }}"
+                                <img src="{{ asset('storage/' . $booking->room->hostel->primaryImage->image_path) }}"
                                      alt="{{ $booking->room->hostel->name }}"
                                      class="w-20 h-20 object-cover rounded-lg">
                             @else

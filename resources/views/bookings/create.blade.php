@@ -31,7 +31,7 @@
                 <h2 class="text-lg font-semibold text-gray-900 mb-3">Booking Summary</h2>
                 <div class="flex items-start space-x-4">
                     @if($hostel->primaryImage)
-                        <img src="{{ Storage::url($hostel->primaryImage->image_path) }}"
+                        <img src="{{ asset('storage/' . $hostel->primaryImage->image_path) }}"
                              alt="{{ $hostel->name }}"
                              class="w-24 h-24 object-cover rounded-lg">
                     @else

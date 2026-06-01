@@ -180,14 +180,14 @@
 
                                 @if($primary && $isVideo)
                                     <video
-                                        src="{{ Storage::url($primary->image_path) }}"
+                                        src="{{ asset('storage/' . $primary->image_path) }}"
                                         class="h-10 w-10 rounded-lg object-cover"
                                         muted
                                         playsinline
                                         preload="metadata"
                                     ></video>
                                 @elseif($primary)
-                                    <img src="{{ Storage::url($primary->image_path) }}" 
+                                    <img src="{{ asset('storage/' . $primary->image_path) }}" 
                                         alt="{{ $hostel->name }}" 
                                         class="h-10 w-10 rounded-lg object-cover">
                                 @else
