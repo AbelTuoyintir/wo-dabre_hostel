@@ -26,7 +26,7 @@ Route::get('/storage-link', function () {
 
     try {
         Artisan::call('storage:link');
-        $output = Artsisan::output();
+        $output = Artisan::output();
         return response()->json([
             'success' => true,
             'message' => 'Storage link created successfully!',
