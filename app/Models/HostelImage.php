@@ -41,8 +41,9 @@ class HostelImage extends Model
 
     public function getUrlAttribute()
     {
-        // Use public path directly to avoid relying on storage::link / Storage disk URL generation.
-        return asset($this->image_path);
+        // Use the Storage facade so URLs point to the `storage` symlink (e.g. /storage/hostels/...)
+        // This relies on `php artisan storage:link` having been run and the `public` disk configured.
+        return Storage::url($this->image_path);
     }
 
 }
