@@ -163,7 +163,8 @@
                         $minPrice = $hostel['min_price'] ?? 0;
                         $availableCount = $hostel['available_rooms_count'] ?? 0;
                     @endphp
-                    
+                    <a href="{{ route('hostels.guest.show', $hostel['uuid'] ?? $hostel['id']) }}" class="block">
+                            
                     <div class="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-slate-200">
                         <div class="relative h-52 overflow-hidden">
                             <img src="{{ $imageUrl }}" alt="{{ $hostel['name'] }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
@@ -178,10 +179,8 @@
                                     </span>
                                 @endif
                             </div>
-                            <a href="{{ route('hostels.guest.show', $hostel['uuid'] ?? $hostel['id']) }}" 
-                               class="absolute bottom-3 left-3 right-3 bg-white/95 text-slate-900 text-center py-2.5 rounded-xl text-sm font-bold hover:bg-purple-600 hover:text-white transition-all opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 duration-300 shadow-lg">
-                                View Details →
-                            </a>
+                                
+                           
                         </div>
                         <div class="p-5">
                             <div class="flex justify-between items-start mb-2">
@@ -214,6 +213,7 @@
                             </div>
                         </div>
                     </div>
+                    </a>
                 @endforeach
             @else
                 <div class="col-span-full text-center py-20">
