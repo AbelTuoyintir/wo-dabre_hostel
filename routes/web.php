@@ -63,13 +63,20 @@ Route::middleware('auth')->group(function () {
     })->name('dashboard');
 });
 
-Route::get('/image/{path}', function ($path) {
+
+
+Route::get('/storage/{path}', function ($path) {
     $fullPath = storage_path('app/public/' . $path);
+    
     if (!file_exists($fullPath)) {
         abort(404);
     }
-    return response()->file($fullPath);
-})->where('path', '.*')->name('image.show');
+    
+    $mime = mime_content_type($fullPath);
+    header('Content-Type: ' . $mime);
+    readfile($fullPath);
+    exit;
+})->where('path', '.*');
 
 
 
