@@ -117,7 +117,7 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div class="flex items-center space-x-3">
             @if($activeBooking->room->hostel->primaryImage)
-                <img src=" {{ asset('/hostels/covers/$activeBooking->room->hostel->primaryImage->path') }}
+                <img src="{{ Storage::url($activeBooking->room->hostel->primaryImage->path) }}"
                      alt="{{ $activeBooking->room->hostel->name }}"
                      class="w-16 h-16 object-cover rounded-lg">
             @else

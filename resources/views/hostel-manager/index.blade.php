@@ -132,7 +132,7 @@
                         <td class="px-6 py-4">
                             <div class="flex items-center">
                                 @if($hostel->primary_image)
-                                <img src="{{ asset('storage/' . $hostel->primary_image) }}"
+                                <img src="{{ Storage::url($hostel->primary_image) }}"
                                      alt="{{ $hostel->name }}"
                                      class="w-12 h-12 rounded-lg object-cover mr-3">
                                 @else
