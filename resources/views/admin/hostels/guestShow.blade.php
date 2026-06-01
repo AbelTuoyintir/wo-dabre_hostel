@@ -163,7 +163,7 @@
                                  @if($room->roomImages && $room->roomImages->count() > 0)
                                     @php
                                         $firstImage = $room->roomImages->first();
-                                        $imagePath = $firstImage->image_path ?? $firstImage->path ?? null;
+                                        $imagePath = $firstImage->image_path ?? null;
                                     @endphp
                                     @if($imagePath)
                                         <img src="{{ Storage::url($imagePath) }}" 

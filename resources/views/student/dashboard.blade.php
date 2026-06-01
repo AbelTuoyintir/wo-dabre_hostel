@@ -117,7 +117,7 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div class="flex items-center space-x-3">
             @if($activeBooking->room->hostel->primaryImage)
-                <img src="{{ Storage::url($activeBooking->room->hostel->primaryImage->path) }}"
+                <img src="{{ Storage::url($activeBooking->room->hostel->primaryImage->image_path) }}"
                      alt="{{ $activeBooking->room->hostel->name }}"
                      class="w-16 h-16 object-cover rounded-lg">
             @else
@@ -206,7 +206,7 @@
                             <div class="flex items-center">
                                 @if($booking->room->hostel->primaryImage)
                                     <img class="w-8 h-8 rounded-lg object-cover mr-3"
-                                         src="{{ Storage::url($booking->room->hostel->primaryImage->path) }}"
+                                         src="{{ Storage::url($booking->room->hostel->primaryImage->image_path) }}"
                                          alt="">
                                 @endif
                                 <span class="text-sm font-medium text-gray-900">{{ $booking->room->hostel->name }}</span>
@@ -277,7 +277,7 @@
                 <div class="border rounded-lg overflow-hidden hover:shadow-lg transition">
                     <div class="relative h-40">
                         @if($hostel->primaryImage)
-                            <img src="{{ Storage::url($hostel->primaryImage->path) }}"
+                            <img src="{{ Storage::url($hostel->primaryImage->image_path) }}"
                                  alt="{{ $hostel->name }}"
                                  class="w-full h-full object-cover">
                         @else

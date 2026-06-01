@@ -743,13 +743,29 @@ public function viewHostel(Hostel $hostel)
             'description' => 'required|string|min:20|max:2000',
         ]);
 
+        // Get hostel_id from booking if provided
+        $hostelId = null;
+        if (!empty($validated['booking_id'])) {
+            $booking = Booking::find($validated['booking_id']);
+            if ($booking) {
+                $hostelId = $booking->room->hostel_id;
+            }
+        }
+
+        // hostel_id is required in the schema, so either get it from booking or fail gracefully
+        if (!$hostelId) {
+            return redirect()->route('student.complaints')
+                ->with('error', 'Please select a valid booking to file a complaint.');
+        }
+
         Complaint::create([
             'user_id' => Auth::id(),
-            'subject' => $validated['subject'],
+            'hostel_id' => $hostelId,
+            'title' => $validated['subject'],
             'category' => $validated['category'],
+            'description' => $validated['description'],
             'priority' => $validated['priority'] ?? 'medium',
             'booking_id' => $validated['booking_id'] ?? null,
-            'description' => $validated['description'],
             'status' => 'pending',
         ]);
 

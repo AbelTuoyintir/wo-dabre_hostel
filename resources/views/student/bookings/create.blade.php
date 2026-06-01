@@ -32,7 +32,7 @@
 
                 <div class="flex items-start space-x-4">
                     @if($hostel->primaryImage)
-                        <img src="{{ Storage::url($hostel->primaryImage->path) }}"
+                        <img src="{{ Storage::url($hostel->primaryImage->image_path) }}"
                              class="w-24 h-24 object-cover rounded-lg"
                              alt="{{ $hostel->name }}">
                     @else

@@ -16,6 +16,7 @@ class Complaint extends Model
         'user_id',
         'booking_id',
         'title',
+        'category',
         'description',
         'status',
         'priority',
