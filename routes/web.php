@@ -63,6 +63,14 @@ Route::middleware('auth')->group(function () {
     })->name('dashboard');
 });
 
+Route::get('/image/{path}', function ($path) {
+    $fullPath = storage_path('app/public/' . $path);
+    if (!file_exists($fullPath)) {
+        abort(404);
+    }
+    return response()->file($fullPath);
+})->where('path', '.*')->name('image.show');
+
 
 
 require __DIR__.'/auth.php';
