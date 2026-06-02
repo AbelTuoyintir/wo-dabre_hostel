@@ -84,8 +84,8 @@
                         <div class="flex items-start space-x-4">
                             <!-- Hostel Image -->
                             @if($booking->hostel && $booking->hostel->primaryImage)
-                                <img src="{{ $booking->hostel->primaryImage->url }}" 
-                                     alt="{{ $booking->hostel->name }}"
+                                  <img src="{{ image_url($booking->hostel->primaryImage->image_path) }}" 
+                                      alt="{{ $booking->hostel->name }}"
                                      class="w-20 h-20 object-cover rounded-lg flex-shrink-0 shadow"
                                      onerror="this.nextElementSibling.style.display='flex';this.style.display='none';">
                                 <div class="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0 hidden shadow">

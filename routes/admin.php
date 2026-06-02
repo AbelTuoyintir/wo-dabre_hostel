@@ -43,4 +43,7 @@ Route::middleware(['auth', 'admin'])
         // Reports
         Route::get('/reports', [AdminController::class, 'reports'])->name('reports.index');
         Route::get('/reports/export/{type}', [AdminController::class, 'exportReport'])->name('reports.export');
+
+        // Image proxy logs
+        Route::get('/image-proxy-logs', [AdminController::class, 'imageProxyLogs'])->name('image-proxy-logs');
     });

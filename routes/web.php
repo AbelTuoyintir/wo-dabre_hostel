@@ -11,6 +11,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\HostelManagerDashboard;
 use App\Http\Controllers\StudentDashboard;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Log;
 
 /*
 |--------------------------------------------------------------------------
@@ -43,16 +44,32 @@ Route::get('/storage-link', function () {
 
 Route::get('/image', function (Request $request) {
     $path = trim($request->query('path', ''));
+    $meta = [
+        'path' => $path,
+        'ip' => $request->ip(),
+        'referer' => $request->headers->get('referer'),
+        'url' => $request->fullUrl(),
+    ];
+
     if (empty($path) || str_contains($path, '..')) {
+        Log::warning('Image proxy request rejected - invalid path', $meta);
         abort(404);
     }
 
     $fullPath = storage_path('app/public/' . ltrim($path, '/'));
     if (!file_exists($fullPath)) {
+        Log::warning('Image proxy file not found', $meta + ['fullPath' => $fullPath]);
         abort(404);
     }
 
-    return response()->file($fullPath, ['Content-Type' => mime_content_type($fullPath)]);
+    try {
+        $mime = mime_content_type($fullPath) ?: 'application/octet-stream';
+        Log::info('Image proxy served', $meta + ['fullPath' => $fullPath, 'mime' => $mime]);
+        return response()->file($fullPath, ['Content-Type' => $mime]);
+    } catch (\Exception $e) {
+        Log::error('Image proxy failed to serve file', $meta + ['exception' => $e->getMessage()]);
+        abort(500);
+    }
 })->name('image.proxy');
 
 /*

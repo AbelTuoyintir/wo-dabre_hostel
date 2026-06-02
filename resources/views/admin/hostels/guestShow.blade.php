@@ -32,8 +32,8 @@
             <!-- Image Gallery -->
             <div class="relative h-96 bg-gray-900">
                 @if($hostel->images && $hostel->images->count() > 0)
-                    <div x-data="{ activeImage: 0, images: {{ json_encode($hostel->images->pluck('image_path')) }} }" class="relative h-full">
-                        <img :src="'{{ asset('storage') }}' + '/' + images[activeImage]" 
+                    <div x-data="{ activeImage: 0, images: {{ json_encode($hostel->images->pluck('image_path')->map(fn($p) => image_url($p))) }} }" class="relative h-full">
+                            <img :src="images[activeImage]" 
                              alt="{{ $hostel->name }}" 
                              class="w-full h-full object-cover">
                         

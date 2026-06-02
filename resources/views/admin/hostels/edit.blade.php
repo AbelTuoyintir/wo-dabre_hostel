@@ -184,8 +184,8 @@
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="current-images">
                         @foreach($hostel->images()->orderBy('is_primary', 'desc')->orderBy('order')->get() as $image)
                             <div class="relative group border rounded-lg p-2 {{ $image->is_primary ? 'bg-blue-50 border-blue-300' : '' }}" data-image-id="{{ $image->id }}">
-                                <img src="{{ $image->url }}"
-                                     class="w-full h-32 object-cover rounded-lg mb-2"
+                                  <img src="{{ image_url($image->image_path) }}"
+                                      class="w-full h-32 object-cover rounded-lg mb-2"
                                      onerror="this.style.opacity='0.5';this.nextElementSibling.style.display='block';">
 
                                 <!-- Image Labels -->
