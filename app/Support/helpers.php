@@ -13,12 +13,8 @@ if (! function_exists('image_url')) {
             return $path;
         }
 
-        // If a physical public/image.php exists (common on shared hosts), prefer it
-        // to avoid webserver rewrite rules that block /storage/* URLs.
-        if (file_exists(public_path('image.php'))) {
-            return url('image.php') . '?path=' . urlencode(ltrim($path, '/'));
-        }
-
+        // Use the Laravel route for image proxy
+        // public/image.php is available as optional fallback for shared hosts
         return route('image.proxy', ['path' => ltrim($path, '/')]);
     }
 }
