@@ -10,7 +10,7 @@ use App\Http\Controllers\BookingController;
 |--------------------------------------------------------------------------
 */
 
-Route::prefix('bookings')->name('bookings.')->group(function () {
+Route::prefix('bookings')->name('bookings.')->middleware('throttle:bookings')->group(function () {
     
     // ===== GUEST ROUTES (No authentication required) =====
     // Guest booking form

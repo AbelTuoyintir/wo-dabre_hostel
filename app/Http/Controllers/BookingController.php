@@ -170,14 +170,14 @@ class BookingController extends Controller
             
             \Log::info('Date calculation', ['nights' => $nights]);
 
-            // Charges
-            $agentFee = 150;
-            $systemCharge = 20; // ₵20
+            // Charges (centralized via config/payments.php)
+            $agentFee = config('payments.agent_fee', 150);
+            $systemCharge = config('payments.system_charge', 20);
             $roomCost = $validated['room_cost'];
             $subTotal = $roomCost + $agentFee + $systemCharge;
-            $paystackFee = $subTotal * 0.021; 
+            $paystackFee = $subTotal * config('payments.paystack_fee_multiplier', 0.0195);
             $finalTotal = $subTotal + $paystackFee;
-            $netAmount = $roomCost + $agentFee; // platform fee retained for payment, room_cost for hostel
+            $netAmount = $roomCost + $agentFee; // platform/net amount reserved
 
             \Log::info('Final calculation', ['final_total' => $finalTotal, 'net_amount' => $netAmount]);
 
@@ -363,7 +363,7 @@ class BookingController extends Controller
 
         $user = Auth::user();
         $totalAmount = $pendingBooking['total_amount'];
-        $feePercentage = 0.02;
+        $feePercentage = config('payments.student_fee_percentage', 0.02);
         $feeAmount = $totalAmount * $feePercentage;
         $finalAmount = $totalAmount + $feeAmount;
         $amountInPesewas = (int) round($finalAmount * 100);
@@ -807,11 +807,11 @@ class BookingController extends Controller
 
         $roomCost = $validated['room_cost'] ?? Room::find($validated['room_id'])->room_cost ?? 0;
 
-        $agentFee = 150;
-        $systemCharge = 20;
+        $agentFee = config('payments.agent_fee', 150);
+        $systemCharge = config('payments.system_charge', 20);
 
         $subTotal = $roomCost + $agentFee + $systemCharge;
-        $paystackFee = $subTotal * 0.0195;
+        $paystackFee = $subTotal * config('payments.paystack_fee_multiplier', 0.0195);
         $finalTotal = $subTotal + $paystackFee;
 
         return response()->json([
