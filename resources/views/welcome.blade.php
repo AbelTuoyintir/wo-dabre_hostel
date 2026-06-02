@@ -156,9 +156,9 @@
                 @foreach($transformedHostels as $hostel)
                     @php
                         $imageUrl = !empty($hostel['primary_image']['image_path'])
-                            ? asset('storage/' . $hostel['primary_image']['image_path'])
+                            ? image_url($hostel['primary_image']['image_path'])
                             : (!empty($hostel['images']) && count($hostel['images']) > 0
-                                ? asset('storage/' . $hostel['images']->first()['image_path'])
+                                ? image_url($hostel['images']->first()['image_path'])
                                 : 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600&h=400&fit=crop');
                         $minPrice = $hostel['min_price'] ?? 0;
                         $availableCount = $hostel['available_rooms_count'] ?? 0;

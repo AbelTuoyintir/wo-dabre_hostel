@@ -16,7 +16,7 @@
     <div class="relative m-10 h-96 bg-gray-900">
         @if($hostel->images && $hostel->images->count() > 0)
             <div x-data="{ activeImage: 0 }" class="relative h-full">
-<img src="{{ asset('storage/' . $hostel->images[0]->image_path) }}" 
+<img src="{{ image_url($hostel->images[0]->image_path) }}" 
                 @if($hostel->images->count() > 1)
                     <button @click="activeImage = activeImage > 0 ? activeImage - 1 : {{ $hostel->images->count() - 1 }}"
                             class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75">
@@ -110,7 +110,7 @@
                     <!-- Room Image -->
                     <div class="relative h-48 mb-4 -mx-4 -mt-4 rounded-t-lg overflow-hidden">
                         @if($room->images && $room->images->count() > 0)
-                            <img src="{{ asset('storage/' . $room->images->first()->image_path) }}" 
+                            <img src="{{ image_url($room->images->first()->image_path) }}" 
                                  alt="Room {{ $room->number }}"
                                  class="w-full h-full object-cover">
                             
@@ -184,7 +184,7 @@
                             @foreach($room->images->take(3) as $index => $image)
                                 @if($index > 0)
                                     <div class="w-8 h-8 rounded-full border-2 border-white overflow-hidden bg-gray-200">
-                                        <img src="{{ asset('storage/' . $image->image_path) }}" 
+                                        <img src="{{ image_url($image->image_path) }}" 
                                              alt="Room thumbnail"
                                              class="w-full h-full object-cover">
                                     </div>

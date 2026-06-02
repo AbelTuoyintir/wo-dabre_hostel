@@ -223,7 +223,7 @@
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="current-images">
                                 @foreach($room->images as $image)
                                     <div class="relative group border rounded-lg p-2 {{ $image->is_primary ? 'bg-blue-50 border-blue-300' : '' }}" data-image-id="{{ $image->id }}">
-                                        <img src="{{ asset('storage/' . $image->image_path) }}"
+                                        <img src="{{ image_url($image->image_path) }}"
                                              alt="Room {{ $room->number }}"
                                              class="w-full h-32 object-cover rounded-lg mb-2">
 

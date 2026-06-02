@@ -166,7 +166,7 @@
                                         $imagePath = $firstImage->image_path ?? null;
                                     @endphp
                                     @if($imagePath)
-                                        <img src="{{ asset('storage/' . $imagePath) }}" 
+                                        <img src="{{ image_url($imagePath) }}" 
                                             alt="Room {{ $room->number }}"
                                             class="w-full h-full object-cover"
                                             onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center\'><i class=\'fas fa-door-open text-gray-400 text-4xl\'></i></div>';">
@@ -281,7 +281,7 @@
                     <a href="{{ route('hostels.show', $similar) }}" class="block border rounded-lg p-4 hover:shadow-lg transition">
                         <div class="flex items-center space-x-3">
                             @if($similar->primaryImage)
-                                <img src="{{ asset('storage/' . $similar->primaryImage->image_path) }}" 
+                                <img src="{{ image_url($similar->primaryImage->image_path) }}" 
                                      alt="{{ $similar->name }}" 
                                      class="w-16 h-16 object-cover rounded-lg">
                             @else

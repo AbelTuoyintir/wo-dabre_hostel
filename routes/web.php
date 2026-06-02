@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\HostelController as AdminHostelController;
@@ -39,6 +40,20 @@ Route::get('/storage-link', function () {
         ], 500);
     }
 })->name('storage.link');
+
+Route::get('/image', function (Request $request) {
+    $path = trim($request->query('path', ''));
+    if (empty($path) || str_contains($path, '..')) {
+        abort(404);
+    }
+
+    $fullPath = storage_path('app/public/' . ltrim($path, '/'));
+    if (!file_exists($fullPath)) {
+        abort(404);
+    }
+
+    return response()->file($fullPath, ['Content-Type' => mime_content_type($fullPath)]);
+})->name('image.proxy');
 
 /*
 |--------------------------------------------------------------------------

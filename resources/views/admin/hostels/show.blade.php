@@ -168,7 +168,7 @@
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
                         @foreach($hostel->images as $image)
                             <div class="relative group">
-                                <img src="{{ asset('storage/' . $image->image_path) }}"
+                                <img src="{{ image_url($image->image_path) }}"
                                     alt="{{ $hostel->name }}"
                                     class="w-full h-40 object-cover rounded-lg">
                                 @if($image->is_primary)

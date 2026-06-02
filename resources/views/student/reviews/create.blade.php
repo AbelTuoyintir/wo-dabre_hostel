@@ -21,7 +21,7 @@
     <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
         <div class="flex items-center space-x-4">
             @if($hostel->primaryImage)
-                <img src="{{ asset('storage/' . $hostel->primaryImage->image_path) }}" 
+                <img src="{{ image_url($hostel->primaryImage->image_path) }}" 
                      alt="{{ $hostel->name }}"
                      class="w-20 h-20 object-cover rounded-lg">
             @else

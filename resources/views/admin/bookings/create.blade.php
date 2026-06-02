@@ -90,7 +90,7 @@
             <div class="hostel-card">
                 <div class="hostel-image">
                     @if($booking->hostel->image)
-                        <img src="{{ asset('storage/' . $booking->hostel->image) }}" alt="{{ $booking->hostel->name }}">
+                        <img src="{{ image_url($booking->hostel->image) }}" alt="{{ $booking->hostel->name }}">
                     @else
                         <div class="image-placeholder">
                             <i class="fas fa-building"></i>
