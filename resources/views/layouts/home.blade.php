@@ -11,8 +11,8 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
-
-   <link rel="icon" href="{{ asset('/images/wodabre-logo.png') }}" type="image/x-icon">
+    <!--add logo to the site-->
+    <link rel="icon" href="{{ asset('/images/wodabre-logo.png') }}" type="image/x-icon">
     <link rel="shortcut icon" href="{{ asset('/images/wodabre-logo.png') }}" type="image/x-icon">
 
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -78,7 +78,7 @@
                 <div class="flex items-center space-x-3 mb-4 md:mb-0">
                     <div class="bg-white text-blue-700 p-2 rounded-full">
                         <!-- add wodabre logo here-->
-                        <img src="{{ asset('/images/wodabre-logo.png') }}" alt="Wo-dabre Logo" class="w-10 h-10">
+                        <img src="{{ asset('wodabre-logo.png') }}" alt="Wo-dabre Logo" class="w-10 h-10">
                     </div>
                     <div>
                         <h1 class="text-2xl font-bold">Wodabre Hostel Booking</h1>

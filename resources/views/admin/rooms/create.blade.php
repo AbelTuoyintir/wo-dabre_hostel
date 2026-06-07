@@ -56,9 +56,14 @@
                             <span class="text-red-500">*</span> Room Type
                         </label>
                         <select name="room_type" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 @error('room_type') border-red-500 @enderror" required>
-                            <option value="single_room" {{ old('room_type') == 'single_room' ? 'selected' : '' }}>Single Room</option>
-                            <option value="shared_2" {{ old('room_type') == 'shared_2' ? 'selected' : '' }}>2 in room</option>
-                            <option value="shared_4" {{ old('room_type') == 'shared_4' ? 'selected' : '' }}>4 in room</option>
+                            <option value="single_room" {{ old('room_type') == 'single_room_self_contain' ? 'selected' : '' }}>Single Room self-contain</option>
+                            <option value="single_room" {{ old('room_type') == 'single_room_shared_washroom_and_kitchen' ? 'selected' : '' }}>Single Share washroom and kitchen</option>
+                            <option value="single_room" {{ old('room_type') == 'single_room_shared_washroom_without_kitchen' ? 'selected' : '' }}>Single Share washroom with no kitchen</option>
+                            <option value="shared_2" {{ old('room_type') == '2_in_a_room_self_contain' ? 'selected' : '' }}>2 in room self-contain</option>
+                            <option value="shared_2" {{ old('room_type') == '2_in_a_room_shared_washroom_without_kitchen' ? 'selected' : '' }}>2 in room washroom and kitchen</option>
+                            <option value="shared_2" {{ old('room_type') == '2_in_a_room_shared_washroom_without_kitchen' ? 'selected' : '' }}>2 in room washroom with no kitchen</option>
+                            <option value="shared_2" {{ old('room_type') == '3_in_a_room_selfcontain' ? 'selected' : '' }}>3 in room self-contain</option>
+                            <option value="shared_4" {{ old('room_type') == 'shared_4' ? 'selected' : '' }}>4 in room self-contain</option>
                             <option value="executive" {{ old('room_type') == 'executive' ? 'selected' : '' }}>Executive</option>
                         </select>
                         @error('room_type')
@@ -138,10 +143,11 @@
                         <select name="window_type" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                             <option value="">Select view type</option>
                             <option value="street" {{ old('window_type') == 'street' ? 'selected' : '' }}>Street View</option>
+                            <option value="roadside" {{ old('window_type') == 'roadside' ? 'selected' : '' }}>Road roadside</option>
                             <option value="courtyard" {{ old('window_type') == 'courtyard' ? 'selected' : '' }}>Courtyard</option>
                             <option value="garden" {{ old('window_type') == 'garden' ? 'selected' : '' }}>Garden</option>
                             <option value="none" {{ old('window_type') == 'none' ? 'selected' : '' }}>No Window</option>
-                        </select>
+                        </select>3
                         @error('window_type')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
