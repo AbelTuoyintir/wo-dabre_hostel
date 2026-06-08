@@ -17,6 +17,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
             'hostel.manager' => \App\Http\Middleware\HostelManagerMiddleware::class,
             'student' => \App\Http\Middleware\StudentMiddleware::class,
+            'hostel.agent' => \App\Http\Middleware\AgentMiddleware::class,
+            'agent.approved' => \App\Http\Middleware\CheckAgentApproved::class,
             'role' => \App\Http\Middleware\RoleMiddleware::class,
         ]);
 

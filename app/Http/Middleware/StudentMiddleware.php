@@ -28,7 +28,7 @@ class StudentMiddleware
         // Check if user has student role
         if ($user->role !== 'student') {
            
-            return redirect()->route('home')
+            return redirect()->route('hostel.index')->with('error', 'Student access only.');
                 ->with('error', 'Student access required.');
         }
 

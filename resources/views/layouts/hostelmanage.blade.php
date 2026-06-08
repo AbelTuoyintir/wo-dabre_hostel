@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
 
-     <!--add logo to the site-->
+    <!--add logo to the site-->
     <link rel="icon" href="{{ asset('wodabre-logo.png') }}" type="image/x-icon">
     <link rel="shortcut icon" href="{{ asset('wodabre-logo.png') }}" type="image/x-icon">
 
@@ -30,6 +30,7 @@
             transition: all 0.3s ease-in-out;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             z-index: 1000;
+            width: 280px !important; /* Fixed width for sidebar */
         }
 
         /* Mobile sidebar - hidden by default */
@@ -71,11 +72,15 @@
         @media (min-width: 1024px) {
             .sidebar {
                 transform: translateX(0);
-                width: 256px;
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100vh;
             }
 
             .main-content {
-                margin-left: 256px;
+                margin-left: 280px !important;
+                width: calc(100% - 280px);
             }
         }
 
@@ -476,13 +481,14 @@
         <div id="sidebarOverlay" class="overlay" onclick="closeSidebar()"></div>
 
         <!-- Sidebar -->
-        <aside class="sidebar text-white fixed w-[45px] h-full overflow-y-auto shadow-xl" id="sidebar">
+        <aside class="sidebar text-white fixed h-full overflow-y-auto shadow-xl" id="sidebar">
             <!-- Logo Area -->
             <div class="p-4 sm:p-6 border-b border-white border-opacity-20">
                 <div class="flex items-center space-x-3">
                     <div class="bg-white bg-opacity-20 p-2 rounded-lg flex-shrink-0">
                         <img src="{{ asset('wodabre-logo.png') }}" alt="Wo-dabre Logo" class="w-9 h-9">
-                        <div class="min-w-0 flex-1">
+                    </div>
+                    <div class="min-w-0 flex-1">
                         <h2 class="text-base sm:text-xl font-bold truncate">{{ config('app.name') }}</h2>
                         <p class="text-[10px] sm:text-xs text-white text-opacity-80 truncate">Hostel Manager Portal</p>
                     </div>

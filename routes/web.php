@@ -117,3 +117,4 @@ require __DIR__.'/admin.php';
 require __DIR__.'/hostelManager.php';
 require __DIR__.'/payment.php';
 require __DIR__.'/student.php';
+require __DIR__.'/agent.php';

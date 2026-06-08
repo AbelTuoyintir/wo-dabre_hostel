@@ -24,6 +24,8 @@ class AdminMiddleware
                     ->with('error', 'Admin access only. You are a Hostel Manager.'),
                 'student' => redirect()->route('student.dashboard')
                     ->with('error', 'Admin access only. You are a Student.'),
+                'hostel_agent' => redirect()->route('hostel-agent.dashboard')
+                    ->with('error', 'Admin access only. You are a Hostel Agent.'),
                 default => redirect()->route('dashboard')
                     ->with('error', 'Administrator access required.'),
             };

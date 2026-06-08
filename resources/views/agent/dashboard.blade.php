@@ -184,6 +184,23 @@
             }
         }
     });
+
+    // Show celebration animation for new commission
+    @if(session('new_commission'))
+        Swal.fire({
+            title: '🎉 New Commission Earned!',
+            html: `You earned <strong>₵{{ session('new_commission') }}</strong><br>Keep up the great work!`,
+            icon: 'success',
+            confirmButtonColor: '#8b5cf6',
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            color: '#fff',
+            confirmButtonText: 'Awesome!',
+            customClass: {
+                popup: 'rounded-2xl',
+                confirmButton: 'bg-white text-purple-600 font-semibold px-6 py-2 rounded-lg'
+            }
+        });
+    @endif
 </script>
 @endpush
 @endsection

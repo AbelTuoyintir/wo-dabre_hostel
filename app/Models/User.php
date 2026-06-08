@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Models\Users;
+use App\Models\HostelAgent;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class User extends Authenticatable
 {
@@ -46,9 +47,20 @@ class User extends Authenticatable
     //     return $this->hasOne(Hostel::class);
     // }
 
-     public function managedHostel()
+    public function managedHostel()
     {
         return $this->hasOne(Hostel::class, 'manager_id');
+    }
+
+    public function agent()
+    {
+        return $this->hasOne(HostelAgent::class, 'user_id');
+    }
+
+
+    public function isHostelAgent()
+    {
+        return $this->role === 'hostel_agent';
     }
 
     /**
