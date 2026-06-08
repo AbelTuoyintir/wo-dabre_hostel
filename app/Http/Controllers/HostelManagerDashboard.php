@@ -53,29 +53,29 @@ class HostelManagerDashboard extends Controller
         $bookingStats = [
             'total_bookings' => Booking::whereIn('hostel_id', $hostelIds)->count(),
             'pending_bookings' => Booking::whereIn('hostel_id', $hostelIds)
-                ->where('status', 'pending')
+                ->where('booking_status', 'pending')
                 ->count(),
             'confirmed_bookings' => Booking::whereIn('hostel_id', $hostelIds)
-                ->where('status', 'confirmed')
+                ->where('booking_status', 'confirmed')
                 ->count(),
             'cancelled_bookings' => Booking::whereIn('hostel_id', $hostelIds)
-                ->where('status', 'cancelled')
+                ->where('booking_status', 'cancelled')
                 ->count(),
             'completed_bookings' => Booking::whereIn('hostel_id', $hostelIds)
-                ->where('status', 'completed')
+                ->where('booking_status', 'checked_out')
                 ->count(),
             'today_checkins' => Booking::whereIn('hostel_id', $hostelIds)
-                ->whereDate('check_in', $currentTime->toDateString())
-                ->where('status', 'confirmed')
+                ->whereDate('check_in_date', $currentTime->toDateString())
+                ->where('booking_status', 'confirmed')
                 ->count(),
             'today_checkouts' => Booking::whereIn('hostel_id', $hostelIds)
-                ->whereDate('check_out', $currentTime->toDateString())
-                ->where('status', 'confirmed')
+                ->whereDate('check_out_date', $currentTime->toDateString())
+                ->where('booking_status', 'checked_out')
                 ->count(),
             'active_bookings' => Booking::whereIn('hostel_id', $hostelIds)
-                ->where('status', 'confirmed')
-                ->where('check_in', '<=', $currentTime)
-                ->where('check_out', '>=', $currentTime)
+                ->where('booking_status', 'confirmed')
+                ->where('check_in_date', '<=', $currentTime)
+                ->where('check_out_date', '>=', $currentTime)
                 ->count(),
         ];
 
@@ -163,30 +163,31 @@ class HostelManagerDashboard extends Controller
         $occupantStats = [
             'total_students' => User::whereHas('bookings', function($q) use ($hostelIds) {
                     $q->whereIn('hostel_id', $hostelIds)
-                      ->whereIn('status', ['confirmed', 'pending']);
+                      ->whereIn('booking_status', ['confirmed', 'pending']);
                 })->count(),
 
             'male_students' => User::whereHas('bookings', function($q) use ($hostelIds) {
                     $q->whereIn('hostel_id', $hostelIds)
-                      ->whereIn('status', ['confirmed', 'pending']);
+                      ->whereIn('booking_status', ['confirmed', 'pending']);
                 })->where('gender', 'male')->count(),
 
             'female_students' => User::whereHas('bookings', function($q) use ($hostelIds) {
                     $q->whereIn('hostel_id', $hostelIds)
-                      ->whereIn('status', ['confirmed', 'pending']);
+                      ->whereIn('booking_status', ['confirmed', 'pending']);
                 })->where('gender', 'female')->count(),
+
 
             'new_this_month' => User::whereHas('bookings', function($q) use ($hostelIds) {
                     $q->whereIn('hostel_id', $hostelIds)
-                      ->whereIn('status', ['confirmed', 'pending']);
+                      ->whereIn('booking_status', ['confirmed', 'pending']);
                 })->whereMonth('created_at', $currentTime->month)
                 ->whereYear('created_at', $currentTime->year)
                 ->count(),
 
             'leaving_this_month' => Booking::whereIn('hostel_id', $hostelIds)
-                ->where('status', 'confirmed')
-                ->whereMonth('check_out', $currentTime->month)
-                ->whereYear('check_out', $currentTime->year)
+                ->where('booking_status', 'checked_out')
+                ->whereMonth('check_out_date', $currentTime->month)
+                ->whereYear('check_out_date', $currentTime->year)
                 ->count(),
         ];
 
