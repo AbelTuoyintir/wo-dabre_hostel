@@ -46,4 +46,19 @@ Route::middleware(['auth', 'admin'])
 
         // Image proxy logs
         Route::get('/image-proxy-logs', [AdminController::class, 'imageProxyLogs'])->name('image-proxy-logs');
+
+        Route::get('/agents', [AgentManagementController::class, 'index'])->name('agents.index');
+        Route::get('/agents/export', [AgentManagementController::class, 'export'])->name('agents.export');
+        Route::get('/agents/statistics', [AgentManagementController::class, 'statistics'])->name('agents.statistics');
+        Route::get('/agents/{id}', [AgentManagementController::class, 'show'])->name('agents.show');
+        Route::get('/agents/{id}/commissions', [AgentManagementController::class, 'commissions'])->name('agents.commissions');
+        Route::get('/agents/{id}/withdrawals', [AgentManagementController::class, 'withdrawals'])->name('agents.withdrawals');
+        
+        Route::post('/agents/{id}/approve', [AgentManagementController::class, 'approve'])->name('agents.approve');
+        Route::post('/agents/{id}/suspend', [AgentManagementController::class, 'suspend'])->name('agents.suspend');
+        Route::post('/agents/{id}/activate', [AgentManagementController::class, 'activate'])->name('agents.activate');
+        Route::post('/agents/{id}/deactivate', [AgentManagementController::class, 'deactivate'])->name('agents.deactivate');
+        Route::post('/agents/{id}/add-commission', [AgentManagementController::class, 'addCommission'])->name('agents.add-commission');
+        Route::post('/withdrawals/{id}/process', [AgentManagementController::class, 'processWithdrawal'])->name('agents.process-withdrawal');
+        Route::delete('/agents/{id}', [AgentManagementController::class, 'destroy'])->name('agents.destroy');
     });
