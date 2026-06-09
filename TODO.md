@@ -1,7 +1,4 @@
-# Fix Undefined property: stdClass::$id in admin/report.blade.php
+- [ ] Fix HostelManagerDashboard booking stats query to use `bookings.booking_status` + `check_in_date/check_out_date` (not `status/check_in/check_out`).
+- [ ] Verify other queries in HostelManagerDashboard that reference `bookings.status`, `check_in`, or `check_out`.
 
-## Steps:
-- [x] Step 1: Edit app/Http/Controllers/Admin/AdminController.php to include 'hostels.id' in the selectRaw query for $bookingsByHostel
-- [x] Step 2: Verify the change by checking the page
-- [x] Step 3: Mark complete
 

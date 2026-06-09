@@ -25,6 +25,7 @@
                 <option value="">All roles</option>
                 <option value="student" {{ request('role')=='student' ? 'selected' : '' }}>Student</option>
                 <option value="hostel_manager" {{ request('role')=='hostel_manager' ? 'selected' : '' }}>Hostel Manager</option>
+                <option value="hostel_manager" {{ request('role')=='hostel_agent' ? 'selected' : '' }}>Hostel Agent</option>
                 <option value="admin" {{ request('role')=='admin' ? 'selected' : '' }}>Admin</option>
             </select>
 
@@ -41,7 +42,6 @@
         <table class="min-w-full text-sm">
             <thead class="bg-slate-50 border-b border-slate-100 text-xs font-medium text-slate-500 uppercase">
             <tr>
-                <th class="px-4 py-2 text-left">#</th>
                 <th class="px-4 py-2 text-left">Name / Email</th>
                 <th class="px-4 py-2 text-left">Role</th>
                 <th class="px-4 py-2 text-left">Student ID</th>
@@ -53,7 +53,6 @@
             <tbody class="divide-y divide-slate-100">
             @forelse ($users as $user)
                 <tr class="hover:bg-slate-50">
-                    <td class="px-4 py-2">{{ $user->id }}</td>
                     <td class="px-4 py-2">
                         <div class="font-semibold text-slate-800">{{ $user->name }}</div>
                         <div class="text-xs text-slate-500">{{ $user->email }}</div>
@@ -76,12 +75,18 @@
                         {{ $user->created_at->format('d M Y') }}
                     </td>
                     <td class="px-4 py-2 text-right text-xs space-x-1">
-                        <a href="{{ route('admin.users.edit', $user) }}"
+                        <a href="{{ route('admin.users.edit', $user->id) }}"
+
+
                            class="inline-flex items-center rounded-md border border-slate-300 px-2 py-1 font-medium text-slate-700 hover:bg-slate-100">
                             Edit
                         </a>
+                       
 
-                        <form action="{{ route('admin.users.toggle-status', $user) }}"
+
+
+
+                        <form action="{{ route('admin.users.toggle-status', $user->id) }}"
                               method="POST"
                               class="inline"
                         >

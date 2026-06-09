@@ -78,6 +78,7 @@
                     >
                         <option value="student" {{ old('role', $user->role) == 'student' ? 'selected' : '' }}>Student</option>
                         <option value="hostel_manager" {{ old('role', $user->role) == 'hostel_manager' ? 'selected' : '' }}>Hostel Manager</option>
+                        <option value="hostel_manager" {{ request('role')=='hostel_agent' ? 'selected' : '' }}>Hostel Agent</option>
                         <option value="admin" {{ old('role', $user->role) == 'admin' ? 'selected' : '' }}>Admin</option>
                     </select>
                     @error('role')

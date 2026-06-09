@@ -598,9 +598,10 @@ class HostelManagerDashboard extends Controller
             'female' => User::whereHas('bookings', fn($q) => $q->whereIn('hostel_id', $hostelIds)->whereIn('booking_status', ['confirmed', 'pending']))->where('gender', 'female')->count(),
             'active' => User::whereHas('bookings', fn($q) => $q->whereIn('hostel_id', $hostelIds)->where('booking_status', 'confirmed'))->count(),
             'checkout_today' => Booking::whereIn('hostel_id', $hostelIds)
-                ->whereDate('check_out', now())
-                ->where('booking_status', 'confirmed')
+                ->whereDate('check_out_date', now())
+                ->where('booking_status', 'checked_out')
                 ->count(),
+
         ];
 
         $hostels = $user->managedHostels()->get();
@@ -1050,24 +1051,37 @@ class HostelManagerDashboard extends Controller
     // In your HostelManagerController
     public function myHostels()
     {
-        $hostels = Hostel::where('manager_id', Auth::id())
-            ->withCount(['rooms', 'bookings' => function($query) {
+        $user = Auth::user();
+
+        // The app uses `hostel.manager_id` and `User::managedHostels()` (hasMany) to determine
+        // hostels a manager can access.
+        $hostelsQuery = $user->managedHostels()->withCount(['rooms', 'bookings' => function($query) {
+            $query->whereIn('booking_status', ['confirmed', 'checked_in']);
+        }]);
+
+        // Ensure we always fetch hostels even if the hostels are stored in a different shape.
+        // If pagination returns an empty collection unexpectedly, fallback to the full list.
+        $hostels = $hostelsQuery->paginate(10);
+
+        if ($hostels->total() === 0 && $user->managedHostels()->exists()) {
+            $hostels = $user->managedHostels()->withCount(['rooms', 'bookings' => function($query) {
                 $query->whereIn('booking_status', ['confirmed', 'checked_in']);
-            }])
-            ->with(['rooms' => function($query) {
-                $query->where('is_available', true);
-            }])
-            ->paginate(10);
+            }])->paginate(10);
+        }
+
 
         // Calculate stats
         $totalRooms = $hostels->sum('rooms_count');
-        $availableRooms = $hostels->sum(function($hostel) {
-            return $hostel->rooms->count();
-        });
         $activeBookings = $hostels->sum('bookings_count');
+
+        // Available rooms for the paginated set
+        $availableRooms = $hostels->getCollection()->sum(function ($hostel) {
+            return $hostel->rooms()->where('status', 'available')->count();
+        });
 
         return view('hostel-manager.index', compact('hostels', 'totalRooms', 'availableRooms', 'activeBookings'));
     }
+
 
     public function showHostel(Hostel $hostel): View
     {
@@ -1138,10 +1152,13 @@ class HostelManagerDashboard extends Controller
             abort(403);
         }
 
-        $hostel->is_active = !$hostel->is_active;
+        // Your `hostels` table uses `status` (active|inactive|maintenance), not `is_active`.
+        // Toggle between active and inactive.
+        $hostel->status = ($hostel->status === 'active') ? 'inactive' : 'active';
         $hostel->save();
 
-        $status = $hostel->is_active ? 'activated' : 'deactivated';
+        $status = $hostel->status === 'active' ? 'activated' : 'deactivated';
+
 
         return redirect()->back()->with('success', "Hostel {$status} successfully.");
     }
@@ -1177,11 +1194,11 @@ public function reports(): View
         ->where('status', 'maintenance')
         ->count();
 
-    $totalOccupants = User::whereHas('bookings', function($q) use ($hostelIds) {
+$totalOccupants = User::whereHas('bookings', function($q) use ($hostelIds) {
             $q->whereIn('hostel_id', $hostelIds)
-              ->where('status', 'confirmed')
-              ->where('check_in', '<=', now())
-              ->where('check_out', '>=', now());
+              ->where('booking_status', 'confirmed')
+              ->where('check_in_date', '<=', now())
+              ->where('check_out_date', '>=', now());
         })->count();
 
     $occupancyRate = $totalRooms > 0 ? round(($occupiedRooms / $totalRooms) * 100, 2) : 0;
@@ -1212,14 +1229,14 @@ public function reports(): View
     foreach (range(0, 6) as $day) {
         $date = now()->subDays(6 - $day);
 
-        $checkinsData[] = Booking::whereIn('hostel_id', $hostelIds)
-            ->whereDate('check_in', $date)
-            ->where('status', 'confirmed')
+$checkinsData[] = Booking::whereIn('hostel_id', $hostelIds)
+            ->whereDate('check_in_date', $date)
+            ->where('booking_status', 'confirmed')
             ->count();
 
         $checkoutsData[] = Booking::whereIn('hostel_id', $hostelIds)
-            ->whereDate('check_out', $date)
-            ->where('status', 'confirmed')
+            ->whereDate('check_out_date', $date)
+            ->where('booking_status', 'confirmed')
             ->count();
     }
 
@@ -1425,10 +1442,10 @@ public function exportReport(Request $request, $type)
                 fputcsv($file, ['Name', 'Student ID', 'Email', 'Phone', 'Gender', 'Hostel', 'Room', 'Check In', 'Check Out']);
 
                 $students = User::whereHas('bookings', function($q) use ($hostelIds) {
-                        $q->whereIn('hostel_id', $hostelIds)
-                          ->where('status', 'confirmed')
-                          ->where('check_in', '<=', now())
-                          ->where('check_out', '>=', now());
+$q->whereIn('hostel_id', $hostelIds)
+                          ->where('booking_status', 'confirmed')
+                          ->where('check_in_date', '<=', now())
+                          ->where('check_out_date', '>=', now());
                     })
                     ->with(['bookings' => function($q) use ($hostelIds) {
                         $q->whereIn('hostel_id', $hostelIds)
@@ -1711,20 +1728,29 @@ public function complaintsReport(Request $request): View
     $bookings = $query->latest()->paginate(15);
 
     // Calculate stats
-    $stats = [
-        'total' => Booking::whereIn('hostel_id', $hostelIds)->count(),
-        'pending' => Booking::whereIn('hostel_id', $hostelIds)->where('status', 'pending')->count(),
-        'confirmed' => Booking::whereIn('hostel_id', $hostelIds)->where('status', 'confirmed')->count(),
-        'completed' => Booking::whereIn('hostel_id', $hostelIds)->where('status', 'completed')->count(),
-        'cancelled' => Booking::whereIn('hostel_id', $hostelIds)->where('status', 'cancelled')->count(),
-        'today_checkins' => Booking::whereIn('hostel_id', $hostelIds)
-            ->whereDate('check_in', now())
-            ->where('status', 'confirmed')
-            ->count(),
-        'today_checkouts' => Booking::whereIn('hostel_id', $hostelIds)
-            ->whereDate('check_out', now())
-            ->where('status', 'confirmed')
-            ->count(),
+        $stats = [
+            'total' => Booking::whereIn('hostel_id', $hostelIds)->count(),
+            'pending' => Booking::whereIn('hostel_id', $hostelIds)
+                ->where('booking_status', 'pending')
+                ->count(),
+            'confirmed' => Booking::whereIn('hostel_id', $hostelIds)
+                ->where('booking_status', 'confirmed')
+                ->count(),
+            'completed' => Booking::whereIn('hostel_id', $hostelIds)
+                ->where('booking_status', 'checked_out')
+                ->count(),
+            'cancelled' => Booking::whereIn('hostel_id', $hostelIds)
+                ->where('booking_status', 'cancelled')
+                ->count(),
+            'today_checkins' => Booking::whereIn('hostel_id', $hostelIds)
+                ->whereDate('check_in_date', now())
+                ->where('booking_status', 'confirmed')
+                ->count(),
+            'today_checkouts' => Booking::whereIn('hostel_id', $hostelIds)
+                ->whereDate('check_out_date', now())
+                ->where('booking_status', 'checked_out')
+                ->count(),
+
     ];
 
     $hostels = $user->managedHostels()->get();

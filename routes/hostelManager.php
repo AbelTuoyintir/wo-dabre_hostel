@@ -70,4 +70,7 @@ Route::middleware(['auth', 'hostel.manager'])->prefix('hostel-manager')->name('h
     Route::get('/hostels/{hostel:uuid}/edit', [HostelManagerDashboard::class, 'editHostel'])->name('hostels.edit');
     Route::put('/hostels/{hostel:uuid}', [HostelManagerDashboard::class, 'updateHostel'])->name('hostels.update');
     Route::patch('/hostels/{hostel:uuid}/toggle-status', [HostelManagerDashboard::class, 'toggleHostelStatus'])->name('hostels.toggle-status');
+
+    // Rooms page entry (used by resources/views/hostel-manager/index.blade.php)
+    Route::get('/rooms/{hostel:uuid}', [HostelManagerDashboard::class, 'rooms'])->name('rooms.index');
 });
