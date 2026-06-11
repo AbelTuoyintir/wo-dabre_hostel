@@ -110,6 +110,15 @@ Route::get('/storage/{path}', function ($path) {
     exit;
 })->where('path', '.*');
 
+// In routes/web.php
+Route::get('/run-migrations', function() {
+    if (app()->environment('local')) { // Only allow in local
+        Artisan::call('migrate', ['--force' => true]);
+        return Artisan::output();
+    }
+    abort(404);
+});
+
 
 
 require __DIR__.'/auth.php';
