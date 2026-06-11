@@ -111,12 +111,10 @@ Route::get('/storage/{path}', function ($path) {
 })->where('path', '.*');
 
 // In routes/web.php
-Route::get('/run-migrations', function() {
-    if (app()->environment('local')) { // Only allow in local
-        Artisan::call('migrate', ['--force' => true]);
-        return Artisan::output();
-    }
-    abort(404);
+Route::get('/run-migrations', function () {
+    Artisan::call('migrate', ['--force' => true]);
+
+    return Artisan::output();
 });
 
 
