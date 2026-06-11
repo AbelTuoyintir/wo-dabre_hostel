@@ -26,11 +26,11 @@ class HostelAgent extends Model
 
     public function commissions()
     {
-        return $this->hasMany(Commission::class, 'agent_id');
+        return $this->hasMany(AgentCommission::class, 'hostel_agent_id');
     }
 
     public function withdrawals()
     {
-        return $this->hasMany(Withdrawal::class, 'agent_id');
-    }       
+        return $this->hasMany(AgentWithdrawal::class, 'hostel_agent_id');
+    }
 }

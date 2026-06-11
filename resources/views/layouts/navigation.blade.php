@@ -70,6 +70,22 @@
             <span class="ml-auto text-xs font-semibold bg-slate-100 text-slate-600 py-0.5 px-2 rounded-full">24</span>
         </a>
 
+         <a href="{{ route('admin.agents.index') }}"
+           class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group
+                  {{ request()->routeIs('admin.agents.*')
+                     ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-200'
+                     : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
+            <span class="flex items-center justify-center w-8 h-8 rounded-lg {{ request()->routeIs('admin.agents.*') ? 'bg-blue-100' : 'bg-slate-100 group-hover:bg-white' }} transition-colors">
+                <svg class="w-5 h-5 {{ request()->routeIs('admin.users.*') ? 'text-blue-600' : 'text-slate-500 group-hover:text-slate-700' }}"
+                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                </svg>
+            </span>
+            <span>Agents</span>
+            <span class="ml-auto text-xs font-semibold bg-slate-100 text-slate-600 py-0.5 px-2 rounded-full">24</span>
+        </a>
+
         {{-- Hostels --}}
         <a href="{{ route('admin.hostels.index') }}"
            class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group

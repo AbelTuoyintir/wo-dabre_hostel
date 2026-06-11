@@ -1,5 +1,5 @@
 {{-- resources/views/admin/agents/commissions.blade.php --}}
-@extends('layouts.admin')
+@extends('layouts.app')
 
 @section('title', 'Agent Commissions - ' . $agent->user->name)
 @section('page-title', 'Commission History')

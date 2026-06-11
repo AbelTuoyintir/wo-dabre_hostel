@@ -1,5 +1,5 @@
 {{-- resources/views/admin/agents/index.blade.php --}}
-@extends('layouts.admin')
+@extends('layouts.app')
 
 @section('title', 'Hostel Agents Management')
 @section('page-title', 'Hostel Agents')
@@ -197,38 +197,46 @@
                         <td class="px-6 py-4 text-sm text-gray-500">
                             {{ $agent->created_at->format('d M Y') }}
                         </td>
-                        <td class="px-6 py-4 text-right">
+                        <td class="px-6 py-4">
                             <div class="flex justify-end gap-2">
                                 <a href="{{ route('admin.agents.show', $agent->id) }}" 
                                    class="text-blue-600 hover:text-blue-800" title="View Details">
-                                    <i class="fas fa-eye"></i>
+                                    {{-- resources/views/components/icons/eye.blade.php --}}
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                    </svg>
                                 </a>
                                 
                                 @if($agent->status == 'pending')
-                                    <button onclick="approveAgent({{ $agent->id }})" 
+                                        <button onclick="approveAgent({{ $agent->id }})" 
                                             class="text-green-600 hover:text-green-800" title="Approve">
-                                        <i class="fas fa-check-circle"></i>
+                                        {{-- resources/views/components/icons/check-circle.blade.php --}}
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
                                     </button>
                                 @endif
                                 
                                 @if($agent->status == 'active')
                                     <button onclick="suspendAgent({{ $agent->id }})" 
                                             class="text-yellow-600 hover:text-yellow-800" title="Suspend">
-                                        <i class="fas fa-pause-circle"></i>
+                                        {{-- resources/views/components/icons/chevron-left.blade.php --}}
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                                        </svg>
                                     </button>
                                 @endif
                                 
                                 @if($agent->status == 'suspended')
                                     <button onclick="activateAgent({{ $agent->id }})" 
                                             class="text-green-600 hover:text-green-800" title="Activate">
-                                        <i class="fas fa-play-circle"></i>
+                                        {{-- resources/views/components/icons/ban.blade.php --}}
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                                        </svg>
                                     </button>
                                 @endif
-                                
-                                <button onclick="deleteAgent({{ $agent->id }})" 
-                                        class="text-red-600 hover:text-red-800" title="Delete">
-                                    <i class="fas fa-trash"></i>
-                                </button>
                             </div>
                         </td>
                     </tr>
@@ -250,8 +258,7 @@
     </div>
 </div>
 
-@push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
     function approveAgent(agentId) {
         Swal.fire({
@@ -281,6 +288,9 @@
                     } else {
                         Swal.fire('Error!', data.error, 'error');
                     }
+                })
+                .catch(error => {
+                    Swal.fire('Error!', 'Something went wrong', 'error');
                 });
             }
         });
@@ -289,7 +299,7 @@
     function suspendAgent(agentId) {
         Swal.fire({
             title: 'Suspend Agent?',
-            text: 'The agent will lose access to the portal. Their hostels will remain visible.',
+            text: 'The agent will lose access to the portal.',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#ef4444',
@@ -311,7 +321,12 @@
                         Swal.fire('Suspended!', data.message, 'success').then(() => {
                             location.reload();
                         });
+                    } else {
+                        Swal.fire('Error!', data.error, 'error');
                     }
+                })
+                .catch(error => {
+                    Swal.fire('Error!', 'Something went wrong', 'error');
                 });
             }
         });
@@ -342,41 +357,18 @@
                         Swal.fire('Activated!', data.message, 'success').then(() => {
                             location.reload();
                         });
+                    } else {
+                        Swal.fire('Error!', data.error, 'error');
                     }
+                })
+                .catch(error => {
+                    Swal.fire('Error!', 'Something went wrong', 'error');
                 });
             }
         });
     }
     
-    function deleteAgent(agentId) {
-        Swal.fire({
-            title: 'Delete Agent?',
-            text: 'This action cannot be undone! All agent data will be permanently deleted.',
-            icon: 'error',
-            showCancelButton: true,
-            confirmButtonColor: '#ef4444',
-            cancelButtonColor: '#6b7280',
-            confirmButtonText: 'Yes, delete',
-            cancelButtonText: 'Cancel'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                fetch(`/admin/agents/${agentId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        Swal.fire('Deleted!', data.message, 'success').then(() => {
-                            location.reload();
-                        });
-                    }
-                });
-            }
-        });
-    }
+    
 </script>
-@endpush
+
 @endsection

@@ -1,5 +1,5 @@
 {{-- resources/views/admin/agents/withdrawals.blade.php --}}
-@extends('layouts.admin')
+@extends('layouts.app')
 
 @section('title', 'Agent Withdrawals - ' . $agent->user->name)
 @section('page-title', 'Withdrawal History')

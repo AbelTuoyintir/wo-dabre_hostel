@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\HostelController;
 use App\Http\Controllers\RoomController;
+use App\Http\Controllers\Admin\AgentManagementController;
 
 Route::middleware(['auth', 'admin'])
     ->prefix('admin')

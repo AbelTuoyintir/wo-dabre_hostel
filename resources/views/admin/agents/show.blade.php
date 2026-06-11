@@ -1,5 +1,5 @@
 {{-- resources/views/admin/agents/show.blade.php --}}
-@extends('layouts.admin')
+@extends('layouts.app')
 
 @section('title', 'Agent Details - ' . $agent->user->name)
 @section('page-title', 'Agent Details')
