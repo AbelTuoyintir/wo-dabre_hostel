@@ -393,7 +393,7 @@ class AgentPersonaTest extends TestCase
         ]);
 
         $withdrawal = AgentWithdrawal::create([
-            'agent_id' => $agent->id,
+            'hostel_agent_id' => $agent->id,
             'status' => 'pending',
             'amount' => 50.00,
             'payment_method' => 'mobile_money',

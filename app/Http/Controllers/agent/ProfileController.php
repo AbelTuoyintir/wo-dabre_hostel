@@ -109,7 +109,12 @@ class ProfileController extends Controller
     public function update(Request $request)
     {
         $agent = Auth::user()->agent;
-        
+
+        if (!$agent) {
+            return redirect()->route('agent.complete-profile')
+                ->with('warning', 'Please complete your agent profile first.');
+        }
+
         $request->validate([
             'phone' => 'required|string|unique:hostel_agents,phone,' . $agent->id,
             'address' => 'nullable|string',

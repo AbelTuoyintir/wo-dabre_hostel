@@ -45,7 +45,8 @@ class SettingsController extends Controller
         $user = Auth::user();
         
         if (!Hash::check($request->current_password, $user->password)) {
-            return back()->with('error', 'Current password is incorrect.');
+            return redirect()->route('agent.settings')
+                ->with('error', 'Current password is incorrect.');
         }
         
         $user->update([

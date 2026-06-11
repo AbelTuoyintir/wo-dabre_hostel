@@ -1,4 +1,7 @@
-- [ ] Fix HostelManagerDashboard booking stats query to use `bookings.booking_status` + `check_in_date/check_out_date` (not `status/check_in/check_out`).
-- [ ] Verify other queries in HostelManagerDashboard that reference `bookings.status`, `check_in`, or `check_out`.
+# TODO (Persona Tests Fix)
 
+- [ ] Fix HostelManagerMiddleware redirect for hostel-manager.dashboard when manager has no managed hostel.
+- [ ] Re-run failing tests (HostelManagerPersonaTest first).
+- [ ] Address any remaining view errors (agent.commissions.index not found) by verifying controller/view names.
+- [ ] Re-run full test suite to confirm all persona tests pass.
 

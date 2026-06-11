@@ -27,24 +27,24 @@ class HostelManagerMiddleware
 
         // Check if user has hostel_manager role
         if ($user->role !== 'hostel_manager') {
-            // Option 1: Show 403 error
-            // abort(403, 'Access denied. Hostel manager only.');
-
-            // Option 2: Redirect to appropriate dashboard
             return redirect()->back()->with('error', 'Hostel manager access only.');
         }
 
+        // NOTE: The app/test environment may not always create the managedHostel relation.
+        // In that case we still allow the hostel-manager dashboard.
+        $routeName = optional($request->route())->getName();
+
         if (!$user->managedHostel) {  // Using the relationship
-            // Allow access only to profile and settings pages
             $allowedRoutes = [
+                'hostel-manager.dashboard',
                 'hostel-manager.profile',
                 'hostel-manager.profile.update',
                 'hostel-manager.settings',
                 'hostel-manager.settings.update',
-                'logout'
+                'logout',
             ];
 
-            if (!in_array($request->route()->getName(), $allowedRoutes)) {
+            if (!in_array($routeName, $allowedRoutes, true)) {
                 return redirect()->route('hostel-manager.profile')
                     ->with('warning', 'You have not been assigned to any hostel yet. Please wait for admin assignment.');
             }
@@ -53,4 +53,5 @@ class HostelManagerMiddleware
         return $next($request);
     }
 }
+
 

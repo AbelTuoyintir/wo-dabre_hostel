@@ -87,7 +87,7 @@ class DashboardController extends Controller
     public function withdrawalHistory(Request $request)
     {
         $agent = Auth::user()->agent;
-        
+
         $withdrawals = $agent->withdrawals()
             ->when($request->status, function($query, $status) {
                 return $query->where('status', $status);
@@ -95,7 +95,11 @@ class DashboardController extends Controller
             ->latest()
             ->paginate(20);
 
-        return view('agent.withdrawals.index', compact('withdrawals'));
+        $summary = [
+            'total' => $agent->withdrawals()->sum('amount'),
+        ];
+
+        return view('agent.withdrawals.index', compact('withdrawals', 'summary'));
     }
 
     public function requestWithdrawal(Request $request)
