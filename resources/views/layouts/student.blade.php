@@ -22,6 +22,18 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
         .student-card {
             transition: all 0.3s;
         }
@@ -43,6 +55,10 @@
     @stack('styles')
 </head>
 <body class="font-sans antialiased bg-gray-100">
+    <!-- Loading Spinner (hidden by default) -->
+    <div id="loadingSpinner" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 z-[9999] flex items-center justify-center">
+        <div class="loader"></div>
+    </div>
     <div class="min-h-screen bg-gray-100">
         <!-- Top Navigation -->
         <nav class="bg-white shadow-lg" x-data="{ mobileOpen: false }">
@@ -250,6 +266,44 @@
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        // Loading spinner functions
+        function showLoading() {
+            const spinner = document.getElementById('loadingSpinner');
+            if (spinner) spinner.classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            const spinner = document.getElementById('loadingSpinner');
+            if (spinner) spinner.classList.add('hidden');
+        }
+
+        // Auto-show loader on form submissions and button clicks
+        document.addEventListener('DOMContentLoaded', function() {
+            // Show loader on all form submissions
+            document.querySelectorAll('form').forEach(form => {
+                form.addEventListener('submit', function() {
+                    if (!this.classList.contains('no-loader')) {
+                        showLoading();
+                    }
+                });
+            });
+
+            // Show loader on clicks for buttons and links
+            document.querySelectorAll('button:not([type="button"]), a.btn, a.show-loader').forEach(el => {
+                el.addEventListener('click', function(e) {
+                    if (this.tagName === 'A' && (this.getAttribute('href').startsWith('#') || this.getAttribute('target') === '_blank')) {
+                        return;
+                    }
+
+                    if (!this.classList.contains('no-loader') && !this.closest('form')) {
+                        showLoading();
+                    }
+                });
+            });
+        });
+    </script>
 
     @stack('scripts')
 </body>

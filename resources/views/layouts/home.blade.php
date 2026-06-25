@@ -290,6 +290,34 @@
             document.getElementById('loadingSpinner').classList.add('hidden');
         }
 
+        // Auto-show loader on form submissions and button clicks
+        document.addEventListener('DOMContentLoaded', function() {
+            // Show loader on all form submissions
+            document.querySelectorAll('form').forEach(form => {
+                form.addEventListener('submit', function() {
+                    // Don't show for forms that might have validation errors handled by JS
+                    // or for those with a specific 'no-loader' class
+                    if (!this.classList.contains('no-loader')) {
+                        showLoading();
+                    }
+                });
+            });
+
+            // Show loader on clicks for buttons and links that aren't just anchors
+            document.querySelectorAll('button:not([type="button"]), a.btn, a.show-loader').forEach(el => {
+                el.addEventListener('click', function(e) {
+                    // Check if it's not a simple anchor link or specifically excluded
+                    if (this.tagName === 'A' && (this.getAttribute('href').startsWith('#') || this.getAttribute('target') === '_blank')) {
+                        return;
+                    }
+
+                    if (!this.classList.contains('no-loader') && !this.closest('form')) {
+                        showLoading();
+                    }
+                });
+            });
+        });
+
         // Helper functions for SweetAlert toasts (can be used in custom JS)
         function showSuccessMessage(message) {
             Swal.fire({
