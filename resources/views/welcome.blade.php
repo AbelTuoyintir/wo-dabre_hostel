@@ -29,14 +29,14 @@
                         <label for="search_price" class="block text-[10px] font-bold uppercase text-slate-800">Price</label>
                         <select id="search_price" name="price_range" class="w-full text-sm text-slate-800 bg-transparent border-none focus:ring-0 p-0 appearance-none">
                             <option value="">Any price</option>
-                            <option value="0-500" {{ request('price_range') == '0-500' ? 'selected' : '' }}>Under ₵500</option>
-                            <option value="500-1000" {{ request('price_range') == '500-1000' ? 'selected' : '' }}>₵500 - ₵1000</option>
-                            <option value="1000-1500" {{ request('price_range') == '1000-1500' ? 'selected' : '' }}>₵1000 - ₵1500</option>
-                            <option value="1500-2000" {{ request('price_range') == '1500-2000' ? 'selected' : '' }}>₵1500 - ₵2000</option>
-                            <option value="2000+" {{ request('price_range') == '2000+' ? 'selected' : '' }}>Above ₵2000</option>
+                            <option value="0-2000" {{ request('price_range') == '0-2000' ? 'selected' : '' }}>Under ₵2000</option>
+                            <option value="2100-4000" {{ request('price_range') == '2100-4000' ? 'selected' : '' }}>₵2100 - ₵4000</option>
+                            <option value="4100-6000" {{ request('price_range') == '4100-6000' ? 'selected' : '' }}>₵4100 - ₵6000</option>
+                            <option value="6100-8000" {{ request('price_range') == '6100-8000' ? 'selected' : '' }}>₵6100 - ₵8000</option>
+                            <option value="8200+" {{ request('price_range') == '8200+' ? 'selected' : '' }}>Above ₵8200</option>
                         </select>
                     </div>
-                    <button type="submit" class="bg-rose-500 hover:bg-rose-600 text-white p-3 rounded-full flex items-center justify-center transition-colors">
+                    <button type="submit" class="bg-blue-500 hover:bg-rose-600 text-white p-3 rounded-full flex items-center justify-center transition-colors">
                         <i class="fas fa-search"></i>
                     </button>
                 </form>

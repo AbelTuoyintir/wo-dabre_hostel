@@ -49,11 +49,11 @@ class HostelController extends Controller
             $priceRange = $request->price_range;
 
             $query->whereHas('rooms', function($q) use ($priceRange) {
-                if ($priceRange == '0-500') {
-                    $q->where('room_cost', '<', 500);
-                } elseif ($priceRange == '500-1000') {
-                    $q->whereBetween('room_cost', [500, 1000]);
-                } elseif ($priceRange == '1000-1500') {
+                if ($priceRange == '0-2000') {
+                    $q->where('room_cost', '<', 2000);
+                } elseif ($priceRange == '2000-4000') {
+                    $q->whereBetween('room_cost', [2000, 4000]);
+                } elseif ($priceRange == '4000-1500') {
                     $q->whereBetween('room_cost', [1000, 1500]);
                 } elseif ($priceRange == '1500-2000') {
                     $q->whereBetween('room_cost', [1500, 2000]);
@@ -156,8 +156,10 @@ class HostelController extends Controller
                     'rating' => $hostel->rating,
                     'is_featured' => $hostel->is_featured,
                     'primary_image' => $hostel->primaryImage ? [
-                        'image_path' => $hostel->primaryImage->image_path
+                        // Accept both image_path and path column names
+                        'image_path' => $hostel->primaryImage->image_path ?? $hostel->primaryImage->path,
                     ] : null,
+
                     'images' => $hostel->images->map(function($image) {
                         return ['image_path' => $image->image_path];
                     }),
@@ -191,9 +193,12 @@ class HostelController extends Controller
 
         // For regular web requests - pass data to Blade view
         // Always pass data to view for server-side rendering
+        \Log::info('HostelController@index - query hostels count', ['count' => (clone $query)->count()]);
         $hostels = $query->paginate(12)->withQueryString();
+        \Log::info('HostelController@index - paginated hostels', ['total' => $hostels->total(), 'per_page' => $hostels->perPage(), 'current_page' => $hostels->currentPage(), 'transformed_will_map' => $hostels->count()]);
 
         // Transform hostels for Blade view
+
         $transformedHostels = $hostels->map(function($hostel) {
             return [
                 'id' => $hostel->id,
@@ -204,9 +209,12 @@ class HostelController extends Controller
                 'description' => $hostel->description,
                 'rating' => $hostel->rating,
                 'is_featured' => $hostel->is_featured,
-                'primary_image' => $hostel->primaryImage ? [
-                    'image_path' => $hostel->primaryImage->image_path
-                ] : null,
+                    'primary_image' => $hostel->primaryImage ? [
+                        // Accept both image_path and path column names
+                        'image_path' => $hostel->primaryImage->image_path ?? $hostel->primaryImage->path,
+                    ] : null,
+
+
                 'images' => $hostel->images->map(function($image) {
                     return ['image_path' => $image->image_path];
                 }),
