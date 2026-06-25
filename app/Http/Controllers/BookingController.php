@@ -472,7 +472,7 @@ class BookingController extends Controller
             try {
                 if ($isGuest) {
                     \Log::info('Routing to guest payment processor');
-                    $result = $this->processGuestPayment($paymentDetails, $metadata);
+                    $booking = $this->processGuestPayment($paymentDetails, $metadata);
                 } else {
                     \Log::info('Routing to student payment processor');
                     // For students, verify user_id exists
@@ -480,11 +480,15 @@ class BookingController extends Controller
                         \Log::error('Student payment missing user_id', ['metadata' => $metadata]);
                         throw new \Exception('Missing user ID for student payment');
                     }
-                    $result = $this->processStudentPayment($paymentDetails, $metadata);
+                    $booking = $this->processStudentPayment($paymentDetails, $metadata);
                 }
 
                 DB::commit();
-                return $result;
+
+                $successMessage = 'Payment successful! Your booking is confirmed.';
+
+                return redirect()->route('student.bookings.show', $booking)
+                    ->with('success', $successMessage);
 
             } catch (\Exception $e) {
                 DB::rollBack();
@@ -582,20 +586,30 @@ class BookingController extends Controller
      */
     private function finalizeBooking($paymentDetails, $bookingData, $user, $password = null, $isGuest = false)
     {
-        $room = Room::find($bookingData['room_id']);
+        // Use lockForUpdate to prevent race conditions during availability check and occupancy update
+        $room = Room::where('id', $bookingData['room_id'])->lockForUpdate()->first();
+
         if (!$room) {
             throw new \Exception('Room not found');
         }
 
+        // Double check payment status and reference for security
+        $paymentReference = $paymentDetails['data']['reference'];
+        $existingBooking = Booking::where('transaction_id', $paymentReference)->first();
+        if ($existingBooking) {
+            \Log::warning('Payment already processed for reference: ' . $paymentReference);
+            return $existingBooking;
+        }
+
         // Check room availability one last time
         if (!$this->checkRoomAvailability($bookingData['room_id'], $bookingData['check_in_date'], $bookingData['check_out_date'])) {
-            \Log::warning('Room no longer available');
+            \Log::warning('Room no longer available during finalization', ['room_id' => $room->id]);
 
-            if ($isGuest) {
+            if ($isGuest && $user) {
                 $user->delete();
             }
 
-            throw new \Exception('Room no longer available');
+            throw new \Exception('Room no longer available. Please contact support for a refund.');
         }
 
         // Gender validation
@@ -700,13 +714,7 @@ class BookingController extends Controller
             \Log::error('Failed to send confirmation email: ' . $mailException->getMessage());
         }
 
-        $successMessage = 'Payment successful! Your booking is confirmed.';
-        if ($password) {
-            $successMessage .= ' Your login credentials have been sent to your email.';
-        }
-
-        return redirect()->route('student.bookings.show', $booking)
-            ->with('success', $successMessage);
+        return $booking;
     }
 
     /**
@@ -937,4 +945,3 @@ class BookingController extends Controller
         }
     }
 }
-

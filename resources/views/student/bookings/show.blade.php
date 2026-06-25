@@ -158,6 +158,13 @@
                         </button>
                     @endif
 
+                    @if(in_array($booking->status, ['completed', 'checked_out']) && !$booking->review)
+                        <a href="{{ route('student.reviews.create', ['booking_id' => $booking->id]) }}"
+                           class="block w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-center">
+                            <i class="fas fa-star mr-2"></i>Rate Hostel
+                        </a>
+                    @endif
+
                     <a href="{{ route('student.complaints', ['booking' => $booking->id]) }}"
                        class="block w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition text-center">
                         <i class="fas fa-exclamation-triangle mr-2"></i>Report Issue

@@ -155,6 +155,14 @@ class StudentController extends Controller
 
             if ($paymentDetails['status'] && $paymentDetails['data']['status'] === 'success') {
 
+                // Security check: Verify if this payment reference has already been processed
+                $existingPayment = Payment::where('reference', $paymentDetails['data']['reference'])->first();
+                if ($existingPayment) {
+                    \Log::warning('Fee payment already processed', ['reference' => $paymentDetails['data']['reference']]);
+                    return redirect()->route('student.payment')
+                        ->with('info', 'This payment has already been processed.');
+                }
+
                 // FIX: Handle metadata safely - it could be array or string
                 $metadata = $paymentDetails['data']['metadata'];
 
@@ -362,7 +370,7 @@ class StudentController extends Controller
         if ($bookingId) {
             $booking = Booking::where('user_id', Auth::id())
                 ->where('id', $bookingId)
-                ->where('booking_status', 'checked_out')
+                ->whereIn('booking_status', ['checked_out', 'completed'])
                 ->with('room.hostel')
                 ->firstOrFail();
 
@@ -436,7 +444,7 @@ class StudentController extends Controller
         // Verify user has completed a booking at this hostel
         $hasCompletedBooking = Booking::where('user_id', Auth::id())
             ->where('hostel_id', $validated['hostel_id'])
-            ->where('booking_status', 'checked_out')
+            ->whereIn('booking_status', ['checked_out', 'completed'])
             ->exists();
 
         if (!$hasCompletedBooking) {
