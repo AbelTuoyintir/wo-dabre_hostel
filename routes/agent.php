@@ -8,6 +8,8 @@ use App\Http\Controllers\Agent\AgentRegisterController as AgentRegisterControlle
 // routes/controllers still reference the older FQCN.
 if (!class_exists(AgentRegisterControllerCompat::class)) {
     class_alias(AgentRegisterControllerCompat::class, \App\Http\Controllers\Agent\AgentRegisterController::class);
+}
+
 use App\Http\Controllers\Agent\DashboardController;
 use App\Http\Controllers\Agent\HostelManagementController;
 use App\Http\Controllers\Agent\ProfileController;
