@@ -2,6 +2,12 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Agent\AgentRegisterController;
+use App\Http\Controllers\Agent\AgentRegisterController as AgentRegisterControllerCompat;
+
+// Backwards-compatible alias to avoid runtime ReflectionException if some
+// routes/controllers still reference the older FQCN.
+if (!class_exists(AgentRegisterControllerCompat::class)) {
+    class_alias(AgentRegisterControllerCompat::class, \App\Http\Controllers\Agent\AgentRegisterController::class);
 use App\Http\Controllers\Agent\DashboardController;
 use App\Http\Controllers\Agent\HostelManagementController;
 use App\Http\Controllers\Agent\ProfileController;
