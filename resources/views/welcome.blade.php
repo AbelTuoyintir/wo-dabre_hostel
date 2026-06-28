@@ -124,9 +124,16 @@
                                     </div>
                                 @endif
                                 
-                                <button class="absolute top-3 right-3 text-white text-xl drop-shadow-md">
+                                <button class="absolute top-3 right-3 text-white text-xl drop-shadow-md z-10 hover:scale-110 transition-transform">
                                     <i class="far fa-heart"></i>
                                 </button>
+
+                                <label class="absolute top-3 left-3 z-10 cursor-pointer" onclick="event.stopPropagation()">
+                                    <input type="checkbox" class="compare-checkbox hidden" data-id="{{ $hostel['uuid'] ?? $hostel['id'] }}" data-name="{{ $hostel['name'] }}" data-image="{{ $imageUrl }}">
+                                    <div class="bg-white/90 p-2 rounded-full shadow-sm border border-slate-200 hover:bg-white transition-colors flex items-center justify-center w-8 h-8 group-has-[:checked]:bg-rose-500 group-has-[:checked]:border-rose-500">
+                                        <i class="fas fa-plus text-[10px] text-slate-600 group-has-[:checked]:text-white group-has-[:checked]:fa-check"></i>
+                                    </div>
+                                </label>
 
                                 <div class="absolute bottom-3 left-3 right-3 flex justify-between items-end opacity-0 group-hover:opacity-100 transition-opacity">
                                      <span class="bg-white/90 text-slate-800 text-[10px] font-bold px-2 py-1 rounded shadow-sm">
@@ -176,11 +183,29 @@
     </section>
 
     <!-- FLOATING MAP BUTTON -->
-    <div class="fixed bottom-24 left-1/2 -translate-x-1/2 z-30 md:bottom-10">
+    <div id="map-button" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-30 md:bottom-10 transition-all duration-300">
         <button class="bg-slate-800 hover:bg-slate-900 text-white px-5 py-3 rounded-full flex items-center gap-2 shadow-xl hover:scale-105 transition-all text-sm font-bold">
             <span>Show Map</span>
             <i class="fas fa-map"></i>
         </button>
+    </div>
+
+    <!-- FLOATING COMPARISON BAR -->
+    <div id="comparison-bar" class="fixed bottom-24 left-0 right-0 z-40 px-4 md:bottom-10 hidden">
+        <div class="max-w-3xl mx-auto bg-white rounded-2xl shadow-2xl border border-slate-200 p-3 flex items-center justify-between gap-4">
+            <div class="flex items-center gap-3 overflow-x-auto no-scrollbar" id="selected-hostels">
+                <!-- Selected hostels will be injected here -->
+            </div>
+            <div class="flex items-center gap-2">
+                <span id="compare-count" class="text-xs font-bold text-slate-500 min-w-max">0 selected</span>
+                <button id="compare-btn" class="bg-rose-500 hover:bg-rose-600 text-white px-6 py-2 rounded-xl text-sm font-bold transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    Compare
+                </button>
+                <button id="clear-compare" class="text-slate-400 hover:text-slate-600 p-2 transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
     </div>
 
     <!-- MOBILE BOTTOM NAVIGATION (Airbnb style) -->
@@ -240,3 +265,80 @@
         }
     </style>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const checkboxes = document.querySelectorAll('.compare-checkbox');
+        const comparisonBar = document.getElementById('comparison-bar');
+        const mapButton = document.getElementById('map-button');
+        const selectedContainer = document.getElementById('selected-hostels');
+        const compareBtn = document.getElementById('compare-btn');
+        const compareCount = document.getElementById('compare-count');
+        const clearBtn = document.getElementById('clear-compare');
+
+        let selectedHostels = [];
+
+        function updateBar() {
+            if (selectedHostels.length > 0) {
+                comparisonBar.classList.remove('hidden');
+                mapButton.classList.add('opacity-0', 'pointer-events-none');
+
+                selectedContainer.innerHTML = selectedHostels.map(h => `
+                    <div class="relative min-w-[50px] group">
+                        <img src="${h.image}" class="w-12 h-12 rounded-lg object-cover border-2 border-rose-500">
+                        <button onclick="removeHostel('${h.id}')" class="absolute -top-2 -right-2 bg-slate-800 text-white rounded-full w-5 h-5 flex items-center justify-center text-[8px] border border-white">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `).join('');
+
+                compareCount.innerText = \`\${selectedHostels.length} selected\`;
+                compareBtn.disabled = selectedHostels.length < 2;
+            } else {
+                comparisonBar.classList.add('hidden');
+                mapButton.classList.remove('opacity-0', 'pointer-events-none');
+            }
+        }
+
+        window.removeHostel = function(id) {
+            selectedHostels = selectedHostels.filter(h => h.id !== id);
+            const cb = document.querySelector(\`.compare-checkbox[data-id="\${id}"]\`);
+            if (cb) cb.checked = false;
+            updateBar();
+        };
+
+        checkboxes.forEach(cb => {
+            cb.addEventListener('change', function() {
+                const id = this.dataset.id;
+                if (this.checked) {
+                    if (selectedHostels.length >= 4) {
+                        this.checked = false;
+                        showWarningMessage('You can compare up to 4 hostels.');
+                        return;
+                    }
+                    selectedHostels.push({
+                        id: id,
+                        name: this.dataset.name,
+                        image: this.dataset.image
+                    });
+                } else {
+                    selectedHostels = selectedHostels.filter(h => h.id !== id);
+                }
+                updateBar();
+            });
+        });
+
+        compareBtn.addEventListener('click', function() {
+            const ids = selectedHostels.map(h => h.id).join(',');
+            window.location.href = \`{{ route('hostels.compare') }}?ids=\${ids}\`;
+        });
+
+        clearBtn.addEventListener('click', function() {
+            selectedHostels = [];
+            checkboxes.forEach(cb => cb.checked = false);
+            updateBar();
+        });
+    });
+</script>
+@endpush

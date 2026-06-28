@@ -496,6 +496,32 @@ class HostelController extends Controller
     return view('admin.hostels.guestShow', compact('hostel', 'availableRooms', 'similarHostels', 'locations'));
 }
 
+    /**
+     * Compare selected hostels
+     */
+    public function compare(Request $request)
+    {
+        $ids = explode(',', $request->query('ids', ''));
+        $ids = array_filter($ids);
+
+        if (empty($ids)) {
+            return redirect()->route('hostels.index')->with('warning', 'Please select hostels to compare.');
+        }
+
+        $hostels = Hostel::whereIn('uuid', $ids)
+            ->orWhereIn('id', $ids)
+            ->where('is_approved', true)
+            ->where('status', 'active')
+            ->with(['primaryImage', 'rooms'])
+            ->get();
+
+        if ($hostels->isEmpty()) {
+            return redirect()->route('hostels.index')->with('error', 'Selected hostels could not be found.');
+        }
+
+        return view('hostels.compare', compact('hostels'));
+    }
+
     private function resolveHostelByRouteKey(string $value): Hostel
     {
         return Hostel::query()

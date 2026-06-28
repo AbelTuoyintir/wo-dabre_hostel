@@ -203,6 +203,37 @@
                                     </div>
                                 </div>
 
+                                <!-- Compatibility Badge (if logged in and room has occupants) -->
+                                @auth
+                                    @php
+                                        $occupants = $room->occupants();
+                                        $userPrefs = auth()->user()->preferences ?? [];
+                                    @endphp
+
+                                    @if($occupants->count() > 0 && !empty($userPrefs))
+                                        @php
+                                            $totalMatches = 0;
+                                            $totalOccupants = $occupants->count();
+                                            foreach($occupants as $occupant) {
+                                                $occPrefs = $occupant->preferences ?? [];
+                                                $matches = 0;
+                                                foreach($userPrefs as $key => $val) {
+                                                    if(isset($occPrefs[$key]) && $occPrefs[$key] === $val) $matches++;
+                                                }
+                                                $totalMatches += ($matches / count($userPrefs));
+                                            }
+                                            $compatibility = round(($totalMatches / $totalOccupants) * 100);
+                                        @endphp
+                                        <div class="bg-gradient-to-r from-rose-50 to-rose-100 border border-rose-200 rounded-lg p-2 flex items-center justify-between">
+                                            <div class="flex items-center gap-2">
+                                                <i class="fas fa-heart text-rose-500 animate-pulse text-xs"></i>
+                                                <span class="text-[10px] font-bold text-rose-700 uppercase">Roommate Match</span>
+                                            </div>
+                                            <span class="text-xs font-black text-rose-600">{{ $compatibility }}%</span>
+                                        </div>
+                                    @endif
+                                @endauth
+
                                 <!-- Features -->
                                 <div class="flex flex-wrap gap-2">
                                     @if($room->furnished)
