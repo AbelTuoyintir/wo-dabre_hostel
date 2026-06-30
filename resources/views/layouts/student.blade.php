@@ -56,9 +56,7 @@
 </head>
 <body class="font-sans antialiased bg-gray-100">
     <!-- Loading Spinner (hidden by default) -->
-    <div id="loadingSpinner" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 z-[9999] flex items-center justify-center">
-        <div class="loader"></div>
-    </div>
+   
     <div class="min-h-screen bg-gray-100">
         <!-- Top Navigation -->
         <nav class="bg-white shadow-lg" x-data="{ mobileOpen: false }">
@@ -125,9 +123,9 @@
                                 </button>
 
                                 <div x-show="open" @click.outside="open = false"
-                                     class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-1 z-50">
+                                    class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-1 z-50">
                                     <a href="{{ route('student.profile') }}"
-                                       class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                         <i class="fas fa-user mr-2"></i> Profile
                                     </a>
                                     <hr class="my-1">
@@ -183,7 +181,7 @@
                     <form method="POST" action="{{ route('logout') }}" class="block">
                         @csrf
                         <button type="submit" class="w-full text-left px-3 py-2 text-base font-medium text-red-600 hover:bg-red-50">
-                            <i class="fas fa-sign-out-alt mr-2 w-5"></i>Logout
+                            </i>Logout
                         </button>
                     </form>
                 </div>
@@ -200,6 +198,9 @@
                 @endif
             </div>
         </div>
+         <div id="loadingSpinner" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 z-[9999] flex items-center justify-center">
+        <div class="loader"></div>
+    </div>
 
         <!-- Page Content -->
         <main class="py-8">
@@ -268,7 +269,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        // Loading spinner functions
+       // Loading spinner functions
         function showLoading() {
             const spinner = document.getElementById('loadingSpinner');
             if (spinner) spinner.classList.remove('hidden');
@@ -281,26 +282,100 @@
 
         // Auto-show loader on form submissions and button clicks
         document.addEventListener('DOMContentLoaded', function() {
-            // Show loader on all form submissions
-            document.querySelectorAll('form').forEach(form => {
-                form.addEventListener('submit', function() {
-                    if (!this.classList.contains('no-loader')) {
+            // Show loader on form submissions (except those with no-loader or in modals/popups)
+            document.querySelectorAll('form:not(.no-loader)').forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    // Skip if form is inside a modal, popup, or dropdown
+                    if (this.closest('[role="dialog"]') || 
+                        this.closest('.modal') || 
+                        this.closest('.popup') || 
+                        this.closest('.dropdown') ||
+                        this.closest('[x-data]') ||
+                        this.closest('[data-no-loader]')) {
+                        return;
+                    }
+                    showLoading();
+                });
+            });
+
+            // Show loader on clicks for buttons and links
+            document.querySelectorAll('button:not([type="button"]):not(.no-loader), a.btn:not(.no-loader), a.show-loader:not(.no-loader)').forEach(el => {
+                el.addEventListener('click', function(e) {
+                    // Skip if element is inside a modal, popup, or dropdown
+                    if (this.closest('[role="dialog"]') || 
+                        this.closest('.modal') || 
+                        this.closest('.popup') || 
+                        this.closest('.dropdown') ||
+                        this.closest('[x-data]') ||
+                        this.closest('[data-no-loader]')) {
+                        return;
+                    }
+
+                    // Skip dropdown toggle buttons
+                    if (this.closest('[x-data]') && this.getAttribute('@click')?.includes('open')) {
+                        return;
+                    }
+
+                    // Skip if it's inside a dropdown menu
+                    if (this.closest('[x-data]') && this.closest('.absolute')) {
+                        return;
+                    }
+
+                    // Skip anchor links and external links
+                    if (this.tagName === 'A' && (this.getAttribute('href')?.startsWith('#') || this.getAttribute('target') === '_blank')) {
+                        return;
+                    }
+
+                    // Skip quick actions
+                    if (this.closest('.fixed.bottom-6.right-6') || this.closest('#quickActionsMenu')) {
+                        return;
+                    }
+
+                    if (!this.closest('form')) {
                         showLoading();
                     }
                 });
             });
 
-            // Show loader on clicks for buttons and links
-            document.querySelectorAll('button:not([type="button"]), a.btn, a.show-loader').forEach(el => {
-                el.addEventListener('click', function(e) {
-                    if (this.tagName === 'A' && (this.getAttribute('href').startsWith('#') || this.getAttribute('target') === '_blank')) {
-                        return;
-                    }
+            // Handle modal/popup events - ensure loader doesn't show
+            document.addEventListener('show.bs.modal', function() {
+                // Bootstrap modal shown - ensure loader is hidden
+                hideLoading();
+            });
 
-                    if (!this.classList.contains('no-loader') && !this.closest('form')) {
-                        showLoading();
-                    }
-                });
+            document.addEventListener('hidden.bs.modal', function() {
+                // Bootstrap modal hidden
+                hideLoading();
+            });
+
+            // Alpine.js events
+            document.addEventListener('alpine:init', function() {
+                // Hide loader when Alpine components initialize
+                hideLoading();
+            });
+        });
+
+        // Override for specific popup/dropdown interactions
+        function handlePopupAction(action) {
+            // Don't show loader for popup actions
+            // Just perform the action
+            action();
+        }
+
+        // Utility function to safely handle form submissions in modals
+        function handleModalFormSubmit(formElement) {
+            formElement.addEventListener('submit', function(e) {
+                e.preventDefault();
+                // Process form without showing loader
+                // Add your form processing logic here
+                console.log('Modal form submitted without loader');
+            });
+        }
+
+        // Handle all modal forms
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.modal form, [role="dialog"] form, .popup form').forEach(form => {
+                form.classList.add('no-loader');
             });
         });
     </script>

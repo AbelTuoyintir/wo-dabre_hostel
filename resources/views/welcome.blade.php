@@ -73,18 +73,23 @@
                 @endif
 
                 <!-- More categories based on amenities or features -->
-                <button class="flex flex-col items-center gap-2 group min-w-max border-b-2 border-transparent opacity-60 hover:opacity-100 hover:border-slate-200 pb-2 transition-all">
+                <a href="{{ route('hostels.index', array_merge(request()->except('amenities'), ['amenities' => 'wifi'])) }}"
+                   class="flex flex-col items-center gap-2 group min-w-max border-b-2 {{ request('amenities') == 'wifi' ? 'border-slate-800 opacity-100' : 'border-transparent opacity-60 hover:opacity-100 hover:border-slate-200' }} pb-2 transition-all">
                     <i class="fas fa-wifi text-xl"></i>
                     <span class="text-xs font-medium">Free WiFi</span>
-                </button>
-                <button class="flex flex-col items-center gap-2 group min-w-max border-b-2 border-transparent opacity-60 hover:opacity-100 hover:border-slate-200 pb-2 transition-all">
+                </a>
+
+                <a href="{{ route('hostels.index', array_merge(request()->except('amenities'), ['amenities' => 'security'])) }}"
+                   class="flex flex-col items-center gap-2 group min-w-max border-b-2 {{ request('amenities') == 'security' ? 'border-slate-800 opacity-100' : 'border-transparent opacity-60 hover:opacity-100 hover:border-slate-200' }} pb-2 transition-all">
                     <i class="fas fa-shield-alt text-xl"></i>
                     <span class="text-xs font-medium">Security</span>
-                </button>
-                <button class="flex flex-col items-center gap-2 group min-w-max border-b-2 border-transparent opacity-60 hover:opacity-100 hover:border-slate-200 pb-2 transition-all">
+                </a>
+
+                <a href="{{ route('hostels.index', array_merge(request()->except('amenities'), ['amenities' => 'instant'])) }}"
+                   class="flex flex-col items-center gap-2 group min-w-max border-b-2 {{ request('amenities') == 'instant' ? 'border-slate-800 opacity-100' : 'border-transparent opacity-60 hover:opacity-100 hover:border-slate-200' }} pb-2 transition-all">
                     <i class="fas fa-bolt text-xl"></i>
                     <span class="text-xs font-medium">Instant</span>
-                </button>
+                </a>
 
                 <div class="ml-auto md:flex hidden">
                     <button class="flex items-center gap-2 border border-slate-200 rounded-xl px-4 py-2 text-xs font-medium hover:bg-slate-50 transition">

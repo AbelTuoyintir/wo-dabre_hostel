@@ -320,28 +320,27 @@
 
 <!-- Quick Actions -->
 <div class="fixed bottom-6 right-6">
-    <button onclick="showQuickActions()"
-            class="bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition">
+    <button onclick="showQuickActions()" data-no-loader="true"
+            class="bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition no-loader">
         <i class="fas fa-plus text-xl"></i>
     </button>
 
     <!-- Quick Actions Menu (Hidden by default) -->
-    <div id="quickActionsMenu" class="hidden absolute bottom-16 right-0 bg-white rounded-lg shadow-xl p-2 w-48">
-        <a href="{{ route('student.hostels.browse') }}"
+    <div id="quickActionsMenu" class="hidden absolute bottom-16 right-0 bg-white rounded-lg shadow-xl p-2 w-48 no-loader">
+        <a href="{{ route('student.hostels.browse') }}" data-no-loader="true"
            class="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">
             <i class="fas fa-building mr-2"></i>Browse Hostels
         </a>
-        <a href="{{ route('student.complaints') }}"
+        <a href="{{ route('student.complaints') }}" data-no-loader="true"
            class="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">
             <i class="fas fa-exclamation-triangle mr-2"></i>Submit Complaint
         </a>
-        <a href="{{ route('student.profile') }}"
+        <a href="{{ route('student.profile') }}" data-no-loader="true"
            class="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">
             <i class="fas fa-user mr-2"></i>Update Profile
         </a>
     </div>
 </div>
-
 @push('scripts')
 <script>
 function showQuickActions() {

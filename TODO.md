@@ -1,7 +1,8 @@
-# TODO (Persona Tests Fix)
+# TODO
 
-- [ ] Fix HostelManagerMiddleware redirect for hostel-manager.dashboard when manager has no managed hostel.
-- [ ] Re-run failing tests (HostelManagerPersonaTest first).
-- [ ] Address any remaining view errors (agent.commissions.index not found) by verifying controller/view names.
-- [ ] Re-run full test suite to confirm all persona tests pass.
+- [x] Identify missing behavior: amenity “buttons” had no link/submit action.
+- [x] Update `resources/views/welcome.blade.php` to make those filters functional via query-string links.
+- [ ] Ensure amenity keys used in query string match backend JSON keys expected by `HostelController@index` (`whereJsonContains('amenities', ...)`).
+- [ ] Test by visiting `/` and clicking those filters; verify URL query params change and results update.
+
 
