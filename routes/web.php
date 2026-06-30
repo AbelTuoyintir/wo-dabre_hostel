@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Log;
 // Public hostel routes (for the welcome page)
 Route::get('/', [HostelController::class, 'index'])->name('hostels.index');
 Route::get('/hostels/locations', [HostelController::class, 'getLocations'])->name('hostels.locations');
+Route::get('/hostels/compare', [HostelController::class, 'compare'])->name('hostels.compare');
 Route::get('/hostels/{hostel:uuid}', [HostelController::class, 'guestShow'])->name('hostels.guest.show');
 
 
