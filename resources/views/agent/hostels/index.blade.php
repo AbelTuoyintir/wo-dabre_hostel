@@ -163,7 +163,8 @@
 <script>
 function openDeleteModal(hostelId, hostelName) {
     document.getElementById('deleteMessage').textContent = `Are you sure you want to delete "${hostelName}"? This action cannot be undone.`;
-    document.getElementById('deleteForm').action = `{{ route('agent.hostels.destroy', '') }}/${hostelId}`;
+    const deleteUrl = "{{ route('agent.hostels.destroy', ['hostel' => '__HOSTEL_ID__']) }}".replace('__HOSTEL_ID__', hostelId);
+    document.getElementById('deleteForm').action = deleteUrl;
     document.getElementById('deleteModal').classList.remove('hidden');
 }
 
