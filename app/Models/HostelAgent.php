@@ -42,4 +42,36 @@ class HostelAgent extends Model
     {
         return $this->hasMany(AgentWithdrawal::class, 'hostel_agent_id');
     }
+
+    public function addCommission($amount, $type, $description = null, $hostelId = null, $bookingId = null, $commissionPercentage = null)
+    {
+        $amount = (float) $amount;
+        $commissionPercentage = $commissionPercentage ?? 20;
+
+        $commission = $this->commissions()->create([
+            'hostel_id' => $hostelId,
+            'booking_id' => $bookingId,
+            'amount' => $amount,
+            'commission_percentage' => $commissionPercentage,
+            'type' => $type,
+            'status' => 'pending',
+            'description' => $description,
+        ]);
+
+        $this->total_commission = (float) $this->total_commission + $amount;
+        $this->available_balance = (float) $this->available_balance + $amount;
+        $this->save();
+
+        return $commission;
+    }
+
+    public function deductFromBalance($amount)
+    {
+        $amount = (float) $amount;
+
+        $this->available_balance = max(0, (float) $this->available_balance - $amount);
+        $this->save();
+
+        return $this;
+    }
 }

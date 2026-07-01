@@ -105,6 +105,19 @@
                                 <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                             @enderror
                         </div>
+
+                        <div>
+                            <label for="agent_fee" class="block text-xs font-medium text-gray-700 mb-1">
+                                Agent Fee (GHS)
+                            </label>
+                            <input type="number" step="0.01" min="0" 
+                                   class="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('agent_fee') border-red-500 @enderror" 
+                                   id="agent_fee" name="agent_fee" value="{{ old('agent_fee', 100) }}">
+                            <p class="mt-1 text-xs text-gray-500">The system keeps 20% and credits you with the remaining 80%.</p>
+                            @error('agent_fee')
+                                <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                            @enderror
+                        </div>
                     </div>
                 </div>
 

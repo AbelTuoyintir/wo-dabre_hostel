@@ -610,4 +610,26 @@ class HostelController extends Controller
 
         return view('admin.hostels.amenities', compact('hostel', 'amenities', 'groupedAmenities'));
     }
+
+    public function seedAmenities()
+{
+    $amenities = [
+        ['name' => 'Water', 'icon' => 'droplet'],
+        ['name' => 'Electricity', 'icon' => 'bolt'],
+        ['name' => 'Kitchenette', 'icon' => 'utensils'],
+        ['name' => 'Parking Area', 'icon' => 'parking'],
+        ['name' => 'Standby Generator', 'icon' => 'generator'],
+        ['name' => 'DSTV', 'icon' => 'tv'],
+        ['name' => 'Internet', 'icon' => 'wifi'],
+    ];
+
+    foreach ($amenities as $amenity) {
+        Amenity::firstOrCreate(
+            ['name' => $amenity['name']],
+            ['icon' => $amenity['icon']]
+        );
+    }
+
+    return redirect()->back()->with('success', 'Amenities seeded successfully!');
+}
 }

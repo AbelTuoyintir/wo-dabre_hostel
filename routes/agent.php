@@ -55,7 +55,7 @@ Route::prefix('agent')->name('agent.')->middleware(['auth', 'hostel.agent'])->gr
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
         
         // Hostel Management
-        Route::resource('hostels', HostelManagementController::class);
+        Route::resource('hostels', HostelManagementController::class); 
         Route::post('/hostels/{hostel}/rooms', [HostelManagementController::class, 'addRoom'])->name('hostels.add-room');
         Route::delete('/hostels/{hostel}/rooms/{room}', [HostelManagementController::class, 'deleteRoom'])->name('hostels.delete-room');
         

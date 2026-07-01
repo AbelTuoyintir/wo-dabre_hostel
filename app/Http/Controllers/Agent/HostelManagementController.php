@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Agent;
 
 use App\Http\Controllers\Controller;
+use App\Models\Amenity;
 use App\Models\Hostel;
 use App\Models\Room;
-use App\Models\Amenity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
@@ -40,6 +40,7 @@ class HostelManagementController extends Controller
             'address' => 'required|string',
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
+            'agent_fee' => 'nullable|numeric|min:0',
             'amenities' => 'array',
             'images.*' => 'image|max:5120',
             'featured_image' => 'required|image|max:5120'
@@ -85,12 +86,18 @@ class HostelManagementController extends Controller
             }
         }
 
-        // Add commission for hostel addition
+        // Add a hostel registration fee for the agent while the system keeps 20% of the amount.
+        $agentFee = (float) ($request->input('agent_fee', 100));
+        $platformShare = round($agentFee * 0.20, 2);
+        $agentCredit = round($agentFee - $platformShare, 2);
+
         $agent->addCommission(
-            100.00,
+            $agentCredit,
             'hostel_added',
             "Commission for adding hostel: {$hostel->name}",
-            $hostel->id
+            $hostel->id,
+            null,
+            20
         );
         $agent->increment('total_hostels_added');
 
