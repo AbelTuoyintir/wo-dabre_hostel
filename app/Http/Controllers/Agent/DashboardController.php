@@ -8,6 +8,7 @@ use App\Models\Hostel;
 use App\Models\Room;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 
 class DashboardController extends Controller
 {
@@ -20,21 +21,41 @@ class DashboardController extends Controller
     public function index()
     {
         $agent = Auth::user()->agent;
+        $hostelQuery = $this->getAgentHostelQuery($agent);
         
         $stats = [
-            'total_hostels' => $agent->total_hostels_added,
-            'total_rooms' => $agent->total_rooms_added,
-            'pending_hostels' => Hostel::where('agent_id', $agent->id)->where('status', 'pending')->count(),
-            'published_hostels' => Hostel::where('agent_id', $agent->id)->where('status', 'approved')->count(),
-            'total_commission' => $agent->total_commission,
-            'available_balance' => $agent->available_balance,
-            'pending_withdrawals' => $agent->withdrawals()->where('status', 'pending')->sum('amount'),
+            'total_hostels' => $agent->total_hostels_added ?? 0,
+            'total_rooms' => $agent->total_rooms_added ?? 0,
+            'pending_hostels' => (clone $hostelQuery)->where('status', 'pending')->count(),
+            'published_hostels' => (clone $hostelQuery)->where('status', 'approved')->count(),
+            'total_commission' => $agent->total_commission ?? 0,
+            'available_balance' => $agent->available_balance ?? 0,
+            'pending_withdrawals' => $agent->withdrawals()->where('status', 'pending')->sum('amount') ?? 0,
             'recent_commissions' => $agent->commissions()->latest()->take(5)->get(),
             'recent_withdrawals' => $agent->withdrawals()->latest()->take(5)->get(),
             'chart_data' => $this->getCommissionChartData($agent)
         ];
 
         return view('agent.dashboard', compact('stats', 'agent'));
+    }
+
+    private function getAgentHostelQuery($agent)
+    {
+        $query = Hostel::query();
+
+        if (Schema::hasColumn('hostels', 'agent_id')) {
+            return $query->where('agent_id', $agent->id);
+        }
+
+        if (Schema::hasColumn('hostels', 'hostel_agent_id')) {
+            return $query->where('hostel_agent_id', $agent->id);
+        }
+
+        if (Schema::hasColumn('hostels', 'user_id')) {
+            return $query->where('user_id', $agent->user_id);
+        }
+
+        return $query->whereRaw('1 = 0');
     }
 
     private function getCommissionChartData($agent)

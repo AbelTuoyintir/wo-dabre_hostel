@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Schema;
 
 class HostelAgent extends Model
 {
@@ -21,7 +22,15 @@ class HostelAgent extends Model
 
     public function hostels()
     {
-        return $this->hasMany(Hostel::class, 'agent_id');
+        if (Schema::hasColumn('hostels', 'agent_id')) {
+            return $this->hasMany(Hostel::class, 'agent_id');
+        }
+
+        if (Schema::hasColumn('hostels', 'hostel_agent_id')) {
+            return $this->hasMany(Hostel::class, 'hostel_agent_id');
+        }
+
+        return $this->hasMany(Hostel::class, 'user_id', 'user_id');
     }
 
     public function commissions()

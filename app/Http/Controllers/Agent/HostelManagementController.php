@@ -7,8 +7,9 @@ use App\Models\Hostel;
 use App\Models\Room;
 use App\Models\Amenity;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 
 class HostelManagementController extends Controller
 {
@@ -16,7 +17,7 @@ class HostelManagementController extends Controller
     {
         $agent = Auth::user()->agent;
         
-        $hostels = Hostel::where('agent_id', $agent->id)
+        $hostels = $this->getAgentHostelQuery($agent)
             ->withCount('rooms')
             ->latest()
             ->paginate(10);
@@ -49,8 +50,7 @@ class HostelManagementController extends Controller
         // Upload featured image
         $featuredPath = $request->file('featured_image')->store('hostels', 'public');
 
-        $hostel = Hostel::create([
-            'agent_id' => $agent->id,
+        $hostelData = [
             'name' => $request->name,
             'description' => $request->description,
             'location' => $request->location,
@@ -60,7 +60,17 @@ class HostelManagementController extends Controller
             'featured_image' => $featuredPath,
             'status' => 'pending',
             'is_verified' => false
-        ]);
+        ];
+
+        if (Schema::hasColumn('hostels', 'agent_id')) {
+            $hostelData['agent_id'] = $agent->id;
+        } elseif (Schema::hasColumn('hostels', 'hostel_agent_id')) {
+            $hostelData['hostel_agent_id'] = $agent->id;
+        } elseif (Schema::hasColumn('hostels', 'user_id')) {
+            $hostelData['user_id'] = $agent->user_id;
+        }
+
+        $hostel = Hostel::create($hostelData);
 
         // Attach amenities
         if ($request->amenities) {
@@ -90,11 +100,30 @@ class HostelManagementController extends Controller
 
     public function show($id)
     {
-        $hostel = Hostel::where('agent_id', Auth::user()->agent->id)
+        $hostel = $this->getAgentHostelQuery(Auth::user()->agent)
             ->with(['rooms', 'amenities', 'images'])
             ->findOrFail($id);
 
         return view('agent.hostels.show', compact('hostel'));
+    }
+
+    private function getAgentHostelQuery($agent)
+    {
+        $query = Hostel::query();
+
+        if (Schema::hasColumn('hostels', 'agent_id')) {
+            return $query->where('agent_id', $agent->id);
+        }
+
+        if (Schema::hasColumn('hostels', 'hostel_agent_id')) {
+            return $query->where('hostel_agent_id', $agent->id);
+        }
+
+        if (Schema::hasColumn('hostels', 'user_id')) {
+            return $query->where('user_id', $agent->user_id);
+        }
+
+        return $query->whereRaw('1 = 0');
     }
 
     public function addRoom(Request $request, $hostelId)
@@ -108,7 +137,7 @@ class HostelManagementController extends Controller
             'is_available' => 'boolean'
         ]);
 
-        $hostel = Hostel::where('agent_id', Auth::user()->agent->id)->findOrFail($hostelId);
+        $hostel = $this->getAgentHostelQuery(Auth::user()->agent)->findOrFail($hostelId);
 
         $room = Room::create([
             'hostel_id' => $hostel->id,

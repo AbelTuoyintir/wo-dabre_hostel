@@ -22,6 +22,7 @@ class Hostel extends Model
         'phone',
         'rating',
         'manager_id',
+        'hostel_agent_id',
         'is_approved',
         'is_featured'
     ];

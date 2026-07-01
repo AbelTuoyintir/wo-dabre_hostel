@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::table('agent_withdrawals', function (Blueprint $table) {
             // Compatibility for tests/older code that still uses agent_id.
             // The canonical column in this app is hostel_agent_id.
-            $table->foreignId('agent_id')->nullable()->constrained('hostel_agents')->nullOnDelete();
+            $table->foreignId('hostel_agent_id')->nullable()->constrained('hostel_agents')->nullOnDelete();
         });
     }
 
