@@ -1,8 +1,8 @@
 # TODO
 
-- [x] Identify missing behavior: amenity “buttons” had no link/submit action.
-- [x] Update `resources/views/welcome.blade.php` to make those filters functional via query-string links.
-- [ ] Ensure amenity keys used in query string match backend JSON keys expected by `HostelController@index` (`whereJsonContains('amenities', ...)`).
-- [ ] Test by visiting `/` and clicking those filters; verify URL query params change and results update.
+## Agent withdrawal undefined method fix
+- [x] Implement `withdraw()` on `app/Models/HostelAgent.php` (create `AgentWithdrawal`, set fields, deduct balance)
 
+- [ ] Run `php artisan test` (or available test commands) to verify the error is resolved
+- [ ] (If needed) adjust validation/business logic to match expected DB columns/status defaults
 

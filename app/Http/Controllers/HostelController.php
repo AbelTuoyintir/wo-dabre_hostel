@@ -70,13 +70,7 @@ class HostelController extends Controller
             });
         }
 
-        // Filter by amenities
-        if ($request->filled('amenities')) {
-            $amenities = explode(',', $request->amenities);
-            foreach ($amenities as $amenity) {
-                $query->whereJsonContains('amenities', trim($amenity));
-            }
-        }
+        // Amenities filtering removed because the related table is not available in this database.
 
         // Filter by room features
         if ($request->filled('furnished')) {

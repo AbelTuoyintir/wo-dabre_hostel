@@ -6,6 +6,7 @@ use App\Models\Concerns\HasRouteUuid;
 use App\Models\Review;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Schema;
 
 class Hostel extends Model
 {
@@ -64,6 +65,15 @@ class Hostel extends Model
     }
 
  
+    public function amenities()
+    {
+        if (!\Schema::hasTable('hostel_amenity')) {
+            return collect();
+        }
+
+        return $this->belongsToMany(Amenity::class, 'hostel_amenity', 'hostel_id', 'amenity_id');
+    }
+
     public function images()
     {
         return $this->hasMany(HostelImage::class)->where('type', 'hostel');

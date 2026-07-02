@@ -74,4 +74,39 @@ class HostelAgent extends Model
 
         return $this;
     }
+
+    public function withdraw($amount, $paymentMethod, $accountNumber, $accountName, $bankName = null)
+    {
+        $amount = (float) $amount;
+
+        $available = (float) ($this->available_balance ?? 0);
+
+        if ($amount <= 0) {
+            throw new \InvalidArgumentException('Withdrawal amount must be greater than 0.');
+        }
+
+        // Keep this aligned with DashboardController validation.
+        if ($amount < 50) {
+            throw new \InvalidArgumentException('Minimum withdrawal amount is 50.');
+        }
+
+        if ($amount > $available) {
+            throw new \InvalidArgumentException('Insufficient available balance.');
+        }
+
+        $withdrawal = $this->withdrawals()->create([
+            'amount' => $amount,
+            'payment_method' => $paymentMethod,
+            'account_number' => $accountNumber,
+            'account_name' => $accountName,
+            'bank_name' => $bankName,
+            'status' => 'pending',
+        ]);
+
+        // Deduct from balance after creating the withdrawal request.
+        $this->deductFromBalance($amount);
+
+        return $withdrawal;
+    }
 }
+

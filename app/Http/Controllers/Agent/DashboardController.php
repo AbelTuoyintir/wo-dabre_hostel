@@ -123,6 +123,14 @@ class DashboardController extends Controller
         return view('agent.withdrawals.index', compact('withdrawals', 'summary'));
     }
 
+    public function showWithdrawalForm()
+    {
+        $agent = Auth::user()->agent;
+
+        return view('agent.withdrawals.request', compact('agent'));
+    }
+
+
     public function requestWithdrawal(Request $request)
     {
         $request->validate([
