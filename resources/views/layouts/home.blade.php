@@ -474,7 +474,7 @@
                         </li>
                         <li class="flex items-center">
                             <i class="fas fa-phone mr-3 text-blue-400"></i>
-                            <span>+233 24 123 4567</span>
+                            <span>+233 55 820 9825</span>
                         </li>
                         <li class="flex items-center">
                             <i class="fas fa-envelope mr-3 text-blue-400"></i>

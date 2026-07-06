@@ -63,10 +63,10 @@
                                 </div>
                                 <p class="text-slate-500 text-sm truncate">{{ $hostel['location'] }}</p>
                                 <p class="text-slate-500 text-sm truncate">Added recently</p>
-                                <div class="pt-1">
+                                {{-- <div class="pt-1">
                                     <span class="font-bold text-slate-800">₵{{ number_format($minPrice, 2) }}</span>
                                     <span class="text-slate-600 font-light text-sm">per year</span>
-                                </div>
+                                </div> --}}
                             </div>
                         </div>
                     </a>
