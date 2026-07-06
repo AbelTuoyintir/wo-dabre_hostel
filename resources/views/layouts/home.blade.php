@@ -301,7 +301,7 @@
             <div class="flex justify-between items-center mb-8">
                 <div class="flex items-center gap-2">
                     <div class="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg flex items-center justify-center">
-                        <img src="{{ asset('images/wodabre-logo.png') }}" alt="Wo-dabre Logo" class="w-5 h-5 object-contain">
+                        <img src="{{ asset('wodabre-logo.png') }}" alt="Wo-dabre Logo" class="w-5 h-5 object-contain">
                     </div>
                     <span class="text-lg font-bold text-gray-800 logo-text">Hostel<span class="text-blue-600">Hub</span></span>
                 </div>
@@ -440,7 +440,7 @@
                 <div>
                     <div class="flex items-center space-x-3 mb-4">
                         <div class="bg-white p-2 rounded-full">
-                            <img src="{{ asset('images/wodabre-logo.png') }}" alt="Wo-dabre Logo" class="w-10 h-10 object-contain">
+                            <img src="{{ asset('wodabre-logo.png') }}" alt="Wo-dabre Logo" class="w-10 h-10 object-contain">
                         </div>
                         <h3 class="text-xl font-bold" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">Wodabre Hostel Booking</h3>
                     </div>
