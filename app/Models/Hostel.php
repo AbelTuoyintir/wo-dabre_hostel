@@ -65,14 +65,20 @@ class Hostel extends Model
     }
 
  
+
     public function amenities()
     {
+        // IMPORTANT: Laravel relationship methods must always return a Relation instance.
+        // Returning non-relationship values (e.g. collect()) can crash when the attribute is accessed.
         if (!\Schema::hasTable('hostel_amenity')) {
-            return collect();
+            // Return an empty but valid relationship instance.
+            return $this->belongsToMany(Amenity::class, 'hostel_amenity', 'hostel_id', 'amenity_id')
+                ->whereRaw('1 = 0');
         }
 
         return $this->belongsToMany(Amenity::class, 'hostel_amenity', 'hostel_id', 'amenity_id');
     }
+
 
     public function images()
     {
