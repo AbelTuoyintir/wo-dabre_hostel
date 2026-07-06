@@ -17,12 +17,13 @@
             <thead>
                 <tr>
                     <th class="p-4 bg-slate-50 border-b text-left text-sm font-bold text-slate-500 uppercase tracking-wider w-1/4">Features</th>
-                    @foreach( as )
+                    @foreach($hostels as $hostel)
                         <th class="p-4 bg-white border-b text-center min-w-[250px]">
+
                             <div class="flex flex-col items-center gap-3">
                                 @php
-                                     = !empty(->primaryImage->image_path)
-                                        ? image_url(->primaryImage->image_path)
+                                    $imageUrl = !empty($hostel->primaryImage->image_path)
+                                        ? image_url($hostel->primaryImage->image_path)
                                         : 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600&h=400&fit=crop';
                                 @endphp
                                 <img src="{{ $imageUrl }}" alt="{{ $hostel->name }}" class="w-32 h-32 object-cover rounded-lg shadow-sm">
@@ -37,16 +38,18 @@
                 <!-- Location -->
                 <tr>
                     <td class="p-4 font-semibold text-slate-700 bg-slate-50/50">Location</td>
-                    @foreach( as )
+                    @foreach($hostels as $hostel)
                         <td class="p-4 text-center text-slate-600">{{ $hostel->location }}</td>
+
                     @endforeach
                 </tr>
                 <!-- Starting Price -->
                 <tr>
                     <td class="p-4 font-semibold text-slate-700 bg-slate-50/50">Starting Price</td>
-                    @foreach( as )
+                    @foreach($hostels as $hostel)
                         <td class="p-4 text-center">
                             <span class="font-bold text-slate-800 text-lg">₵{{ number_format($hostel->rooms->min('room_cost'), 2) }}</span>
+
                             <span class="text-slate-500 text-xs">/ year</span>
                         </td>
                     @endforeach
@@ -54,8 +57,9 @@
                 <!-- Amenities -->
                 <tr>
                     <td class="p-4 font-semibold text-slate-700 bg-slate-50/50">Amenities</td>
-                    @foreach( as )
+                    @foreach($hostels as $hostel)
                         <td class="p-4">
+
                             <div class="flex flex-wrap justify-center gap-2">
                                 @if($hostel->amenities)
                                     @foreach(array_slice($hostel->amenities, 0, 5) as $amenity)
@@ -74,9 +78,10 @@
                 <!-- Availability -->
                 <tr>
                     <td class="p-4 font-semibold text-slate-700 bg-slate-50/50">Available Rooms</td>
-                    @foreach( as )
+                    @foreach($hostels as $hostel)
                         <td class="p-4 text-center">
                             @php $count = $hostel->rooms->where('status', 'available')->count(); @endphp
+
                             <span class="{{ $count > 0 ? 'text-green-600' : 'text-red-600' }} font-medium">
                                 {{ $count }} rooms left
                             </span>
@@ -86,9 +91,10 @@
                 <!-- Rating -->
                 <tr>
                     <td class="p-4 font-semibold text-slate-700 bg-slate-50/50">Rating</td>
-                    @foreach( as )
+                    @foreach($hostels as $hostel)
                         <td class="p-4 text-center">
                             <div class="flex items-center justify-center gap-1">
+
                                 <i class="fas fa-star text-amber-400 text-xs"></i>
                                 <span class="font-bold">{{ $hostel->rating ?? '4.5' }}</span>
                             </div>
