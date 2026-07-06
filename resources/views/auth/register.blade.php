@@ -211,6 +211,44 @@
                                 </div>
                             </div>
 
+                            <div class="mt-4">
+                                <label for="phone" class="block text-xs font-semibold text-gray-700 mb-1.5">
+                                    Gender <span class="text-red-500">*</span>
+                                </label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4a3 3 0 100-6 3 3 0 000 6zm0 0v12m-4-4h8m-4 4v6"/>
+                                        </svg>
+                                    </div>
+                                    <select  class="block w-full pl-10 pr-3 py-2.5 text-sm rounded-xl border-2 border-gray-200 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 transition-all duration-200" >
+                                        <option value="">Select your role</option>
+                                        <option value="male">Male</option>
+                                        <option value="female">Female</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="mt-4">
+                                <label for="phone" class="block text-xs font-semibold text-gray-700 mb-1.5">
+                                    Role <span class="text-red-500">*</span>
+                                </label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zm-4 7a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2l1.5 3h3l-2.5 3.5 1 4-3-2-3 2 1-4L7.5 5h3z"/>
+                                        </svg>
+                                    </div>
+                                    <select  class="block w-full pl-10 pr-3 py-2.5 text-sm rounded-xl border-2 border-gray-200 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 transition-all duration-200" >
+                                        <option value="">Select your role</option>
+                                        <option value="student">Student</option>
+                                        <option value="hostel_agent">Agent</option>
+                                    </select>
+                                    
+                                </div>
+                            </div>
+
                             <!-- Password -->
                             <div class="mt-4">
                                 <label for="password" class="block text-xs font-semibold text-gray-700 mb-1.5">
