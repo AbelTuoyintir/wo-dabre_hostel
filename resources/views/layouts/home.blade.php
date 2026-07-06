@@ -11,7 +11,6 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
-    <!--add logo to the site-->
     <link rel="icon" href="{{ asset('/images/wodabre-logo.png') }}" type="image/x-icon">
     <link rel="shortcut icon" href="{{ asset('/images/wodabre-logo.png') }}" type="image/x-icon">
 
@@ -65,65 +64,257 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        
+        /* Custom scrollbar hide for categories */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Mobile menu transition */
+        #mobileMenu {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* Search bar focus styles */
+        .search-input:focus {
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
     </style>
 
     @stack('styles')
 </head>
 <body class="bg-gray-50">
 
-    <!-- Header -->
-<header class="bg-transparent text-white shadow-lg">
-        <div class="container mx-auto px-4 py-6">
-            <div class="flex flex-col md:flex-row justify-between items-center">
-                <div class="flex items-center space-x-3 mb-4 md:mb-0">
-                    <div class="bg-white text-blue-700 p-2 rounded-full">
-                        <!-- add wodabre logo here-->
-                        <img src="{{ asset('wodabre-logo.png') }}" alt="Wo-dabre Logo" class="w-10 h-10">
+    <!-- Redesigned Header -->
+    <header class="bg-white shadow-sm">
+        <!-- Top Bar - Brand & User Actions -->
+        <div class="border-b border-gray-100">
+            <div class="container mx-auto px-4 md:px-8">
+                <div class="flex items-center justify-between h-20">
+                    <!-- Logo -->
+                    <a href="/" class="flex items-center gap-2 group">
+                        <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg transition-all">
+                            <img src="{{ asset('images/wodabre-logo.png') }}" alt="Wo-dabre Logo" class="w-6 h-6 object-contain">
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-bold text-gray-800 tracking-tight">Hostel<span class="text-blue-600">Hub</span></h1>
+                            <p class="text-[10px] text-gray-400 font-medium tracking-wider uppercase">Find Your Home Away</p>
+                        </div>
+                    </a>
+
+                    <!-- Desktop Navigation & Auth -->
+                    <div class="hidden lg:flex items-center gap-6">
+                        <!-- Quick Links -->
+                        <nav class="flex items-center gap-1">
+                            <a href="#" class="px-3 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all">List Hostel</a>
+                            <a href="#" class="px-3 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all">Help</a>
+                        </nav>
+
+                        <!-- Divider -->
+                        <div class="w-px h-6 bg-gray-200"></div>
+
+                        <!-- Auth Buttons -->
+                        @guest
+                            <div class="flex items-center gap-3">
+                                <a href="{{ route('register') }}"
+                                   class="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">
+                                    Sign Up
+                                </a>
+                                <a href="{{ route('login') }}"
+                                   class="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 shadow-sm hover:shadow transition-all">
+                                    <i class="fas fa-sign-in-alt mr-2"></i>Login
+                                </a>
+                            </div>
+                        @else
+                            <div class="flex items-center gap-3">
+                                @if(auth()->user()->role === 'student')
+                                    <a href="{{ route('student.dashboard') }}"
+                                       class="bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-600 shadow-sm hover:shadow transition-all">
+                                        <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+                                    </a>
+                                @elseif(auth()->user()->role === 'admin')
+                                    <a href="{{ route('admin.dashboard') }}"
+                                       class="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-purple-700 shadow-sm hover:shadow transition-all">
+                                        <i class="fas fa-cog mr-2"></i>Admin
+                                    </a>
+                                @elseif(auth()->user()->role === 'manager')
+                                    <a href="{{ route('hostel-manager.dashboard') }}"
+                                       class="bg-orange-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-orange-600 shadow-sm hover:shadow transition-all">
+                                        <i class="fas fa-building mr-2"></i>Manager
+                                    </a>
+                                @endif
+                                <form method="POST" action="{{ route('logout') }}" class="inline">
+                                    @csrf
+                                    <button type="submit"
+                                            class="text-sm font-medium text-gray-600 hover:text-red-600 transition-colors">
+                                        <i class="fas fa-sign-out-alt mr-1"></i>Logout
+                                    </button>
+                                </form>
+                            </div>
+                        @endguest
                     </div>
-                    <div>
-                        <h1 class="text-2xl font-bold">Wodabre Hostel Booking</h1>
-                        <p class="text-blue-200">University of Cape Coast Student Accommodation</p>
-                    </div>
+
+                    <!-- Mobile Menu Button -->
+                    <button class="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition" id="mobileMenuBtn" aria-label="Toggle menu">
+                        <i class="fas fa-bars text-gray-600 text-xl"></i>
+                    </button>
                 </div>
-                <div class="flex items-center space-x-4">
-                    @guest
-                        <a href="{{ route('register') }}"
-                           class="hidden md:flex items-center space-x-2 bg-blue-800 text-white px-4 py-2 rounded-lg hover:bg-blue-900 transition">
-                            <i class="fas fa-user-graduate"></i>
-                            <span>Create Account</span>
+            </div>
+        </div>
+
+        <!-- Search & Filters Section -->
+        <div class="border-b border-gray-100 bg-gray-50/50">
+            <div class="container mx-auto px-4 md:px-8 py-4">
+                <!-- Desktop Search Bar -->
+                <div class="hidden md:block max-w-4xl mx-auto">
+                    <form action="{{ route('hostels.index') }}" method="GET" 
+                          class="flex items-center bg-white rounded-2xl shadow-sm hover:shadow-md border border-gray-200 transition-all overflow-hidden">
+                        
+                        <!-- Location Input -->
+                        <div class="flex-1 px-5 py-3 border-r border-gray-100">
+                            <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Location</label>
+                            <input type="text" name="search" value="{{ request('search') }}" 
+                                   placeholder="Search by area, landmark..." 
+                                   class="w-full text-sm text-gray-700 placeholder:text-gray-400 bg-transparent border-none focus:ring-0 p-0 outline-none">
+                        </div>
+
+                        <!-- Campus Select -->
+                        <div class="flex-1 px-5 py-3 border-r border-gray-100">
+                            <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Campus</label>
+                            <select name="location" 
+                                    class="w-full text-sm text-gray-700 bg-transparent border-none focus:ring-0 p-0 outline-none appearance-none cursor-pointer">
+                                <option value="all">All Campuses</option>
+                                @if(isset($locations))
+                                    @foreach($locations as $loc)
+                                        <option value="{{ $loc }}" {{ request('location') == $loc ? 'selected' : '' }}>
+                                            {{ $loc }}
+                                        </option>
+                                    @endforeach
+                                @endif
+                            </select>
+                        </div>
+
+                        <!-- Price Select -->
+                        <div class="flex-1 px-5 py-3">
+                            <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Budget</label>
+                            <select name="price_range" 
+                                    class="w-full text-sm text-gray-700 bg-transparent border-none focus:ring-0 p-0 outline-none appearance-none cursor-pointer">
+                                <option value="">Any price</option>
+                                <option value="0-2000" {{ request('price_range') == '0-2000' ? 'selected' : '' }}>Under ₵2,000</option>
+                                <option value="2100-4000" {{ request('price_range') == '2100-4000' ? 'selected' : '' }}>₵2,100 - ₵4,000</option>
+                                <option value="4100-6000" {{ request('price_range') == '4100-6000' ? 'selected' : '' }}>₵4,100 - ₵6,000</option>
+                                <option value="6100-8000" {{ request('price_range') == '6100-8000' ? 'selected' : '' }}>₵6,100 - ₵8,000</option>
+                                <option value="8200+" {{ request('price_range') == '8200+' ? 'selected' : '' }}>Above ₵8,200</option>
+                            </select>
+                        </div>
+
+                        <!-- Search Button -->
+                        <button type="submit" 
+                                class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 m-1 rounded-xl transition-colors shadow-sm hover:shadow">
+                            <i class="fas fa-search mr-2"></i>
+                            <span class="font-medium">Search</span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Mobile Search -->
+                <div class="md:hidden">
+                    <form action="{{ route('hostels.index') }}" method="GET" 
+                          class="flex items-center bg-white rounded-xl shadow-sm border border-gray-200 p-2">
+                        <i class="fas fa-search text-blue-500 mx-3"></i>
+                        <input type="text" name="search" value="{{ request('search') }}" 
+                               placeholder="Where to?" 
+                               class="flex-1 text-sm text-gray-700 placeholder:text-gray-400 bg-transparent border-none focus:ring-0 p-2 outline-none">
+                        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                            Go
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Category Navigation -->
+        <div class="container mx-auto px-4 md:px-8">
+            <div class="flex items-center gap-6 overflow-x-auto no-scrollbar py-3">
+                <!-- All Campuses -->
+                <a href="{{ route('hostels.index', array_merge(request()->except('location'), ['location' => 'all'])) }}"
+                   class="flex items-center gap-2 px-2 py-1 border-b-2 {{ !request('location') || request('location') == 'all' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} transition-all whitespace-nowrap">
+                    <i class="fas fa-th-large text-sm"></i>
+                    <span class="text-sm font-medium">All</span>
+                </a>
+
+                <!-- Campus Filters -->
+                @if(isset($locations))
+                    @foreach($locations as $location)
+                        <a href="{{ route('hostels.index', array_merge(request()->except('location'), ['location' => $location])) }}"
+                           class="flex items-center gap-2 px-2 py-1 border-b-2 {{ request('location') == $location ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} transition-all whitespace-nowrap">
+                            <i class="fas fa-map-pin text-sm"></i>
+                            <span class="text-sm font-medium">{{ $location }}</span>
                         </a>
-                        <a href="{{ route('login') }}"
-                           class="bg-white text-blue-900 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition">
-                            <i class="fas fa-sign-in-alt mr-2"></i> Student Login
-                        </a>
-                    @else
-                        @if(auth()->user()->role === 'student')
-                            <a href="{{ route('student.dashboard') }}"
-                               class="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition">
-                                <i class="fas fa-tachometer-alt mr-2"></i> Dashboard
-                            </a>
-                        @elseif(auth()->user()->role === 'admin')
-                            <a href="{{ route('admin.dashboard') }}"
-                               class="bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition">
-                                <i class="fas fa-cog mr-2"></i> Admin
-                            </a>
-                        @elseif(auth()->user()->role === 'manager')
-                            <a href="{{ route('hostel-manager.dashboard') }}"
-                               class="bg-orange-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-orange-700 transition">
-                                <i class="fas fa-building mr-2"></i> Manager
-                            </a>
-                        @endif
-                        <form method="POST" action="{{ route('logout') }}" class="inline">
-                            @csrf
-                            <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 transition">
-                                <i class="fas fa-sign-out-alt mr-2"></i> Logout
-                            </button>
-                        </form>
-                    @endguest
+                    @endforeach
+                @endif
+
+                <!-- Filter Button -->
+                <div class="ml-auto">
+                    <button class="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 rounded-full px-4 py-1.5 text-sm font-medium text-gray-700 transition">
+                        <i class="fas fa-sliders-h text-xs"></i>
+                        <span>Filters</span>
+                    </button>
                 </div>
             </div>
         </div>
     </header>
+
+    <!-- Mobile Navigation Overlay -->
+    <div class="fixed inset-0 bg-black/50 z-50 hidden" id="mobileOverlay"></div>
+    <div class="fixed top-0 left-0 w-80 h-full bg-white z-50 transform -translate-x-full shadow-xl hidden" id="mobileMenu">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-8">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg flex items-center justify-center">
+                        <img src="{{ asset('images/wodabre-logo.png') }}" alt="Wo-dabre Logo" class="w-5 h-5 object-contain">
+                    </div>
+                    <span class="text-lg font-bold text-gray-800">Hostel<span class="text-blue-600">Hub</span></span>
+                </div>
+                <button id="closeMobileMenu" class="p-2 hover:bg-gray-100 rounded-lg transition" aria-label="Close menu">
+                    <i class="fas fa-times text-gray-600"></i>
+                </button>
+            </div>
+            
+            <nav class="space-y-4">
+                <a href="#" class="block text-gray-700 font-medium hover:text-blue-600 transition">List Hostel</a>
+                <a href="#" class="block text-gray-700 font-medium hover:text-blue-600 transition">Help</a>
+                
+                @guest
+                    <div class="pt-4 border-t border-gray-200 space-y-3">
+                        <a href="{{ route('register') }}" class="block text-center bg-blue-600 text-white py-2.5 rounded-lg font-medium hover:bg-blue-700 transition">
+                            Create Account
+                        </a>
+                        <a href="{{ route('login') }}" class="block text-center border border-gray-300 text-gray-700 py-2.5 rounded-lg font-medium hover:bg-gray-50 transition">
+                            Login
+                        </a>
+                    </div>
+                @else
+                    <div class="pt-4 border-t border-gray-200 space-y-3">
+                        <a href="{{ auth()->user()->role === 'student' ? route('student.dashboard') : (auth()->user()->role === 'admin' ? route('admin.dashboard') : route('hostel-manager.dashboard')) }}" 
+                           class="block text-center bg-blue-600 text-white py-2.5 rounded-lg font-medium hover:bg-blue-700 transition">
+                            Dashboard
+                        </a>
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="w-full text-center border border-gray-300 text-gray-700 py-2.5 rounded-lg font-medium hover:bg-gray-50 transition">
+                                Logout
+                            </button>
+                        </form>
+                    </div>
+                @endguest
+            </nav>
+        </div>
+    </div>
 
     <!-- Loading Spinner (hidden by default) -->
     <div id="loadingSpinner" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 z-[9999] flex items-center justify-center">
@@ -131,7 +322,7 @@
     </div>
 
     <!-- Main Content -->
-    <main class="container mx-auto px-4 py-8">
+    <main class="container mx-auto py-8">
         <!-- Alert Messages (converted to SweetAlert automatically) -->
         @if(session('success'))
             <script>
@@ -223,10 +414,9 @@
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <div>
                     <div class="flex items-center space-x-3 mb-4">
-                        <div class="bg-white text-blue-900 p-2 rounded-full">
-                        <!-- add wodabre logo here-->
-                        <img src="{{ asset('wodabre-logo.png') }}" alt="Wo-dabre Logo" class="w-10 h-10">
-                    </div>
+                        <div class="bg-white p-2 rounded-full">
+                            <img src="{{ asset('images/wodabre-logo.png') }}" alt="Wo-dabre Logo" class="w-10 h-10 object-contain">
+                        </div>
                         <h3 class="text-xl font-bold">Wodabre Hostel Booking</h3>
                     </div>
                     <p class="text-gray-400">The official hostel booking platform for University of Cape Coast students.</p>
@@ -243,7 +433,6 @@
                 <div>
                     <h4 class="text-lg font-bold mb-4">Locations</h4>
                     <ul class="space-y-2 text-gray-400" id="locationList">
-                        <!-- Will be populated dynamically if needed -->
                         <li>Amamoma</li>
                         <li>Kwaprow</li>
                         <li>Ayensu</li>
@@ -281,6 +470,47 @@
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
     <script>
+        // Mobile menu toggle
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const closeMobileMenuBtn = document.getElementById('closeMobileMenu');
+        const mobileOverlay = document.getElementById('mobileOverlay');
+        const mobileMenu = document.getElementById('mobileMenu');
+
+        function openMobileMenu() {
+            mobileMenu.classList.remove('hidden');
+            mobileOverlay.classList.remove('hidden');
+            setTimeout(() => {
+                mobileMenu.classList.remove('-translate-x-full');
+            }, 10);
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeMobileMenu() {
+            mobileMenu.classList.add('-translate-x-full');
+            mobileOverlay.classList.add('hidden');
+            setTimeout(() => {
+                mobileMenu.classList.add('hidden');
+                document.body.style.overflow = '';
+            }, 300);
+        }
+
+        if (mobileMenuBtn) {
+            mobileMenuBtn.addEventListener('click', openMobileMenu);
+        }
+        if (closeMobileMenuBtn) {
+            closeMobileMenuBtn.addEventListener('click', closeMobileMenu);
+        }
+        if (mobileOverlay) {
+            mobileOverlay.addEventListener('click', closeMobileMenu);
+        }
+
+        // Close mobile menu on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && !mobileMenu.classList.contains('hidden')) {
+                closeMobileMenu();
+            }
+        });
+
         // Loading spinner functions
         function showLoading() {
             document.getElementById('loadingSpinner').classList.remove('hidden');
@@ -295,8 +525,6 @@
             // Show loader on all form submissions
             document.querySelectorAll('form').forEach(form => {
                 form.addEventListener('submit', function() {
-                    // Don't show for forms that might have validation errors handled by JS
-                    // or for those with a specific 'no-loader' class
                     if (!this.classList.contains('no-loader')) {
                         showLoading();
                     }
@@ -306,7 +534,6 @@
             // Show loader on clicks for buttons and links that aren't just anchors
             document.querySelectorAll('button:not([type="button"]), a.btn, a.show-loader').forEach(el => {
                 el.addEventListener('click', function(e) {
-                    // Check if it's not a simple anchor link or specifically excluded
                     if (this.tagName === 'A' && (this.getAttribute('href').startsWith('#') || this.getAttribute('target') === '_blank')) {
                         return;
                     }
@@ -318,7 +545,7 @@
             });
         });
 
-        // Helper functions for SweetAlert toasts (can be used in custom JS)
+        // Helper functions for SweetAlert toasts
         function showSuccessMessage(message) {
             Swal.fire({
                 icon: 'success',
