@@ -303,7 +303,7 @@
                     <div class="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg flex items-center justify-center">
                         <img src="{{ asset('wodabre-logo.png') }}" alt="Wo-dabre Logo" class="w-5 h-5 object-contain">
                     </div>
-                    <span class="text-lg font-bold text-gray-800 logo-text">Hostel<span class="text-blue-600">Hub</span></span>
+                     <h1 class="logo-text text-xl text-gray-800 tracking-tight">Wo<span class="text-blue-600">dabre</span></h1>
                 </div>
                 <button id="closeMobileMenu" class="p-2 hover:bg-gray-100 rounded-lg transition" aria-label="Close menu">
                     <i class="fas fa-times text-gray-600"></i>
@@ -311,8 +311,8 @@
             </div>
             
             <nav class="space-y-4" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">
-                <a href="#" class="block text-gray-700 font-medium hover:text-blue-600 transition">List Hostel</a>
-                <a href="#" class="block text-gray-700 font-medium hover:text-blue-600 transition">Help</a>
+                {{-- <a href="#" class="block text-gray-700 font-medium hover:text-blue-600 transition">List Hostel</a>
+                <a href="#" class="block text-gray-700 font-medium hover:text-blue-600 transition">Help</a> --}}
                 
                 @guest
                     <div class="pt-4 border-t border-gray-200 space-y-3">
