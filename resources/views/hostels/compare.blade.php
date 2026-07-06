@@ -62,11 +62,11 @@
 
                             <div class="flex flex-wrap justify-center gap-2">
                                 @if($hostel->amenities)
-                                    @foreach(array_slice($hostel->amenities, 0, 5) as $amenity)
+                                    @foreach($hostel->amenities->take(5) as $amenity)
                                         <span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-1 rounded-md">{{ $amenity }}</span>
                                     @endforeach
-                                    @if(count($hostel->amenities) > 5)
-                                        <span class="text-[10px] text-slate-400">+{{ count($hostel->amenities) - 5 }} more</span>
+                                    @if($hostel->amenities->count() > 5)
+                                        <span class="text-[10px] text-slate-400">+{{ $hostel->amenities->count() - 5 }} more</span>
                                     @endif
                                 @else
                                     <span class="text-slate-400 text-xs">N/A</span>
