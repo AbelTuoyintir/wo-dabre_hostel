@@ -170,8 +170,9 @@
                             </div>
                         </div>
 
-                        <form method="POST" action="#">
+                        <form method="POST" action="{{ route('password.confirm') }}" class="space-y-4">
                             <!-- Password -->
+                            @csrf
                             <div>
                                 <label for="password" class="block text-xs font-semibold text-gray-700 mb-1.5">
                                     Password <span class="text-red-500">*</span>

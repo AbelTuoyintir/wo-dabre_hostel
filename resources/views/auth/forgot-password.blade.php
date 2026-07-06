@@ -175,7 +175,8 @@
                             Your session status message here
                         </div>
 
-                        <form method="POST" action="#">
+                        <form method="POST" action="{{ route('password.email') }}" class="space-y-4">
+                            @csrf
                             <!-- Email Address -->
                             <div>
                                 <label for="email" class="block text-xs font-semibold text-gray-700 mb-1.5">

@@ -14,17 +14,29 @@
     <link rel="icon" href="{{ asset('/images/wodabre-logo.png') }}" type="image/x-icon">
     <link rel="shortcut icon" href="{{ asset('/images/wodabre-logo.png') }}" type="image/x-icon">
 
+    <!-- Lucida Font Stack -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <!-- SweetAlert2 CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <!-- Vite Assets (your custom CSS/JS) -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
+        /* Lucida Font Family */
         * {
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Inter', 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
         }
+
+        /* Specific font weights for Lucida */
+        .font-light { font-weight: 300; }
+        .font-regular { font-weight: 400; }
+        .font-medium { font-weight: 500; }
+        .font-semibold { font-weight: 600; }
+        .font-bold { font-weight: 700; }
+
         .location-btn.active {
             background-color: #1d4ed8;
             color: white;
@@ -83,6 +95,18 @@
         .search-input:focus {
             box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
         }
+
+        /* Lucida-specific letter spacing for better readability */
+        .tracking-lucida {
+            letter-spacing: 0.02em;
+        }
+
+        /* Logo text styling */
+        .logo-text {
+            font-family: 'Inter', 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', sans-serif;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
     </style>
 
     @stack('styles')
@@ -97,22 +121,17 @@
                 <div class="flex items-center justify-between h-20">
                     <!-- Logo -->
                     <a href="/" class="flex items-center gap-2 group">
-                        <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg transition-all">
-                            <img src="{{ asset('images/wodabre-logo.png') }}" alt="Wo-dabre Logo" class="w-6 h-6 object-contain">
+                        <div class="w-10 h-10 bg-gradient-to-br from-white-600 to-blue-800 rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg transition-all">
+                            <img src="{{ asset('wodabre-logo.png') }}" alt="Wo-dabre Logo" class="w-6 h-6 object-contain">
                         </div>
                         <div>
-                            <h1 class="text-xl font-bold text-gray-800 tracking-tight">Hostel<span class="text-blue-600">Hub</span></h1>
-                            <p class="text-[10px] text-gray-400 font-medium tracking-wider uppercase">Find Your Home Away</p>
+                            <h1 class="logo-text text-xl text-gray-800 tracking-tight">Wo<span class="text-blue-600">dabre</span></h1>
+                            <p class="text-[10px] text-gray-400 font-medium tracking-wider uppercase" style="letter-spacing: 0.05em;">Find Your Home Away</p>
                         </div>
                     </a>
 
                     <!-- Desktop Navigation & Auth -->
                     <div class="hidden lg:flex items-center gap-6">
-                        <!-- Quick Links -->
-                        <nav class="flex items-center gap-1">
-                            <a href="#" class="px-3 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all">List Hostel</a>
-                            <a href="#" class="px-3 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all">Help</a>
-                        </nav>
 
                         <!-- Divider -->
                         <div class="w-px h-6 bg-gray-200"></div>
@@ -121,36 +140,36 @@
                         @guest
                             <div class="flex items-center gap-3">
                                 <a href="{{ route('register') }}"
-                                   class="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">
+                                   class="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">
                                     Sign Up
                                 </a>
                                 <a href="{{ route('login') }}"
-                                   class="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 shadow-sm hover:shadow transition-all">
-                                    <i class="fas fa-sign-in-alt mr-2"></i>Login
+                                   class="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 shadow-sm hover:shadow transition-all" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">
+                                  Login
                                 </a>
                             </div>
                         @else
                             <div class="flex items-center gap-3">
                                 @if(auth()->user()->role === 'student')
                                     <a href="{{ route('student.dashboard') }}"
-                                       class="bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-600 shadow-sm hover:shadow transition-all">
+                                       class="bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-600 shadow-sm hover:shadow transition-all" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">
                                         <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
                                     </a>
                                 @elseif(auth()->user()->role === 'admin')
                                     <a href="{{ route('admin.dashboard') }}"
-                                       class="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-purple-700 shadow-sm hover:shadow transition-all">
+                                       class="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-purple-700 shadow-sm hover:shadow transition-all" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">
                                         <i class="fas fa-cog mr-2"></i>Admin
                                     </a>
                                 @elseif(auth()->user()->role === 'manager')
                                     <a href="{{ route('hostel-manager.dashboard') }}"
-                                       class="bg-orange-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-orange-600 shadow-sm hover:shadow transition-all">
+                                       class="bg-orange-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-orange-600 shadow-sm hover:shadow transition-all" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">
                                         <i class="fas fa-building mr-2"></i>Manager
                                     </a>
                                 @endif
                                 <form method="POST" action="{{ route('logout') }}" class="inline">
                                     @csrf
                                     <button type="submit"
-                                            class="text-sm font-medium text-gray-600 hover:text-red-600 transition-colors">
+                                            class="text-sm font-medium text-gray-600 hover:text-red-600 transition-colors" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">
                                         <i class="fas fa-sign-out-alt mr-1"></i>Logout
                                     </button>
                                 </form>
@@ -176,17 +195,21 @@
                         
                         <!-- Location Input -->
                         <div class="flex-1 px-5 py-3 border-r border-gray-100">
-                            <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Location</label>
+                            <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider" style="font-family: 'Inter', 'Lucida Sans', sans-serif; letter-spacing: 0.05em;">
+                                Location
+                            </label>
                             <input type="text" name="search" value="{{ request('search') }}" 
                                    placeholder="Search by area, landmark..." 
-                                   class="w-full text-sm text-gray-700 placeholder:text-gray-400 bg-transparent border-none focus:ring-0 p-0 outline-none">
+                                   class="w-full text-sm text-gray-700 placeholder:text-gray-400 bg-transparent border-none focus:ring-0 p-0 outline-none" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">
                         </div>
 
                         <!-- Campus Select -->
                         <div class="flex-1 px-5 py-3 border-r border-gray-100">
-                            <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Campus</label>
+                            <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider" style="font-family: 'Inter', 'Lucida Sans', sans-serif; letter-spacing: 0.05em;">
+                                Campus
+                            </label>
                             <select name="location" 
-                                    class="w-full text-sm text-gray-700 bg-transparent border-none focus:ring-0 p-0 outline-none appearance-none cursor-pointer">
+                                    class="w-full text-sm text-gray-700 bg-transparent border-none focus:ring-0 p-0 outline-none appearance-none cursor-pointer" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">
                                 <option value="all">All Campuses</option>
                                 @if(isset($locations))
                                     @foreach($locations as $loc)
@@ -200,9 +223,11 @@
 
                         <!-- Price Select -->
                         <div class="flex-1 px-5 py-3">
-                            <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Budget</label>
+                            <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider" style="font-family: 'Inter', 'Lucida Sans', sans-serif; letter-spacing: 0.05em;">
+                                Budget
+                            </label>
                             <select name="price_range" 
-                                    class="w-full text-sm text-gray-700 bg-transparent border-none focus:ring-0 p-0 outline-none appearance-none cursor-pointer">
+                                    class="w-full text-sm text-gray-700 bg-transparent border-none focus:ring-0 p-0 outline-none appearance-none cursor-pointer" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">
                                 <option value="">Any price</option>
                                 <option value="0-2000" {{ request('price_range') == '0-2000' ? 'selected' : '' }}>Under ₵2,000</option>
                                 <option value="2100-4000" {{ request('price_range') == '2100-4000' ? 'selected' : '' }}>₵2,100 - ₵4,000</option>
@@ -214,7 +239,7 @@
 
                         <!-- Search Button -->
                         <button type="submit" 
-                                class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 m-1 rounded-xl transition-colors shadow-sm hover:shadow">
+                                class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 m-1 rounded-xl transition-colors shadow-sm hover:shadow" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">
                             <i class="fas fa-search mr-2"></i>
                             <span class="font-medium">Search</span>
                         </button>
@@ -228,8 +253,8 @@
                         <i class="fas fa-search text-blue-500 mx-3"></i>
                         <input type="text" name="search" value="{{ request('search') }}" 
                                placeholder="Where to?" 
-                               class="flex-1 text-sm text-gray-700 placeholder:text-gray-400 bg-transparent border-none focus:ring-0 p-2 outline-none">
-                        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                               class="flex-1 text-sm text-gray-700 placeholder:text-gray-400 bg-transparent border-none focus:ring-0 p-2 outline-none" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">
+                        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">
                             Go
                         </button>
                     </form>
@@ -242,7 +267,7 @@
             <div class="flex items-center gap-6 overflow-x-auto no-scrollbar py-3">
                 <!-- All Campuses -->
                 <a href="{{ route('hostels.index', array_merge(request()->except('location'), ['location' => 'all'])) }}"
-                   class="flex items-center gap-2 px-2 py-1 border-b-2 {{ !request('location') || request('location') == 'all' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} transition-all whitespace-nowrap">
+                   class="flex items-center gap-2 px-2 py-1 border-b-2 {{ !request('location') || request('location') == 'all' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} transition-all whitespace-nowrap" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">
                     <i class="fas fa-th-large text-sm"></i>
                     <span class="text-sm font-medium">All</span>
                 </a>
@@ -251,7 +276,7 @@
                 @if(isset($locations))
                     @foreach($locations as $location)
                         <a href="{{ route('hostels.index', array_merge(request()->except('location'), ['location' => $location])) }}"
-                           class="flex items-center gap-2 px-2 py-1 border-b-2 {{ request('location') == $location ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} transition-all whitespace-nowrap">
+                           class="flex items-center gap-2 px-2 py-1 border-b-2 {{ request('location') == $location ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} transition-all whitespace-nowrap" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">
                             <i class="fas fa-map-pin text-sm"></i>
                             <span class="text-sm font-medium">{{ $location }}</span>
                         </a>
@@ -260,7 +285,7 @@
 
                 <!-- Filter Button -->
                 <div class="ml-auto">
-                    <button class="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 rounded-full px-4 py-1.5 text-sm font-medium text-gray-700 transition">
+                    <button class="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 rounded-full px-4 py-1.5 text-sm font-medium text-gray-700 transition" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">
                         <i class="fas fa-sliders-h text-xs"></i>
                         <span>Filters</span>
                     </button>
@@ -278,35 +303,35 @@
                     <div class="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg flex items-center justify-center">
                         <img src="{{ asset('images/wodabre-logo.png') }}" alt="Wo-dabre Logo" class="w-5 h-5 object-contain">
                     </div>
-                    <span class="text-lg font-bold text-gray-800">Hostel<span class="text-blue-600">Hub</span></span>
+                    <span class="text-lg font-bold text-gray-800 logo-text">Hostel<span class="text-blue-600">Hub</span></span>
                 </div>
                 <button id="closeMobileMenu" class="p-2 hover:bg-gray-100 rounded-lg transition" aria-label="Close menu">
                     <i class="fas fa-times text-gray-600"></i>
                 </button>
             </div>
             
-            <nav class="space-y-4">
+            <nav class="space-y-4" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">
                 <a href="#" class="block text-gray-700 font-medium hover:text-blue-600 transition">List Hostel</a>
                 <a href="#" class="block text-gray-700 font-medium hover:text-blue-600 transition">Help</a>
                 
                 @guest
                     <div class="pt-4 border-t border-gray-200 space-y-3">
-                        <a href="{{ route('register') }}" class="block text-center bg-blue-600 text-white py-2.5 rounded-lg font-medium hover:bg-blue-700 transition">
+                        <a href="{{ route('register') }}" class="block text-center bg-blue-600 text-white py-2.5 rounded-lg font-medium hover:bg-blue-700 transition" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">
                             Create Account
                         </a>
-                        <a href="{{ route('login') }}" class="block text-center border border-gray-300 text-gray-700 py-2.5 rounded-lg font-medium hover:bg-gray-50 transition">
+                        <a href="{{ route('login') }}" class="block text-center border border-gray-300 text-gray-700 py-2.5 rounded-lg font-medium hover:bg-gray-50 transition" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">
                             Login
                         </a>
                     </div>
                 @else
                     <div class="pt-4 border-t border-gray-200 space-y-3">
                         <a href="{{ auth()->user()->role === 'student' ? route('student.dashboard') : (auth()->user()->role === 'admin' ? route('admin.dashboard') : route('hostel-manager.dashboard')) }}" 
-                           class="block text-center bg-blue-600 text-white py-2.5 rounded-lg font-medium hover:bg-blue-700 transition">
+                           class="block text-center bg-blue-600 text-white py-2.5 rounded-lg font-medium hover:bg-blue-700 transition" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">
                             Dashboard
                         </a>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
-                            <button type="submit" class="w-full text-center border border-gray-300 text-gray-700 py-2.5 rounded-lg font-medium hover:bg-gray-50 transition">
+                            <button type="submit" class="w-full text-center border border-gray-300 text-gray-700 py-2.5 rounded-lg font-medium hover:bg-gray-50 transition" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">
                                 Logout
                             </button>
                         </form>
@@ -417,13 +442,13 @@
                         <div class="bg-white p-2 rounded-full">
                             <img src="{{ asset('images/wodabre-logo.png') }}" alt="Wo-dabre Logo" class="w-10 h-10 object-contain">
                         </div>
-                        <h3 class="text-xl font-bold">Wodabre Hostel Booking</h3>
+                        <h3 class="text-xl font-bold" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">Wodabre Hostel Booking</h3>
                     </div>
-                    <p class="text-gray-400">The official hostel booking platform for University of Cape Coast students.</p>
+                    <p class="text-gray-400" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">The official hostel booking platform for University of Cape Coast students.</p>
                 </div>
                 <div>
-                    <h4 class="text-lg font-bold mb-4">Quick Links</h4>
-                    <ul class="space-y-2 text-gray-400">
+                    <h4 class="text-lg font-bold mb-4" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">Quick Links</h4>
+                    <ul class="space-y-2 text-gray-400" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">
                         <li><a href="#" class="hover:text-white transition">About Us</a></li>
                         <li><a href="#" class="hover:text-white transition">Contact</a></li>
                         <li><a href="#" class="hover:text-white transition">FAQs</a></li>
@@ -431,8 +456,8 @@
                     </ul>
                 </div>
                 <div>
-                    <h4 class="text-lg font-bold mb-4">Locations</h4>
-                    <ul class="space-y-2 text-gray-400" id="locationList">
+                    <h4 class="text-lg font-bold mb-4" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">Locations</h4>
+                    <ul class="space-y-2 text-gray-400" id="locationList" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">
                         <li>Amamoma</li>
                         <li>Kwaprow</li>
                         <li>Ayensu</li>
@@ -441,8 +466,8 @@
                     </ul>
                 </div>
                 <div>
-                    <h4 class="text-lg font-bold mb-4">Contact Info</h4>
-                    <ul class="space-y-3 text-gray-400">
+                    <h4 class="text-lg font-bold mb-4" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">Contact Info</h4>
+                    <ul class="space-y-3 text-gray-400" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">
                         <li class="flex items-center">
                             <i class="fas fa-map-marker-alt mr-3 text-blue-400"></i>
                             <span>University of Cape Coast, Ghana</span>
@@ -459,7 +484,7 @@
                 </div>
             </div>
             <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-                <p>&copy; {{ date('Y') }} University of Cape Coast Hostel Booking System. All rights reserved.</p>
+                <p style="font-family: 'Inter', 'Lucida Sans', sans-serif;">&copy; {{ date('Y') }} University of Cape Coast Hostel Booking System. All rights reserved.</p>
             </div>
         </div>
     </footer>

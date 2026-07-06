@@ -158,7 +158,8 @@
                             <h2 class="text-sm font-semibold text-gray-700 mt-2">Create your account</h2>
                         </div>
 
-                        <form method="POST" action="#">
+                        <form method="POST" action="{{ route('register.store') }}" class="space-y-4">
+                            @csrf   
                             <!-- Name -->
                             <div>
                                 <label for="name" class="block text-xs font-semibold text-gray-700 mb-1.5">

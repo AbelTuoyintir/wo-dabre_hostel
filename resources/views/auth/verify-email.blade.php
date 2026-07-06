@@ -211,7 +211,7 @@
                                 </button>
                             </form>
 
-                            <form method="POST" action="#" class="w-full sm:w-auto">
+                            <form method="POST" action="" class="w-full sm:w-auto">
                                 <button type="submit" 
                                     class="w-full sm:w-auto px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white text-sm font-semibold rounded-xl transition-all duration-300 shadow-lg flex items-center justify-center gap-2">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

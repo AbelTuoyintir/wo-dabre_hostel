@@ -172,7 +172,8 @@
                             <h2 class="text-sm font-semibold text-gray-700 mt-2">Reset Password</h2>
                         </div>
 
-                        <form method="POST" action="#">
+                        <form method="POST" action="{{ route('password.update') }}" class="space-y-4">
+                            @csrf
                             <!-- Password Reset Token -->
                             <input type="hidden" name="token" value="reset-token-here">
 

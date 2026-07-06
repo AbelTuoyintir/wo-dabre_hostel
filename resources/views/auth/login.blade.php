@@ -158,7 +158,8 @@
                             <h2 class="text-sm font-semibold text-gray-700 mt-2">Welcome Back</h2>
                         </div>
 
-                        <form method="POST" action="{{ route('login.store ') }}">
+                        <form method="POST" action="{{ route('login.store') }}">
+                            @csrf
                             <!-- Session Status -->
                             <div class="mb-4 p-3 bg-green-50 border-l-4 border-green-500 rounded-lg text-green-700 text-xs hidden">
                                 Your session status message here
