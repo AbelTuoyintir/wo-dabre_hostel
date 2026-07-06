@@ -222,7 +222,7 @@
                                         </svg>
                                     </div>
                                     <select  class="block w-full pl-10 pr-3 py-2.5 text-sm rounded-xl border-2 border-gray-200 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 transition-all duration-200" >
-                                        <option value="">Select your role</option>
+                                        <option value="">Select your gender</option>
                                         <option value="male">Male</option>
                                         <option value="female">Female</option>
                                     </select>
