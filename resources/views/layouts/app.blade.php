@@ -12,6 +12,7 @@
         <link rel="shortcut icon" href="{{ asset('wodabre-logo.png') }}" type="image/x-icon">
 
         <script src="//unpkg.com/alpinejs" defer></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
 
         <!-- Fonts -->
