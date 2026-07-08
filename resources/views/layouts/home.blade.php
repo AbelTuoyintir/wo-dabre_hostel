@@ -341,13 +341,7 @@
         </div>
     </div>
 
-<!-- Loading Spinner (hidden by default)
-     NOTE: Requirement - remove/disable loader behavior on mobile view.
-     We keep it for desktop only (md+).
--->
-    <div id="loadingSpinner" class="hidden md:flex fixed inset-0 bg-gray-900 bg-opacity-50 z-[9999] items-center justify-center">
-        <div class="loader"></div>
-    </div>
+
 
 
     <!-- Main Content -->
@@ -540,19 +534,7 @@
             }
         });
 
-        // Loading spinner functions
-        function showLoading() {
-            // Loader disabled globally (removed requirement)
-            return;
-        }
 
-
-
-        function hideLoading() {
-            document.getElementById('loadingSpinner').classList.add('hidden');
-        }
-
-        // Auto-show loader on form submissions and button clicks
         document.addEventListener('DOMContentLoaded', function() {
             // Show loader on all form submissions
             document.querySelectorAll('form').forEach(form => {
