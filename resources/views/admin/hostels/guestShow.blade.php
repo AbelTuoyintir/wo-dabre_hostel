@@ -108,17 +108,25 @@
 
                 <!-- Amenities -->
                 @if($hostel->amenities && count($hostel->amenities) > 0)
-                <div class="mb-6">
-                    <h2 class="text-xl font-semibold text-gray-900 mb-3">Amenities</h2>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        @foreach($hostel->amenities as $amenity)
-                            <div class="flex items-center text-gray-600">
-                                <i class="fas fa-check-circle text-green-500 mr-2"></i>
-                                <span>{{ ucwords(str_replace('_', ' ', $amenity)) }}</span>
-                            </div>
-                        @endforeach
+                    <div class="mb-6">
+                        <h2 class="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                            <i class="fas fa-list-check text-yellow-500"></i>
+                            Amenities
+                            <span class="ml-2 text-sm font-normal text-gray-500">({{ count($hostel->amenities) }})</span>
+                        </h2>
+                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                            @foreach($hostel->amenities as $amenity)
+                                <div class="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg hover:bg-green-50 transition-colors">
+                                    @if($amenity->icon)
+                                        <i class="{{ $amenity->icon }} text-green-500 text-sm"></i>
+                                    @else
+                                        <i class="fas fa-check-circle text-green-500 text-sm"></i>
+                                    @endif
+                                    <span class="text-sm text-gray-700">{{ ucwords(str_replace('_', ' ', $amenity->name)) }}</span>
+                                </div>
+                            @endforeach
+                        </div>
                     </div>
-                </div>
                 @endif
 
                 <!-- Contact Info -->
