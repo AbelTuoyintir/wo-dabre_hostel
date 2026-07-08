@@ -341,10 +341,14 @@
         </div>
     </div>
 
-    <!-- Loading Spinner (hidden by default) -->
-    <div id="loadingSpinner" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 z-[9999] flex items-center justify-center">
+<!-- Loading Spinner (hidden by default)
+     NOTE: Requirement - remove/disable loader behavior on mobile view.
+     We keep it for desktop only (md+).
+-->
+    <div id="loadingSpinner" class="hidden md:flex fixed inset-0 bg-gray-900 bg-opacity-50 z-[9999] items-center justify-center">
         <div class="loader"></div>
     </div>
+
 
     <!-- Main Content -->
     <main class="container mx-auto py-8">
@@ -538,8 +542,11 @@
 
         // Loading spinner functions
         function showLoading() {
+            // Disable loader on mobile view (requirement)
+            if (window.innerWidth < 768) return;
             document.getElementById('loadingSpinner').classList.remove('hidden');
         }
+
 
         function hideLoading() {
             document.getElementById('loadingSpinner').classList.add('hidden');
