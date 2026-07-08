@@ -335,22 +335,104 @@
                 </div>
             </div>
 
-            <!-- Amenities -->
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                    <h3 class="text-lg font-medium text-gray-900">Amenities</h3>
+           <!-- Amenities -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 bg-yellow-100 rounded-xl">
+                            <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">Amenities & Features</h3>
+                            <p class="text-xs text-gray-500">What this hostel has to offer</p>
+                        </div>
+                        <span class="ml-auto bg-yellow-100 text-yellow-800 text-xs font-medium px-3 py-1 rounded-full">
+                            {{ $hostel->amenities ? count($hostel->amenities) : 0 }} amenities
+                        </span>
+                    </div>
                 </div>
+                
                 <div class="p-6">
                     @if($hostel->amenities && count($hostel->amenities) > 0)
-                        <div class="flex flex-wrap gap-2">
-                            @foreach($hostel->amenities as $amenity)
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs bg-gray-100 text-gray-800">
-                                    {{ ucwords(str_replace('_', ' ', $amenity)) }}
-                                </span>
-                            @endforeach
-                        </div>
+                        @php
+                            // Group amenities by category if you have categories
+                            $groupedAmenities = [];
+                            foreach($hostel->amenities as $amenity) {
+                                $category = $amenity->category ?? 'General';
+                                if(!isset($groupedAmenities[$category])) {
+                                    $groupedAmenities[$category] = [];
+                                }
+                                $groupedAmenities[$category][] = $amenity;
+                            }
+                        @endphp
+
+                        @if(count($groupedAmenities) > 1)
+                            <!-- Grouped by Category -->
+                            <div class="space-y-6">
+                                @foreach($groupedAmenities as $category => $items)
+                                    <div>
+                                        <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                                            {{ $category }}
+                                        </h4>
+                                        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                                            @foreach($items as $amenity)
+                                                <div class="flex items-center gap-2.5 p-2.5 bg-gray-50 rounded-xl hover:bg-yellow-50 transition-colors duration-200 group">
+                                                    @if($amenity->icon)
+                                                        <div class="w-8 h-8 flex items-center justify-center bg-white rounded-lg shadow-sm group-hover:shadow-md transition-shadow">
+                                                            <i class="{{ $amenity->icon }} text-yellow-600 text-sm"></i>
+                                                        </div>
+                                                    @else
+                                                        <div class="w-8 h-8 flex items-center justify-center bg-white rounded-lg shadow-sm">
+                                                            <svg class="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                                            </svg>
+                                                        </div>
+                                                    @endif
+                                                    <span class="text-sm text-gray-700 group-hover:text-gray-900 transition-colors">
+                                                        {{ $amenity->name }}
+                                                    </span>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <!-- Flat List with Icons -->
+                            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                                @foreach($hostel->amenities as $amenity)
+                                    <div class="flex items-center gap-2.5 p-2.5 bg-gray-50 rounded-xl hover:bg-yellow-50 transition-colors duration-200 group">
+                                        @if($amenity->icon)
+                                            <div class="w-8 h-8 flex items-center justify-center bg-white rounded-lg shadow-sm group-hover:shadow-md transition-shadow">
+                                                <i class="{{ $amenity->icon }} text-yellow-600 text-sm"></i>
+                                            </div>
+                                        @else
+                                            <div class="w-8 h-8 flex items-center justify-center bg-white rounded-lg shadow-sm">
+                                                <svg class="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                                </svg>
+                                            </div>
+                                        @endif
+                                        <span class="text-sm text-gray-700 group-hover:text-gray-900 transition-colors">
+                                            {{ $amenity->name }}
+                                        </span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
                     @else
-                        <p class="text-sm text-gray-500">No amenities listed.</p>
+                        <!-- Empty State -->
+                        <div class="text-center py-12">
+                            <div class="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+                                <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                                </svg>
+                            </div>
+                            <p class="text-sm text-gray-500">No amenities listed for this hostel.</p>
+                            <p class="text-xs text-gray-400 mt-1">Check back later for updates.</p>
+                        </div>
                     @endif
                 </div>
             </div>
