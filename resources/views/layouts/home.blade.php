@@ -542,10 +542,10 @@
 
         // Loading spinner functions
         function showLoading() {
-            // Disable loader on mobile view (requirement)
-            if (window.innerWidth < 768) return;
-            document.getElementById('loadingSpinner').classList.remove('hidden');
+            // Loader disabled globally (removed requirement)
+            return;
         }
+
 
 
         function hideLoading() {

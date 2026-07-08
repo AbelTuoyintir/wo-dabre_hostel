@@ -84,9 +84,30 @@
             </div>
         </div>
 
+        <!-- Amenities -->
+        <div class="bg-white rounded-lg shadow border p-6">
+            <h3 class="text-lg font-semibold mb-4">Amenities</h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                @foreach($amenities as $amenity)
+                    <label class="flex items-center gap-3 p-3 border rounded-md hover:bg-gray-50 cursor-pointer">
+                        <input
+                            type="checkbox"
+                            name="amenities[]"
+                            value="{{ $amenity->id }}"
+                            class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500"
+                            {{ ($hostel->amenities->contains($amenity->id)) ? 'checked' : '' }}
+                        >
+                        <span class="text-sm text-gray-700">{{ $amenity->name }}</span>
+                    </label>
+                @endforeach
+            </div>
+        </div>
+
         <!-- Image Management Section -->
         <div class="bg-white rounded-lg shadow border p-6">
             <h3 class="text-lg font-semibold mb-4">Manage Hostel Images</h3>
+
 
             <script>
                 // Define functions before they're used in onclick handlers

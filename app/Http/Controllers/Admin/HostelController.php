@@ -83,15 +83,20 @@ class HostelController extends Controller
     /**
      * Show form for creating a new hostel
      */
-   public function create()
+    public function create()
     {
         // Get all managers (for the select dropdown)
         $managers = User::where('role', 'hostel_manager')->get();
 
+        // Get all amenities (for checkbox selection)
+        $amenities = \App\Models\Amenity::orderBy('name')->get();
+
         return view('admin.hostels.create', [
-            'managers' => $managers
+            'managers' => $managers,
+            'amenities' => $amenities,
         ]);
     }
+
 
 
     /**
@@ -106,11 +111,14 @@ class HostelController extends Controller
             'contact_phone' => 'nullable|string|max:20',
             'contact_email' => 'nullable|email|max:255',
             'manager_id' => 'nullable|exists:users,id',
+            'amenities' => 'nullable|array',
+            'amenities.*' => 'exists:amenities,id',
             'description' => 'nullable|string',
             'cover_image' => 'required|image|mimes:jpeg,png,jpg,gif|max:10240', // 10MB max
             'gallery_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240', // 10MB max per image
             'gallery_images' => 'nullable|array|max:5', // Maximum 5 gallery images
         ]);
+
 
         // Prepare data for creation
         $data = $request->only([
@@ -128,6 +136,11 @@ class HostelController extends Controller
 
         // Create the hostel
         $hostel = Hostel::create($data);
+
+        // Sync amenities
+        $amenities = $request->input('amenities', []);
+        $hostel->amenities()->sync($amenities);
+
 
         // Handle cover image upload (primary image)
         if ($request->hasFile('cover_image')) {
@@ -195,10 +208,16 @@ class HostelController extends Controller
     public function edit(Hostel $hostel)
     {
         $managers = User::where('role', 'hostel_manager')->get();
-        $hostel->load('images');
+        $amenities = \App\Models\Amenity::orderBy('name')->get();
 
-        return view('admin.hostels.edit', compact('hostel', 'managers'));
+        $hostel->load([
+            'images',
+            'amenities',
+        ]);
+
+        return view('admin.hostels.edit', compact('hostel', 'managers', 'amenities'));
     }
+
 
     /**
      * Update the specified hostel
@@ -213,6 +232,8 @@ class HostelController extends Controller
             'contact_phone' => 'nullable|string|max:20',
             'contact_email' => 'nullable|email|max:255',
             'manager_id' => 'nullable|exists:users,id',
+            'amenities' => 'nullable|array',
+            'amenities.*' => 'exists:amenities,id',
             'is_featured' => 'sometimes|boolean',
             'is_approved' => 'sometimes|boolean',
             'cover_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
@@ -222,6 +243,7 @@ class HostelController extends Controller
             'removed_images.*' => 'exists:hostel_images,id',
             'primary_image_id' => 'nullable|exists:hostel_images,id',
         ]);
+
 
         DB::beginTransaction();
         try {
@@ -237,6 +259,11 @@ class HostelController extends Controller
                 'is_featured' => $request->has('is_featured'),
                 'is_approved' => $request->has('is_approved'),
             ]);
+
+            // Sync amenities
+            $amenities = $request->input('amenities', []);
+            $hostel->amenities()->sync($amenities);
+
 
             // Handle removed images
             if (!empty($validated['removed_images'])) {

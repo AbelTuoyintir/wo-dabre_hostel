@@ -81,8 +81,29 @@
             </div>
         </div>
 
+        <!-- Amenities -->
+        <div class="bg-white rounded-lg shadow border p-6">
+            <h3 class="text-lg font-semibold mb-4">Amenities</h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                @foreach($amenities as $amenity)
+                    <label class="flex items-center gap-3 p-3 border rounded-md hover:bg-gray-50 cursor-pointer">
+                        <input
+                            type="checkbox"
+                            name="amenities[]"
+                            value="{{ $amenity->id }}"
+                            class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500"
+                            {{ in_array($amenity->id, old('amenities', [])) ? 'checked' : '' }}
+                        >
+                        <span class="text-sm text-gray-700">{{ $amenity->name }}</span>
+                    </label>
+                @endforeach
+            </div>
+        </div>
+
         <!-- Hostel Images -->
         <div class="bg-white rounded-lg shadow border p-6">
+
             <h3 class="text-lg font-semibold mb-4">Hostel Images</h3>
 
             <!-- Cover Image -->
