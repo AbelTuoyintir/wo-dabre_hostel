@@ -58,21 +58,29 @@
                 <tr>
                     <td class="p-4 font-semibold text-slate-700 bg-slate-50/50">Amenities</td>
                     @foreach($hostels as $hostel)
-                        <td class="p-4">
-
-                            <div class="flex flex-wrap justify-center gap-2">
-                                @if($hostel->amenities)
-                                    @foreach($hostel->amenities->take(5) as $amenity)
-                                        <span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-1 rounded-md">{{ $amenity }}</span>
-                                    @endforeach
-                                    @if($hostel->amenities->count() > 5)
-                                        <span class="text-[10px] text-slate-400">+{{ $hostel->amenities->count() - 5 }} more</span>
-                                    @endif
-                                @else
-                                    <span class="text-slate-400 text-xs">N/A</span>
+                      <td class="p-4">
+                        <div class="flex flex-wrap justify-center gap-1.5">
+                            @if($hostel->amenities && $hostel->amenities->count() > 0)
+                                @foreach($hostel->amenities->take(5) as $amenity)
+                                    <span class="inline-flex items-center gap-1 text-[10px] bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full">
+                                        @if($amenity->icon)
+                                            <i class="{{ $amenity->icon }} text-blue-500 text-xs"></i>
+                                        @else
+                                            <i class="fas fa-circle-check text-blue-500 text-xs"></i>
+                                        @endif
+                                        {{ $amenity->name }}
+                                    </span>
+                                @endforeach
+                                @if($hostel->amenities->count() > 5)
+                                    <span class="text-[10px] text-slate-500 px-2 py-1 bg-slate-100 rounded-full">
+                                        +{{ $hostel->amenities->count() - 5 }}
+                                    </span>
                                 @endif
-                            </div>
-                        </td>
+                            @else
+                                <span class="text-slate-400 text-xs">—</span>
+                            @endif
+                        </div>
+                    </td>
                     @endforeach
                 </tr>
                 <!-- Availability -->
