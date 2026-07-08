@@ -498,10 +498,6 @@
                             <dt class="text-sm text-gray-500">Last Updated</dt>
                             <dd class="text-sm text-gray-900">{{ $hostel->updated_at->diffForHumans() }}</dd>
                         </div>
-                        <div class="flex justify-between">
-                            <dt class="text-sm text-gray-500">Hostel ID</dt>
-                            <dd class="text-sm text-gray-900">#{{ $hostel->id }}</dd>
-                        </div>
                     </dl>
                 </div>
             </div>
