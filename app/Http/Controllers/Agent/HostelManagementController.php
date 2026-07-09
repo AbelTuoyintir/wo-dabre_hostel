@@ -86,19 +86,8 @@ class HostelManagementController extends Controller
             }
         }
 
-        // Add a hostel registration fee for the agent while the system keeps 20% of the amount.
-        $agentFee = (float) ($request->input('agent_fee', 100));
-        $platformShare = round($agentFee * 0.20, 2);
-        $agentCredit = round($agentFee - $platformShare, 2);
-
-        $agent->addCommission(
-            $agentCredit,
-            'hostel_added',
-            "Commission for adding hostel: {$hostel->name}",
-            $hostel->id,
-            null,
-            20
-        );
+        // Agent commissions must come from booking agent fee, not from adding/registering a hostel.
+        // Therefore, DO NOT create an 'hostel_added' commission here.
         $agent->increment('total_hostels_added');
 
         return redirect()->route('agent.hostels.show', $hostel->id)
