@@ -385,8 +385,7 @@
 
                 reader.onload = function(e) {
                     const div = document.createElement('div');
-                    div.className = 'relative group';
-                    div.innerHTML = `
+                    div.className = 'relative group';                    div.innerHTML = `
                         <img src="${e.target.result}"
                              class="w-full h-24 object-cover rounded-lg shadow-sm"
                              alt="Gallery preview ${i+1}">
@@ -424,6 +423,8 @@
         } else if (previewWrap) {
             previewWrap.classList.add('hidden');
         }
+
+        // Note: we don't revokeObjectURL here to avoid breaking playback before submit.
     }
 
     document.getElementById('room_video')?.addEventListener('change', function(e){
