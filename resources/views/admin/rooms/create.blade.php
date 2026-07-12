@@ -214,6 +214,31 @@
                     <h4 class="text-md font-medium text-gray-900 mb-4">Room Images</h4>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Room Video Upload -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Room Video (optional)
+                            </label>
+                            <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-blue-500 transition-colors">
+                                <div class="text-center">
+                                    <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                        <path d="M30 8l10 6v20l-10 6z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <rect x="8" y="8" width="18" height="32" rx="4" stroke-width="2" stroke-linejoin="round"/>
+                                    </svg>
+                                    <div class="mt-4">
+                                        <label for="room_video" class="cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500">
+                                            <span>Click to upload room video</span>
+                                            <input id="room_video" name="room_video" type="file" class="sr-only" accept="video/*">
+                                        </label>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-2">MP4/WebM up to 50MB</p>
+                                </div>
+                                <div id="room-video-preview" class="mt-4 hidden">
+                                    <video controls class="w-full rounded-lg border" src=""></video>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Cover Image Upload -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">
@@ -347,6 +372,63 @@
     function previewGalleryImages(input) {
         const preview = document.getElementById('gallery-preview');
         preview.innerHTML = '';
+
+        if (input.files && input.files.length > 0) {
+            preview.classList.remove('hidden');
+
+            // Limit to 5 images
+            const maxFiles = Math.min(input.files.length, 5);
+
+            for (let i = 0; i < maxFiles; i++) {
+                const file = input.files[i];
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    const div = document.createElement('div');
+                    div.className = 'relative group';
+                    div.innerHTML = `
+                        <img src="${e.target.result}"
+                             class="w-full h-24 object-cover rounded-lg shadow-sm"
+                             alt="Gallery preview ${i+1}">
+                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all rounded-lg"></div>
+                        <span class="absolute top-1 right-1 bg-green-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                            New
+                        </span>
+                    `;
+                    preview.appendChild(div);
+                }
+
+                reader.readAsDataURL(file);
+            }
+
+            // Show warning if more than 5 files selected
+            if (input.files.length > 5) {
+                const warningDiv = document.createElement('div');
+                warningDiv.className = 'col-span-2 text-center text-xs text-amber-600 mt-2';
+                warningDiv.textContent = 'Maximum 5 images allowed. Only the first 5 will be uploaded.';
+                preview.appendChild(warningDiv);
+            }
+        } else {
+            preview.classList.add('hidden');
+        }
+    }
+
+    function previewRoomVideo(input) {
+        const previewWrap = document.getElementById('room-video-preview');
+        const video = previewWrap?.querySelector('video');
+
+        if (input.files && input.files[0] && video) {
+            const url = URL.createObjectURL(input.files[0]);
+            video.src = url;
+            previewWrap.classList.remove('hidden');
+        } else if (previewWrap) {
+            previewWrap.classList.add('hidden');
+        }
+    }
+
+    document.getElementById('room_video')?.addEventListener('change', function(e){
+        previewRoomVideo(this);
+    });
 
         if (input.files && input.files.length > 0) {
             preview.classList.remove('hidden');

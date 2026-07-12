@@ -14,6 +14,7 @@ class HostelImage extends Model
         'hostel_id',
         'room_id',
         'image_path',
+        'media_kind',
         'is_primary',
         'order',
         'type'

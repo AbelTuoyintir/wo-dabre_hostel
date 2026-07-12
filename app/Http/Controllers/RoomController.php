@@ -74,7 +74,9 @@ class RoomController extends Controller
                 // Image validation rules
                 'cover_image' => 'required|image|mimes:jpeg,png,jpg,gif|max:10240', // 10MB max, required
                 'gallery_images' => 'nullable|array|max:5',
-                'gallery_images.*' => 'image|mimes:jpeg,png,jpg,gif|max:10240', // 10MB max per image
+'gallery_images.*' => 'image|mimes:jpeg,png,jpg,gif|max:10240', // 10MB max per image
+                // Dedicated room video (optional)
+                'room_video' => 'nullable|file|mimetypes:video/mp4,video/webm|max:51200', // 50MB
             ]);
 
             // Handle boolean fields
@@ -104,7 +106,7 @@ class RoomController extends Controller
                 // Create the room
                 $room = Room::create($validated);
 
-// Handle cover image upload
+                // Handle cover image upload
                 if ($request->hasFile('cover_image')) {
                     $path = $request->file('cover_image')->store('rooms/covers', 'public');
 
@@ -120,6 +122,37 @@ class RoomController extends Controller
                     \Log::info('Uploaded cover image for new room', [
                         'room_id' => $room->id,
                         'image_path' => $path
+                    ]);
+                }
+
+                // Handle room video upload (optional)
+                if ($request->hasFile('room_video')) {
+                    $videoPath = $request->file('room_video')->store('rooms/videos', 'public');
+
+                    // Delete existing video if any
+                    $existingVideo = HostelImage::where('room_id', $room->id)
+                        ->where('type', 'room')
+                        ->where('media_kind', 'video')
+                        ->first();
+
+                    if ($existingVideo) {
+                        Storage::disk('public')->delete($existingVideo->image_path);
+                        $existingVideo->delete();
+                    }
+
+                    HostelImage::create([
+                        'hostel_id' => $room->hostel_id,
+                        'room_id' => $room->id,
+                        'image_path' => $videoPath,
+                        'type' => 'room',
+                        'media_kind' => 'video',
+                        'is_primary' => false,
+                        'order' => 0,
+                    ]);
+
+                    \Log::info('Uploaded room video for new room', [
+                        'room_id' => $room->id,
+                        'video_path' => $videoPath,
                     ]);
                 }
 
@@ -291,6 +324,7 @@ $room->images()->create([
                 'cover_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
                 'gallery_images' => 'nullable|array|max:5',
                 'gallery_images.*' => 'image|mimes:jpeg,png,jpg,gif|max:10240',
+                'room_video' => 'nullable|file|mimetypes:video/mp4,video/webm|max:51200',
                 'removed_images' => 'nullable|array',
                 'removed_images.*' => 'exists:hostel_images,id',
                 'primary_image_id' => 'nullable|exists:hostel_images,id',
@@ -413,6 +447,37 @@ $room->images()->create([
                     \Log::info('Uploaded new cover image for room', [
                         'room_id' => $room->id,
                         'image_path' => $path
+                    ]);
+                }
+
+                // Handle room video upload (optional)
+                if ($request->hasFile('room_video')) {
+                    $videoPath = $request->file('room_video')->store('rooms/videos', 'public');
+
+                    // Delete existing video if any
+                    $existingVideo = HostelImage::where('room_id', $room->id)
+                        ->where('type', 'room')
+                        ->where('media_kind', 'video')
+                        ->first();
+
+                    if ($existingVideo) {
+                        Storage::disk('public')->delete($existingVideo->image_path);
+                        $existingVideo->delete();
+                    }
+
+                    HostelImage::create([
+                        'hostel_id' => $room->hostel_id,
+                        'room_id' => $room->id,
+                        'image_path' => $videoPath,
+                        'type' => 'room',
+                        'media_kind' => 'video',
+                        'is_primary' => false,
+                        'order' => 0,
+                    ]);
+
+                    \Log::info('Uploaded room video for room update', [
+                        'room_id' => $room->id,
+                        'video_path' => $videoPath,
                     ]);
                 }
 

@@ -326,6 +326,34 @@
                     </div>
                 </div>
 
+                <!-- Room Video Upload -->
+                <div class="border-t border-gray-200 pt-6">
+                    <h4 class="text-md font-medium text-gray-900 mb-4">Room Video</h4>
+
+                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                        @php
+                            $roomVideo = $room->roomVideo()->first();
+                        @endphp
+
+                        @if($roomVideo)
+                            <div class="mb-4">
+                                <video controls class="w-full rounded-lg border">
+                                    <source src="{{ image_url($roomVideo->image_path) }}" type="video/mp4">
+                                </video>
+                                <p class="text-xs text-gray-500 mt-2">Current video</p>
+                            </div>
+                        @endif
+
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Upload/Replace Video</label>
+                        <input type="file" name="room_video" accept="video/*" class="w-full border-gray-300 rounded-md">
+                        <p class="text-xs text-gray-500 mt-2">MP4/WebM up to 50MB</p>
+
+                        @error('room_video')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
                 <!-- Description -->
                 <div class="border-t border-gray-200 pt-6">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Room Description</label>

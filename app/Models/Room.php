@@ -49,7 +49,16 @@ class Room extends Model
 
     public function images()
     {
-        return $this->hasMany(HostelImage::class)->where('type', 'room');
+        return $this->hasMany(HostelImage::class)
+            ->where('type', 'room')
+            ->where('media_kind', 'image');
+    }
+
+    public function roomVideo()
+    {
+        return $this->hasOne(HostelImage::class)
+            ->where('type', 'room')
+            ->where('media_kind', 'video');
     }
 
     public function primaryImage()
@@ -128,6 +137,8 @@ class Room extends Model
     */
       public function roomImages()
     {
-        return $this->hasMany(HostelImage::class);
+        return $this->hasMany(HostelImage::class)
+            ->where('type', 'room')
+            ->where('media_kind', 'image');
     }
 }

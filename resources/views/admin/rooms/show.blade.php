@@ -121,7 +121,11 @@
         </div>
     </div>
 
-    <!-- Main Content Grid -->
+        <!-- Main Content Grid -->
+        @php
+            $roomVideo = $room->roomVideo()->first();
+        @endphp
+
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Left Column - Room Details -->
         <div class="lg:col-span-2 space-y-6">
@@ -134,6 +138,15 @@
                     <div class="grid grid-cols-2 gap-6">
                         <div>
                             <h4 class="text-xs font-medium text-gray-500 uppercase tracking-wider">Room Details</h4>
+
+                            @if($roomVideo)
+                                <div class="mt-4">
+                                    <h5 class="text-xs font-medium text-gray-700 mb-2">Room Video</h5>
+                                    <video controls class="w-full rounded-lg border">
+                                        <source src="{{ image_url($roomVideo->image_path) }}" type="video/mp4">
+                                    </video>
+                                </div>
+                            @endif
                             <dl class="mt-3 space-y-3">
                                 <div class="flex justify-between">
                                     <dt class="text-sm text-gray-600">Room Number:</dt>
