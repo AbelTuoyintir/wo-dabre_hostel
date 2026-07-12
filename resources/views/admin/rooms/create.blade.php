@@ -56,14 +56,9 @@
                             <span class="text-red-500">*</span> Room Type
                         </label>
                         <select name="room_type" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 @error('room_type') border-red-500 @enderror" required>
-                            <option value="single_room" {{ old('room_type') == 'single_room_self_contain' ? 'selected' : '' }}>Single Room self-contain</option>
-                            <option value="single_room" {{ old('room_type') == 'single_room_shared_washroom_and_kitchen' ? 'selected' : '' }}>Single Share washroom and kitchen</option>
-                            <option value="single_room" {{ old('room_type') == 'single_room_shared_washroom_without_kitchen' ? 'selected' : '' }}>Single Share washroom with no kitchen</option>
-                            <option value="shared_2" {{ old('room_type') == '2_in_a_room_self_contain' ? 'selected' : '' }}>2 in room self-contain</option>
-                            <option value="shared_2" {{ old('room_type') == '2_in_a_room_shared_washroom_without_kitchen' ? 'selected' : '' }}>2 in room washroom and kitchen</option>
-                            <option value="shared_2" {{ old('room_type') == '2_in_a_room_shared_washroom_without_kitchen' ? 'selected' : '' }}>2 in room washroom with no kitchen</option>
-                            <option value="shared_2" {{ old('room_type') == '3_in_a_room_selfcontain' ? 'selected' : '' }}>3 in room self-contain</option>
-                            <option value="shared_4" {{ old('room_type') == 'shared_4' ? 'selected' : '' }}>4 in room self-contain</option>
+                            <option value="single_room" {{ old('room_type') == 'single_room' ? 'selected' : '' }}>Single Room</option>
+                            <option value="shared_2" {{ old('room_type') == 'shared_2' ? 'selected' : '' }}>Shared (2)</option>
+                            <option value="shared_4" {{ old('room_type') == 'shared_4' ? 'selected' : '' }}>Shared (4)</option>
                             <option value="executive" {{ old('room_type') == 'executive' ? 'selected' : '' }}>Executive</option>
                         </select>
                         @error('room_type')
@@ -385,7 +380,8 @@
 
                 reader.onload = function(e) {
                     const div = document.createElement('div');
-                    div.className = 'relative group';                    div.innerHTML = `
+                    div.className = 'relative group';
+                    div.innerHTML = `
                         <img src="${e.target.result}"
                              class="w-full h-24 object-cover rounded-lg shadow-sm"
                              alt="Gallery preview ${i+1}">
@@ -424,7 +420,6 @@
             previewWrap.classList.add('hidden');
         }
 
-        // Note: we don't revokeObjectURL here to avoid breaking playback before submit.
     }
 
     document.getElementById('room_video')?.addEventListener('change', function(e){
