@@ -119,6 +119,16 @@ Route::get('/run-migrations', function () {
 });
 
 
+// Add to routes/web.php
+Route::get('/test-upload', function() {
+    echo "Current upload_max_filesize: " . ini_get('upload_max_filesize') . "\n";
+    echo "Current post_max_size: " . ini_get('post_max_size') . "\n";
+    echo "Current memory_limit: " . ini_get('memory_limit') . "\n";
+    
+    // Test if we can handle large files
+    $testSize = 100 * 1024 * 1024; // 100MB
+    echo "Can handle 100MB file: " . ($testSize < (int) ini_get('upload_max_filesize') * 1024 * 1024 ? 'Yes' : 'No') . "\n";
+});
 
 require __DIR__.'/auth.php';
 require __DIR__.'/admin.php';
