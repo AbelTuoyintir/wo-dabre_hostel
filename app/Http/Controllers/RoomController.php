@@ -62,7 +62,7 @@ class RoomController extends Controller
                 'capacity' => 'required|integer|min:1',
                 'hostel_id' => 'required|exists:hostels,id',
                 'gender' => 'required|in:male,female,any',
-                'room_type' => 'required|in:single_room,shared_2,shared_4,executive',
+                'room_type' => 'nullable|string|max:255', // Validation for room_type is handled in RoomController
                 'status' => 'required|in:available,full,maintenance,inactive',
                 'room_cost' => 'nullable|numeric|min:0',
                 'description' => 'nullable|string|max:1000',
@@ -72,9 +72,9 @@ class RoomController extends Controller
                 'furnished' => 'sometimes|boolean',
                 'private_bathroom' => 'sometimes|boolean',
                 // Image validation rules
-                'cover_image' => 'required|image|mimes:jpeg,png,jpg,gif|max:10240', // 10MB max, required
+                'cover_image' => 'required|image|mimes:jpeg,png,jpg,gif|max:50240', // 10MB max, required
                 'gallery_images' => 'nullable|array|max:5',
-'gallery_images.*' => 'image|mimes:jpeg,png,jpg,gif|max:10240', // 10MB max per image
+                'gallery_images.*' => 'image|mimes:jpeg,png,jpg,gif|max:10240', // 10MB max per image
                 // Dedicated room video (optional)
                 'room_video' => 'nullable|file|mimetypes:video/mp4,video/webm|max:51200', // 50MB
             ]);
