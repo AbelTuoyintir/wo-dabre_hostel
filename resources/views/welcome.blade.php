@@ -55,7 +55,7 @@
                             <!-- Details - More Compact -->
                             <div class="space-y-0.5">
                                 <div class="flex justify-between items-start">
-                                    <h3 class="font-semibold text-sm text-slate-800 truncate">{{ $hostel['name'] }}</h3>
+                                    {{-- <h3 class="font-semibold text-sm text-slate-800 truncate">{{ $hostel['name'] }}</h3> --}}
                                     <div class="flex items-center gap-0.5">
                                         <i class="fas fa-star text-[10px] text-amber-400"></i>
                                         <span class="text-xs font-light text-slate-600">{{ $hostel['rating'] ?? '4.5' }}</span>
@@ -91,13 +91,13 @@
         @endif
     </section>
 
-    <!-- FLOATING MAP BUTTON - Smaller -->
+    {{-- <!-- FLOATING MAP BUTTON - Smaller -->
     <div id="map-button" class="fixed bottom-20 left-1/2 -translate-x-1/2 z-30 md:bottom-8 transition-all duration-300">
         <button class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-full flex items-center gap-1.5 shadow-xl hover:scale-105 transition-all text-xs font-bold">
             <span>Show Map</span>
             <i class="fas fa-map text-xs"></i>
         </button>
-    </div>
+    </div> --}}
 
     <!-- FLOATING COMPARISON BAR - More Compact -->
     <div id="comparison-bar" class="fixed bottom-20 left-0 right-0 z-40 px-3 md:bottom-8 hidden">
