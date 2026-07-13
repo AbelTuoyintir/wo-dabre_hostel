@@ -17,7 +17,7 @@
             <p class="mt-1 text-sm text-gray-600">Add a new room to your hostel system.</p>
         </div>
 
-        <form action="{{ route('admin.rooms.store') }}" method="POST" enctype="multipart/form-data" class="p-6">
+        <form action="{{ route('admin.rooms.store') }}" method="POST" enctype="multipart/form-data" class="p-6" id="roomForm">
             @csrf
 
             @if($errors->any())
@@ -264,7 +264,7 @@
                             <option value="courtyard" {{ old('window_type') == 'courtyard' ? 'selected' : '' }}>Courtyard</option>
                             <option value="garden" {{ old('window_type') == 'garden' ? 'selected' : '' }}>Garden</option>
                             <option value="none" {{ old('window_type') == 'none' ? 'selected' : '' }}>No Window</option>
-                        </select>3
+                        </select>
                         @error('window_type')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
@@ -345,13 +345,14 @@
                                     <div class="mt-4">
                                         <label for="room_video" class="cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500">
                                             <span>Click to upload room video</span>
-                                            <input id="room_video" name="room_video" type="file" class="sr-only" accept="video/*">
+                                            <input id="room_video" name="room_video" type="file" class="sr-only" accept="video/*" onchange="previewRoomVideo(this)">
                                         </label>
                                     </div>
                                     <p class="text-xs text-gray-500 mt-2">MP4/WebM up to 50MB</p>
                                 </div>
                                 <div id="room-video-preview" class="mt-4 hidden">
                                     <video controls class="w-full rounded-lg border" src=""></video>
+                                    <button type="button" onclick="removeRoomVideo()" class="mt-2 text-xs text-red-600 hover:text-red-800">Remove Video</button>
                                 </div>
                             </div>
                         </div>
@@ -376,7 +377,12 @@
                                     <p class="text-xs text-gray-400 mt-1">This will be the main image displayed for the room</p>
                                 </div>
                                 <div id="cover-preview" class="mt-4 hidden">
-                                    <img src="" class="max-h-40 mx-auto rounded-lg shadow-md" alt="Cover preview">
+                                    <div class="relative inline-block">
+                                        <img src="" class="max-h-40 mx-auto rounded-lg shadow-md" alt="Cover preview">
+                                        <button type="button" onclick="removeCoverImage()" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600">
+                                            ×
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                             @error('cover_image')
@@ -385,7 +391,7 @@
                         </div>
 
                         <!-- Gallery Images Upload -->
-                        <div>
+                        <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700 mb-2">
                                 Gallery Images (Optional)
                             </label>
@@ -404,7 +410,7 @@
                                     <p class="text-xs text-gray-500 mt-2">PNG, JPG, GIF up to 10MB each (max 5 images)</p>
                                     <p class="text-xs text-gray-400 mt-1">Additional photos showing different angles of the room</p>
                                 </div>
-                                <div id="gallery-preview" class="grid grid-cols-2 gap-3 mt-4 hidden"></div>
+                                <div id="gallery-preview" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 mt-4 hidden"></div>
                             </div>
                             @error('gallery_images.*')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -467,6 +473,7 @@
 
 @push('scripts')
 <script>
+    // Cover Image Preview
     function previewCoverImage(input) {
         const preview = document.getElementById('cover-preview');
         const previewImg = preview.querySelector('img');
@@ -486,6 +493,17 @@
         }
     }
 
+    function removeCoverImage() {
+        const input = document.getElementById('cover_image');
+        const preview = document.getElementById('cover-preview');
+        const previewImg = preview.querySelector('img');
+        
+        input.value = '';
+        previewImg.src = '';
+        preview.classList.add('hidden');
+    }
+
+    // Gallery Images Preview
     function previewGalleryImages(input) {
         const preview = document.getElementById('gallery-preview');
         preview.innerHTML = '';
@@ -496,8 +514,7 @@
             // Limit to 5 images
             const maxFiles = Math.min(input.files.length, 5);
 
-            for (let i = 0; i < maxFiles; i++) {
-                const file = input.files[i];
+            Array.from(input.files).slice(0, maxFiles).forEach((file, index) => {
                 const reader = new FileReader();
 
                 reader.onload = function(e) {
@@ -505,24 +522,29 @@
                     div.className = 'relative group';
                     div.innerHTML = `
                         <img src="${e.target.result}"
-                             class="w-full h-24 object-cover rounded-lg shadow-sm"
-                             alt="Gallery preview ${i+1}">
+                             class="w-full h-24 object-cover rounded-lg shadow-sm border border-gray-200"
+                             alt="Gallery preview ${index+1}">
                         <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all rounded-lg"></div>
-                        <span class="absolute top-1 right-1 bg-green-500 text-white text-xs px-1.5 py-0.5 rounded-full">
-                            New
+                        <button type="button" 
+                                onclick="removeGalleryImage(${index})" 
+                                class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                            ×
+                        </button>
+                        <span class="absolute bottom-1 left-1 bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded">
+                            ${index + 1}
                         </span>
                     `;
                     preview.appendChild(div);
                 }
 
                 reader.readAsDataURL(file);
-            }
+            });
 
             // Show warning if more than 5 files selected
             if (input.files.length > 5) {
                 const warningDiv = document.createElement('div');
-                warningDiv.className = 'col-span-2 text-center text-xs text-amber-600 mt-2';
-                warningDiv.textContent = 'Maximum 5 images allowed. Only the first 5 will be uploaded.';
+                warningDiv.className = 'col-span-full text-center text-xs text-amber-600 mt-2 p-2 bg-amber-50 rounded';
+                warningDiv.innerHTML = '⚠️ Maximum 5 images allowed. Only the first 5 will be uploaded.';
                 preview.appendChild(warningDiv);
             }
         } else {
@@ -530,6 +552,28 @@
         }
     }
 
+    function removeGalleryImage(index) {
+        const input = document.getElementById('gallery_images');
+        const dt = new DataTransfer();
+        const files = input.files;
+        
+        // Convert FileList to Array and remove the file at the specified index
+        const fileArray = Array.from(files);
+        fileArray.splice(index, 1);
+        
+        // Add remaining files back to DataTransfer
+        fileArray.forEach(file => {
+            dt.items.add(file);
+        });
+        
+        input.files = dt.files;
+        
+        // Trigger change event to refresh preview
+        const event = new Event('change');
+        input.dispatchEvent(event);
+    }
+
+    // Room Video Preview
     function previewRoomVideo(input) {
         const previewWrap = document.getElementById('room-video-preview');
         const video = previewWrap?.querySelector('video');
@@ -538,63 +582,69 @@
             const url = URL.createObjectURL(input.files[0]);
             video.src = url;
             previewWrap.classList.remove('hidden');
+            
+            // Display video info
+            const file = input.files[0];
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'mt-2 text-xs text-gray-500';
+            infoDiv.innerHTML = `
+                <p>File: ${file.name}</p>
+                <p>Size: ${(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                <p>Type: ${file.type}</p>
+            `;
+            
+            // Remove existing info if any
+            const existingInfo = previewWrap.querySelector('.video-info');
+            if (existingInfo) {
+                existingInfo.remove();
+            }
+            infoDiv.className = 'video-info mt-2 text-xs text-gray-500';
+            previewWrap.appendChild(infoDiv);
         } else if (previewWrap) {
             previewWrap.classList.add('hidden');
-        }
-
-    }
-
-    document.getElementById('room_video')?.addEventListener('change', function(e){
-        previewRoomVideo(this);
-    });
-
-        if (input.files && input.files.length > 0) {
-            preview.classList.remove('hidden');
-
-            // Limit to 5 images
-            const maxFiles = Math.min(input.files.length, 5);
-
-            for (let i = 0; i < maxFiles; i++) {
-                const file = input.files[i];
-                const reader = new FileReader();
-
-                reader.onload = function(e) {
-                    const div = document.createElement('div');
-                    div.className = 'relative group';
-                    div.innerHTML = `
-                        <img src="${e.target.result}"
-                             class="w-full h-24 object-cover rounded-lg shadow-sm"
-                             alt="Gallery preview ${i+1}">
-                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all rounded-lg"></div>
-                        <span class="absolute top-1 right-1 bg-green-500 text-white text-xs px-1.5 py-0.5 rounded-full">
-                            New
-                        </span>
-                    `;
-                    preview.appendChild(div);
-                }
-
-                reader.readAsDataURL(file);
+            const video = previewWrap?.querySelector('video');
+            if (video) {
+                video.src = '';
             }
-
-            // Show warning if more than 5 files selected
-            if (input.files.length > 5) {
-                const warningDiv = document.createElement('div');
-                warningDiv.className = 'col-span-2 text-center text-xs text-amber-600 mt-2';
-                warningDiv.textContent = 'Maximum 5 images allowed. Only the first 5 will be uploaded.';
-                preview.appendChild(warningDiv);
-            }
-        } else {
-            preview.classList.add('hidden');
         }
     }
 
-    // Debug function to check if files are selected
-    document.getElementById('cover_image').addEventListener('change', function(e) {
-        console.log('Cover image selected:', e.target.files.length > 0 ? e.target.files[0].name : 'No file');
-    });
+    function removeRoomVideo() {
+        const input = document.getElementById('room_video');
+        const previewWrap = document.getElementById('room-video-preview');
+        const video = previewWrap?.querySelector('video');
+        
+        input.value = '';
+        if (video) {
+            video.src = '';
+        }
+        previewWrap.classList.add('hidden');
+        
+        // Remove info
+        const info = previewWrap?.querySelector('.video-info');
+        if (info) {
+            info.remove();
+        }
+    }
 
-    document.getElementById('gallery_images').addEventListener('change', function(e) {
-        console.log('Gallery images selected:', e.target.files.length);
+    // Reset form previews
+    document.addEventListener('DOMContentLoaded', function() {
+        const resetButton = document.querySelector('button[type="reset"]');
+        if (resetButton) {
+            resetButton.addEventListener('click', function(e) {
+                // Clear cover image
+                removeCoverImage();
+                
+                // Clear gallery preview
+                const galleryPreview = document.getElementById('gallery-preview');
+                galleryPreview.innerHTML = '';
+                galleryPreview.classList.add('hidden');
+                document.getElementById('gallery_images').value = '';
+                
+                // Clear video preview
+                removeRoomVideo();
+            });
+        }
     });
 </script>
 @endpush
@@ -602,10 +652,25 @@
 @push('styles')
 <style>
     .border-dashed {
-        background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' stroke='%23CBD5E0' stroke-width='2' stroke-dasharray='6%2c 14' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+        background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' stroke='%23CBD5E0' stroke-width='2' stroke-dasharray='6%2c 14' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e);
     }
     .border-dashed:hover {
-        background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' stroke='%233B82F6' stroke-width='2' stroke-dasharray='6%2c 14' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+        background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' stroke='%233B82F6' stroke-width='2' stroke-dasharray='6%2c 14' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e);
+    }
+    
+    /* Gallery image hover effect */
+    #gallery-preview > div {
+        transition: transform 0.2s ease;
+    }
+    #gallery-preview > div:hover {
+        transform: scale(1.05);
+        z-index: 10;
+    }
+    
+    /* Video preview styling */
+    #room-video-preview video {
+        max-height: 200px;
+        background: #000;
     }
 </style>
 @endpush
