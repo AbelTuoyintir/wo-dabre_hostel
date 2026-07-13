@@ -41,14 +41,14 @@ class HostelManagementController extends Controller
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
             'agent_fee' => 'nullable|numeric|min:0',
-            'amenities' => 'array',
-            'images.*' => 'image|max:5120',
+'amenities' => 'array',
+            'images.*' => 'mimetypes:image/*,video/*|max:102400',
             'featured_image' => 'required|image|max:5120'
         ]);
 
         $agent = Auth::user()->agent;
 
-        // Upload featured image
+// Upload featured image (images only)
         $featuredPath = $request->file('featured_image')->store('hostels', 'public');
 
         $hostelData = [
@@ -78,11 +78,20 @@ class HostelManagementController extends Controller
             $hostel->amenities()->attach($request->amenities);
         }
 
-        // Upload gallery images
+// Upload gallery images/videos
         if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $image) {
-                $path = $image->store('hostels/gallery', 'public');
-                $hostel->images()->create(['image_path' => $path]);
+            foreach ($request->file('images') as $file) {
+                $path = $file->store('hostels/gallery', 'public');
+
+                $mediaKind = str_starts_with($file->getMimeType() ?? '', 'video/') ? 'video' : 'image';
+
+$hostel->images()->create([
+                    'image_path' => $path,
+                    'media_kind' => $mediaKind,
+                    'is_primary' => false,
+                    'order' => 0,
+                    'type' => 'hostel',
+                ]);
             }
         }
 

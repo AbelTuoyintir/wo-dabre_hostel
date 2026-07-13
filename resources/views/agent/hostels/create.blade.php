@@ -127,7 +127,7 @@
                         <label for="featured_image" class="block text-xs font-medium text-gray-700 mb-1">
                             Featured Image <span class="text-red-500">*</span>
                         </label>
-                        <input type="file" 
+<input type="file" 
                                class="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('featured_image') border-red-500 @enderror" 
                                id="featured_image" name="featured_image" accept="image/*" required>
                         <p class="mt-1 text-xs text-gray-500">Max size: 5MB</p>
@@ -137,9 +137,9 @@
                     </div>
                     <div>
                         <label for="images" class="block text-xs font-medium text-gray-700 mb-1">Gallery Images</label>
-                        <input type="file" 
+<input type="file" 
                                class="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('images.*') border-red-500 @enderror" 
-                               id="images" name="images[]" accept="image/*" multiple>
+                               id="images" name="images[]" accept="image/*,video/*" multiple>
                         <p class="mt-1 text-xs text-gray-500">You can select multiple images. Max size each: 5MB</p>
                         @error('images.*')
                             <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
