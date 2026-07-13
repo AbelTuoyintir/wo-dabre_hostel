@@ -9,22 +9,24 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('amenities', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('slug')->unique();
-            $table->string('icon')->nullable();
-            $table->string('category')->nullable();
-            $table->text('description')->nullable();
-            $table->boolean('is_active')->default(true);
-            $table->timestamps();
+        if (!Schema::hasTable('amenities')) {
+            Schema::create('amenities', function (Blueprint $table) {
+                $table->id();
+                $table->string('name');
+                $table->string('slug')->unique();
+                $table->string('icon')->nullable();
+                $table->string('category')->nullable();
+                $table->text('description')->nullable();
+                $table->boolean('is_active')->default(true);
+                $table->timestamps();
 
-            // Add index for better performance
-            $table->index('category');
-            $table->index('is_active');
-        });
+                // Add index for better performance
+                $table->index('category');
+                $table->index('is_active');
+            });
+        }
 
-        // Insert amenities with categories
+        // Insert/update amenities with categories (idempotent by slug)
         $amenities = [
             // Basic Amenities
             ['name' => 'Free WiFi', 'slug' => 'wifi', 'icon' => 'fa-solid fa-wifi', 'category' => 'Basic', 'description' => 'High-speed internet access'],
@@ -54,10 +56,13 @@ return new class extends Migration
         ];
 
         foreach ($amenities as $amenity) {
-            DB::table('amenities')->insert(array_merge($amenity, [
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]));
+            DB::table('amenities')->updateOrInsert(
+                ['slug' => $amenity['slug']],
+                array_merge($amenity, [
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ])
+            );
         }
     }
 
