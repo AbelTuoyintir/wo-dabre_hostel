@@ -72,7 +72,7 @@ class RoomController extends Controller
                 'furnished' => 'sometimes|boolean',
                 'private_bathroom' => 'sometimes|boolean',
                 // Image validation rules
-                'cover_image' => 'required|image|mimes:jpeg,png,jpg,gif|max:50240', // 10MB max, required
+                'cover_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:50240', // 10MB max, required
                 'gallery_images' => 'nullable|array|max:5',
                 'gallery_images.*' => 'image|mimes:jpeg,png,jpg,gif|max:10240', // 10MB max per image
                 // Dedicated room video (optional)
