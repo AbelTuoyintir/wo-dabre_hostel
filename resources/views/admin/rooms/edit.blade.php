@@ -25,7 +25,7 @@
             </div>
         </div>
 
-        <form action="{{ route('admin.rooms.update', $room) }}" method="POST" enctype="multipart/form-data" class="p-6">
+        <form action="{{ route('admin.rooms.update', $room) }}" method="POST" enctype="multipart/form-data" class="p-6" id="roomForm">
             @csrf
             @method('PUT')
 
@@ -222,7 +222,7 @@
                             <label class="block text-sm font-medium text-gray-700 mb-3">Current Images</label>
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="current-images">
                                 @foreach($room->images as $image)
-                                    <div class="relative group border rounded-lg p-2 {{ $image->is_primary ? 'bg-blue-50 border-blue-300' : '' }}" data-image-id="{{ $image->id }}">
+                                    <div class="relative group border rounded-lg p-2 {{ $image->is_primary ? 'bg-blue-50 border-blue-300' : 'border-gray-200' }}" data-image-id="{{ $image->id }}" id="image-{{ $image->id }}">
                                         <img src="{{ image_url($image->image_path) }}"
                                              alt="Room {{ $room->number }}"
                                              class="w-full h-32 object-cover rounded-lg mb-2">
@@ -234,11 +234,16 @@
                                                     Primary
                                                 </span>
                                             @endif
+                                            @if($image->video)
+                                                <span class="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                                                    Video
+                                                </span>
+                                            @endif
                                         </div>
 
                                         <!-- Image Actions -->
-                                        <div class="flex justify-between items-center mt-2">
-                                            <div class="flex gap-2">
+                                        <div class="flex flex-wrap justify-between items-center mt-2 gap-1">
+                                            <div class="flex gap-1">
                                                 @if(!$image->is_primary)
                                                     <button type="button"
                                                             onclick="setAsPrimary({{ $image->id }})"
@@ -256,7 +261,7 @@
 
                                             <!-- Order Indicator -->
                                             @if(!$image->is_primary)
-                                                <span class="text-xs text-gray-500">Order: {{ $image->order }}</span>
+                                                <span class="text-xs text-gray-500">#{{ $image->order }}</span>
                                             @endif
                                         </div>
                                     </div>
@@ -295,7 +300,12 @@
                                         <p class="text-xs text-gray-500 mt-1">PNG, JPG up to 10MB</p>
                                     </div>
                                     <div id="cover-preview" class="mt-2 hidden">
-                                        <img src="" class="h-24 w-auto rounded-lg mx-auto" alt="Cover preview">
+                                        <div class="relative inline-block">
+                                            <img src="" class="h-24 w-auto rounded-lg mx-auto" alt="Cover preview">
+                                            <button type="button" onclick="removeCoverImage()" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600">
+                                                ×
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -330,23 +340,42 @@
                 <div class="border-t border-gray-200 pt-6">
                     <h4 class="text-md font-medium text-gray-900 mb-4">Room Video</h4>
 
-                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-blue-500 transition-colors">
                         @php
                             $roomVideo = $room->roomVideo()->first();
                         @endphp
 
                         @if($roomVideo)
-                            <div class="mb-4">
-                                <video controls class="w-full rounded-lg border">
-                                    <source src="{{ image_url($roomVideo->image_path) }}" type="video/mp4">
-                                </video>
-                                <p class="text-xs text-gray-500 mt-2">Current video</p>
+                            <div id="current-video-container" class="mb-4">
+                                <div class="relative">
+                                    <video controls class="w-full rounded-lg border max-h-64">
+                                        <source src="{{ image_url($roomVideo->image_path) }}" type="video/mp4">
+                                        Your browser does not support the video tag.
+                                    </video>
+                                    <p class="text-xs text-gray-500 mt-2">Current video</p>
+                                    <button type="button" 
+                                            onclick="removeCurrentVideo()" 
+                                            class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600">
+                                        ×
+                                    </button>
+                                </div>
                             </div>
+                            <input type="hidden" name="remove_video" id="remove_video" value="0">
                         @endif
 
                         <label class="block text-sm font-medium text-gray-700 mb-2">Upload/Replace Video</label>
-                        <input type="file" name="room_video" accept="video/*" class="w-full border-gray-300 rounded-md">
+                        <input type="file" name="room_video" id="room_video" accept="video/*" onchange="previewRoomVideo(this)" class="w-full border-gray-300 rounded-md">
                         <p class="text-xs text-gray-500 mt-2">MP4/WebM up to 50MB</p>
+
+                        <div id="video-preview" class="mt-3 hidden">
+                            <div class="relative">
+                                <video controls class="w-full rounded-lg border max-h-64" src=""></video>
+                                <button type="button" onclick="removeVideoPreview()" class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600">
+                                    ×
+                                </button>
+                            </div>
+                            <div id="video-info" class="mt-2 text-xs text-gray-500"></div>
+                        </div>
 
                         @error('room_video')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -432,18 +461,21 @@
             updateRemovedImagesInput();
 
             // Hide the image container
-            const imageContainer = document.querySelector(`[data-image-id="${imageId}"]`);
+            const imageContainer = document.getElementById(`image-${imageId}`);
             if (imageContainer) {
-                imageContainer.style.opacity = '0.5';
+                imageContainer.style.opacity = '0.4';
                 imageContainer.style.pointerEvents = 'none';
                 imageContainer.classList.add('bg-gray-100');
 
                 // Add "marked for removal" text
-                const removalBadge = document.createElement('div');
-                removalBadge.className = 'absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold z-10';
-                removalBadge.textContent = 'Marked for Removal';
-                imageContainer.style.position = 'relative';
-                imageContainer.appendChild(removalBadge);
+                const existingBadge = imageContainer.querySelector('.removal-badge');
+                if (!existingBadge) {
+                    const removalBadge = document.createElement('div');
+                    removalBadge.className = 'removal-badge absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold z-10';
+                    removalBadge.textContent = '🗑️ Marked for Removal';
+                    imageContainer.style.position = 'relative';
+                    imageContainer.appendChild(removalBadge);
+                }
             }
         }
     }
@@ -477,26 +509,51 @@
         });
 
         // Add primary styling to selected image
-        const selectedContainer = document.querySelector(`[data-image-id="${imageId}"]`);
-        selectedContainer.classList.add('bg-blue-50', 'border-blue-300');
+        const selectedContainer = document.getElementById(`image-${imageId}`);
+        if (selectedContainer) {
+            selectedContainer.classList.add('bg-blue-50', 'border-blue-300');
 
-        // Add primary badge
-        const badgeContainer = selectedContainer.querySelector('.absolute.top-3.left-3');
-        if (badgeContainer) {
-            badgeContainer.innerHTML = '<span class="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">Primary</span>';
+            // Add primary badge
+            const badgeContainer = selectedContainer.querySelector('.absolute.top-3.left-3');
+            if (badgeContainer) {
+                // Remove existing badges
+                badgeContainer.innerHTML = '';
+                const primaryBadge = document.createElement('span');
+                primaryBadge.className = 'bg-blue-500 text-white text-xs px-2 py-1 rounded-full';
+                primaryBadge.textContent = 'Primary';
+                badgeContainer.appendChild(primaryBadge);
+            }
         }
+
+        // Show confirmation
+        showToast('Primary image updated successfully!', 'success');
     }
 
     function previewCoverImage(input) {
         const preview = document.getElementById('cover-preview');
+        const previewImg = preview.querySelector('img');
+
         if (input.files && input.files[0]) {
             const reader = new FileReader();
             reader.onload = function(e) {
-                preview.querySelector('img').src = e.target.result;
+                previewImg.src = e.target.result;
                 preview.classList.remove('hidden');
             }
             reader.readAsDataURL(input.files[0]);
+        } else {
+            preview.classList.add('hidden');
+            previewImg.src = '';
         }
+    }
+
+    function removeCoverImage() {
+        const input = document.getElementById('cover_image');
+        const preview = document.getElementById('cover-preview');
+        const previewImg = preview.querySelector('img');
+        
+        input.value = '';
+        previewImg.src = '';
+        preview.classList.add('hidden');
     }
 
     function previewGalleryImages(input) {
@@ -506,32 +563,117 @@
         if (input.files && input.files.length > 0) {
             preview.classList.remove('hidden');
 
-            for (let i = 0; i < Math.min(input.files.length, 5); i++) {
-                const file = input.files[i];
+            const maxFiles = Math.min(input.files.length, 5);
+
+            Array.from(input.files).slice(0, maxFiles).forEach((file, index) => {
                 const reader = new FileReader();
 
                 reader.onload = function(e) {
                     const div = document.createElement('div');
-                    div.className = 'relative';
+                    div.className = 'relative group';
                     div.innerHTML = `
-                        <img src="${e.target.result}" class="w-full h-16 object-cover rounded-lg">
-                        <span class="absolute top-1 right-1 bg-green-500 text-white text-xs px-1 rounded">New</span>
+                        <img src="${e.target.result}" 
+                             class="w-full h-20 object-cover rounded-lg border border-gray-200">
+                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all rounded-lg"></div>
+                        <span class="absolute top-1 right-1 bg-green-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                            New
+                        </span>
+                        <button type="button" 
+                                onclick="removeGalleryImage(${index})" 
+                                class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                            ×
+                        </button>
                     `;
                     preview.appendChild(div);
                 }
 
                 reader.readAsDataURL(file);
-            }
+            });
 
-            // Show message if more than 5 files selected
+            // Show warning if more than 5 files selected
             if (input.files.length > 5) {
                 const warningDiv = document.createElement('div');
-                warningDiv.className = 'col-span-full text-center text-xs text-amber-600 mt-2';
-                warningDiv.textContent = 'Maximum 5 images allowed. Only the first 5 will be uploaded.';
+                warningDiv.className = 'col-span-full text-center text-xs text-amber-600 mt-2 p-2 bg-amber-50 rounded';
+                warningDiv.innerHTML = '⚠️ Maximum 5 images allowed. Only the first 5 will be uploaded.';
                 preview.appendChild(warningDiv);
             }
         } else {
             preview.classList.add('hidden');
+        }
+    }
+
+    function removeGalleryImage(index) {
+        const input = document.getElementById('gallery_images');
+        const dt = new DataTransfer();
+        const files = input.files;
+        
+        // Convert FileList to Array and remove the file at the specified index
+        const fileArray = Array.from(files);
+        fileArray.splice(index, 1);
+        
+        // Add remaining files back to DataTransfer
+        fileArray.forEach(file => {
+            dt.items.add(file);
+        });
+        
+        input.files = dt.files;
+        
+        // Trigger change event to refresh preview
+        const event = new Event('change');
+        input.dispatchEvent(event);
+    }
+
+    function previewRoomVideo(input) {
+        const preview = document.getElementById('video-preview');
+        const video = preview.querySelector('video');
+        const info = document.getElementById('video-info');
+
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            const url = URL.createObjectURL(file);
+            
+            video.src = url;
+            preview.classList.remove('hidden');
+            
+            // Show video info
+            info.innerHTML = `
+                <p>📹 File: ${file.name}</p>
+                <p>📦 Size: ${(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                <p>📝 Type: ${file.type}</p>
+            `;
+            
+            // Hide current video if exists
+            const currentVideoContainer = document.getElementById('current-video-container');
+            if (currentVideoContainer) {
+                currentVideoContainer.style.display = 'none';
+            }
+        }
+    }
+
+    function removeVideoPreview() {
+        const input = document.getElementById('room_video');
+        const preview = document.getElementById('video-preview');
+        const video = preview.querySelector('video');
+        const info = document.getElementById('video-info');
+        
+        input.value = '';
+        video.src = '';
+        preview.classList.add('hidden');
+        info.innerHTML = '';
+        
+        // Show current video if it was hidden
+        const currentVideoContainer = document.getElementById('current-video-container');
+        if (currentVideoContainer) {
+            currentVideoContainer.style.display = 'block';
+        }
+    }
+
+    function removeCurrentVideo() {
+        if (confirm('Are you sure you want to remove the current video?')) {
+            document.getElementById('remove_video').value = '1';
+            const container = document.getElementById('current-video-container');
+            container.style.display = 'none';
+            showToast('Video marked for removal', 'info');
         }
     }
 
@@ -540,16 +682,96 @@
             document.getElementById('delete-form').submit();
         }
     }
+
+    // Toast notification function
+    function showToast(message, type = 'info') {
+        const colors = {
+            success: 'bg-green-500',
+            error: 'bg-red-500',
+            info: 'bg-blue-500',
+            warning: 'bg-yellow-500'
+        };
+
+        const toast = document.createElement('div');
+        toast.className = `fixed bottom-4 right-4 ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg z-50 transform transition-all duration-300 translate-y-0 opacity-100`;
+        toast.textContent = message;
+        
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.classList.add('opacity-0', 'translate-y-2');
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        }, 3000);
+    }
+
+    // Form submission validation
+    document.getElementById('roomForm').addEventListener('submit', function(e) {
+        // Check if there are any images selected for upload
+        const coverImage = document.getElementById('cover_image');
+        const galleryImages = document.getElementById('gallery_images');
+        const currentImages = document.querySelectorAll('#current-images [data-image-id]');
+        
+        // If there are no current images and no new images uploaded, show warning
+        if (currentImages.length === 0 && 
+            (!coverImage.files || coverImage.files.length === 0) && 
+            (!galleryImages.files || galleryImages.files.length === 0)) {
+            e.preventDefault();
+            showToast('Please upload at least one image for the room.', 'error');
+            return false;
+        }
+        
+        return true;
+    });
 </script>
 @endpush
 
 @push('styles')
 <style>
     .border-dashed {
-        background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' stroke='%23CBD5E0' stroke-width='2' stroke-dasharray='6%2c 14' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+        background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' stroke='%23CBD5E0' stroke-width='2' stroke-dasharray='6%2c 14' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e);
     }
     .border-dashed:hover {
-        background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' stroke='%233B82F6' stroke-width='2' stroke-dasharray='6%2c 14' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+        background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' stroke='%233B82F6' stroke-width='2' stroke-dasharray='6%2c 14' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e);
+    }
+    
+    /* Gallery hover effects */
+    #gallery-preview > div {
+        transition: transform 0.2s ease;
+    }
+    #gallery-preview > div:hover {
+        transform: scale(1.05);
+        z-index: 10;
+    }
+    
+    /* Current images hover effects */
+    #current-images > div {
+        transition: all 0.3s ease;
+    }
+    #current-images > div:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Video preview styling */
+    #video-preview video {
+        max-height: 300px;
+        background: #000;
+    }
+    
+    /* Animations */
+    .removal-badge {
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.7;
+        }
     }
 </style>
 @endpush
