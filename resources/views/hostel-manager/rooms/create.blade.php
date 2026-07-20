@@ -88,7 +88,7 @@
                         <i class="fas fa-info-circle text-blue-500 mr-1.5 text-xs"></i>
                         Basic Information
                     </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <!-- Room Number -->
                         <div>
                             <label class="block text-[10px] font-medium text-gray-500 uppercase mb-1">
@@ -111,6 +111,132 @@
                                    class="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 @error('floor') border-red-500 @enderror"
                                    placeholder="e.g., 1, 2, 3" min="0">
                             @error('floor')
+                                <p class="mt-1 text-[10px] text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <!-- Room Type -->
+                        <div>
+                            <label class="block text-[10px] font-medium text-gray-500 uppercase mb-1">
+                                Room Type <span class="text-red-500">*</span>
+                            </label>
+                            <select name="room_type" class="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 @error('room_type') border-red-500 @enderror" required>
+                                <option value="">Select Room Type</option>
+                                <optgroup label="Single Rooms">
+                                    <option value="single_self_contained" {{ old('room_type') == 'single_self_contained' ? 'selected' : '' }}>Single Room - Self Contained</option>
+                                    <option value="single_private_bathroom" {{ old('room_type') == 'single_private_bathroom' ? 'selected' : '' }}>Single Room - Private Bathroom</option>
+                                    <option value="single_shared_bathroom" {{ old('room_type') == 'single_shared_bathroom' ? 'selected' : '' }}>Single Room - Shared Bathroom</option>
+                                    <option value="single_shared_kitchen" {{ old('room_type') == 'single_shared_kitchen' ? 'selected' : '' }}>Single Room - Shared Kitchen</option>
+                                    <option value="single_shared_kitchen_bathroom" {{ old('room_type') == 'single_shared_kitchen_bathroom' ? 'selected' : '' }}>Single Room - Shared Kitchen &amp; Bathroom</option>
+                                    <option value="single_premium" {{ old('room_type') == 'single_premium' ? 'selected' : '' }}>Single Room - Premium</option>
+                                    <option value="single_executive" {{ old('room_type') == 'single_executive' ? 'selected' : '' }}>Single Room - Executive</option>
+                                    <option value="single_standard" {{ old('room_type') == 'single_standard' ? 'selected' : '' }}>Single Room - Standard</option>
+                                    <option value="single_deluxe" {{ old('room_type') == 'single_deluxe' ? 'selected' : '' }}>Single Room - Deluxe</option>
+                                    <option value="single_ensuite" {{ old('room_type') == 'single_ensuite' ? 'selected' : '' }}>Single Room - En-suite</option>
+                                    <option value="single_balcony" {{ old('room_type') == 'single_balcony' ? 'selected' : '' }}>Single Room - With Balcony</option>
+                                    <option value="single_furnished" {{ old('room_type') == 'single_furnished' ? 'selected' : '' }}>Single Room - Furnished</option>
+                                    <option value="single_ac" {{ old('room_type') == 'single_ac' ? 'selected' : '' }}>Single Room - With Air Conditioning</option>
+                                </optgroup>
+
+                                <optgroup label="Double Rooms (2 People)">
+                                    <option value="double_self_contained" {{ old('room_type') == 'double_self_contained' ? 'selected' : '' }}>Two in a Room - Self Contained</option>
+                                    <option value="double_private_bathroom" {{ old('room_type') == 'double_private_bathroom' ? 'selected' : '' }}>Two in a Room - Private Bathroom</option>
+                                    <option value="double_shared_bathroom" {{ old('room_type') == 'double_shared_bathroom' ? 'selected' : '' }}>Two in a Room - Shared Bathroom</option>
+                                    <option value="double_shared_kitchen" {{ old('room_type') == 'double_shared_kitchen' ? 'selected' : '' }}>Two in a Room - Shared Kitchen</option>
+                                    <option value="double_shared_kitchen_bathroom" {{ old('room_type') == 'double_shared_kitchen_bathroom' ? 'selected' : '' }}>Two in a Room - Shared Kitchen &amp; Bathroom</option>
+                                    <option value="double_ensuite" {{ old('room_type') == 'double_ensuite' ? 'selected' : '' }}>Two in a Room - En-suite</option>
+                                    <option value="double_standard" {{ old('room_type') == 'double_standard' ? 'selected' : '' }}>Two in a Room - Standard</option>
+                                    <option value="double_executive" {{ old('room_type') == 'double_executive' ? 'selected' : '' }}>Two in a Room - Executive</option>
+                                    <option value="double_deluxe" {{ old('room_type') == 'double_deluxe' ? 'selected' : '' }}>Two in a Room - Deluxe</option>
+                                    <option value="double_balcony" {{ old('room_type') == 'double_balcony' ? 'selected' : '' }}>Two in a Room - With Balcony</option>
+                                    <option value="double_furnished" {{ old('room_type') == 'double_furnished' ? 'selected' : '' }}>Two in a Room - Furnished</option>
+                                    <option value="double_ac" {{ old('room_type') == 'double_ac' ? 'selected' : '' }}>Two in a Room - With Air Conditioning</option>
+                                </optgroup>
+
+                                <optgroup label="Triple Rooms (3 People)">
+                                    <option value="triple_self_contained" {{ old('room_type') == 'triple_self_contained' ? 'selected' : '' }}>Three in a Room - Self Contained</option>
+                                    <option value="triple_private_bathroom" {{ old('room_type') == 'triple_private_bathroom' ? 'selected' : '' }}>Three in a Room - Private Bathroom</option>
+                                    <option value="triple_shared_bathroom" {{ old('room_type') == 'triple_shared_bathroom' ? 'selected' : '' }}>Three in a Room - Shared Bathroom</option>
+                                    <option value="triple_shared_kitchen" {{ old('room_type') == 'triple_shared_kitchen' ? 'selected' : '' }}>Three in a Room - Shared Kitchen</option>
+                                    <option value="triple_shared_kitchen_bathroom" {{ old('room_type') == 'triple_shared_kitchen_bathroom' ? 'selected' : '' }}>Three in a Room - Shared Kitchen &amp; Bathroom</option>
+                                    <option value="triple_ensuite" {{ old('room_type') == 'triple_ensuite' ? 'selected' : '' }}>Three in a Room - En-suite</option>
+                                    <option value="triple_standard" {{ old('room_type') == 'triple_standard' ? 'selected' : '' }}>Three in a Room - Standard</option>
+                                    <option value="triple_balcony" {{ old('room_type') == 'triple_balcony' ? 'selected' : '' }}>Three in a Room - With Balcony</option>
+                                </optgroup>
+
+                                <optgroup label="Quad Rooms (4 People)">
+                                    <option value="quad_self_contained" {{ old('room_type') == 'quad_self_contained' ? 'selected' : '' }}>Four in a Room - Self Contained</option>
+                                    <option value="quad_shared_bathroom" {{ old('room_type') == 'quad_shared_bathroom' ? 'selected' : '' }}>Four in a Room - Shared Bathroom</option>
+                                    <option value="quad_shared_kitchen" {{ old('room_type') == 'quad_shared_kitchen' ? 'selected' : '' }}>Four in a Room - Shared Kitchen</option>
+                                    <option value="quad_shared_kitchen_bathroom" {{ old('room_type') == 'quad_shared_kitchen_bathroom' ? 'selected' : '' }}>Four in a Room - Shared Kitchen &amp; Bathroom</option>
+                                </optgroup>
+
+                                <optgroup label="Dormitories">
+                                    <option value="dorm_4_shared" {{ old('room_type') == 'dorm_4_shared' ? 'selected' : '' }}>4-Bed Dormitory - Shared Bathroom</option>
+                                    <option value="dorm_4_ensuite" {{ old('room_type') == 'dorm_4_ensuite' ? 'selected' : '' }}>4-Bed Dormitory - En-suite</option>
+                                    <option value="dorm_6_shared" {{ old('room_type') == 'dorm_6_shared' ? 'selected' : '' }}>6-Bed Dormitory - Shared Bathroom</option>
+                                    <option value="dorm_6_ensuite" {{ old('room_type') == 'dorm_6_ensuite' ? 'selected' : '' }}>6-Bed Dormitory - En-suite</option>
+                                    <option value="dorm_8_shared" {{ old('room_type') == 'dorm_8_shared' ? 'selected' : '' }}>8-Bed Dormitory - Shared Bathroom</option>
+                                    <option value="dorm_8_ensuite" {{ old('room_type') == 'dorm_8_ensuite' ? 'selected' : '' }}>8-Bed Dormitory - En-suite</option>
+                                    <option value="dorm_10_shared" {{ old('room_type') == 'dorm_10_shared' ? 'selected' : '' }}>10-Bed Dormitory - Shared Bathroom</option>
+                                    <option value="dorm_10_ensuite" {{ old('room_type') == 'dorm_10_ensuite' ? 'selected' : '' }}>10-Bed Dormitory - En-suite</option>
+                                    <option value="dorm_12_shared" {{ old('room_type') == 'dorm_12_shared' ? 'selected' : '' }}>12-Bed Dormitory - Shared Bathroom</option>
+                                    <option value="dorm_12_ensuite" {{ old('room_type') == 'dorm_12_ensuite' ? 'selected' : '' }}>12-Bed Dormitory - En-suite</option>
+                                </optgroup>
+
+                                <optgroup label="Studio / Apartments">
+                                    <option value="studio_self_contained" {{ old('room_type') == 'studio_self_contained' ? 'selected' : '' }}>Studio Apartment - Self Contained</option>
+                                    <option value="studio_kitchenette" {{ old('room_type') == 'studio_kitchenette' ? 'selected' : '' }}>Studio Apartment - Kitchenette</option>
+                                    <option value="studio_private_bathroom" {{ old('room_type') == 'studio_private_bathroom' ? 'selected' : '' }}>Studio Apartment - Private Bathroom</option>
+                                    <option value="studio_furnished" {{ old('room_type') == 'studio_furnished' ? 'selected' : '' }}>Studio Apartment - Furnished</option>
+                                    <option value="one_bedroom_self_contained" {{ old('room_type') == 'one_bedroom_self_contained' ? 'selected' : '' }}>One-Bedroom Apartment - Self Contained</option>
+                                    <option value="one_bedroom_kitchenette" {{ old('room_type') == 'one_bedroom_kitchenette' ? 'selected' : '' }}>One-Bedroom Apartment - Kitchenette</option>
+                                    <option value="two_bedroom_self_contained" {{ old('room_type') == 'two_bedroom_self_contained' ? 'selected' : '' }}>Two-Bedroom Apartment - Self Contained</option>
+                                </optgroup>
+
+                                <optgroup label="Shared Rooms">
+                                    <option value="shared_2_self_contained" {{ old('room_type') == 'shared_2_self_contained' ? 'selected' : '' }}>Shared Room - 2 People (Self Contained)</option>
+                                    <option value="shared_2_shared_bathroom" {{ old('room_type') == 'shared_2_shared_bathroom' ? 'selected' : '' }}>Shared Room - 2 People (Shared Bathroom)</option>
+                                    <option value="shared_2_shared_kitchen" {{ old('room_type') == 'shared_2_shared_kitchen' ? 'selected' : '' }}>Shared Room - 2 People (Shared Kitchen)</option>
+                                    <option value="shared_2_shared_kitchen_bathroom" {{ old('room_type') == 'shared_2_shared_kitchen_bathroom' ? 'selected' : '' }}>Shared Room - 2 People (Shared Kitchen &amp; Bathroom)</option>
+                                    <option value="shared_3_self_contained" {{ old('room_type') == 'shared_3_self_contained' ? 'selected' : '' }}>Shared Room - 3 People (Self Contained)</option>
+                                    <option value="shared_3_shared_bathroom" {{ old('room_type') == 'shared_3_shared_bathroom' ? 'selected' : '' }}>Shared Room - 3 People (Shared Bathroom)</option>
+                                    <option value="shared_4_self_contained" {{ old('room_type') == 'shared_4_self_contained' ? 'selected' : '' }}>Shared Room - 4 People (Self Contained)</option>
+                                    <option value="shared_4_shared_bathroom" {{ old('room_type') == 'shared_4_shared_bathroom' ? 'selected' : '' }}>Shared Room - 4 People (Shared Bathroom)</option>
+                                </optgroup>
+
+                                <optgroup label="Premium &amp; Special Rooms">
+                                    <option value="executive_suite" {{ old('room_type') == 'executive_suite' ? 'selected' : '' }}>Executive Suite - Self Contained</option>
+                                    <option value="presidential_suite" {{ old('room_type') == 'presidential_suite' ? 'selected' : '' }}>Presidential Suite - Self Contained</option>
+                                    <option value="honeymoon_suite" {{ old('room_type') == 'honeymoon_suite' ? 'selected' : '' }}>Honeymoon Suite - Self Contained</option>
+                                    <option value="family_room_self" {{ old('room_type') == 'family_room_self' ? 'selected' : '' }}>Family Room - Self Contained</option>
+                                    <option value="family_room_shared" {{ old('room_type') == 'family_room_shared' ? 'selected' : '' }}>Family Room - Shared Bathroom</option>
+                                    <option value="vip_room" {{ old('room_type') == 'vip_room' ? 'selected' : '' }}>VIP Room - Self Contained</option>
+                                    <option value="business_room" {{ old('room_type') == 'business_room' ? 'selected' : '' }}>Business Room - Self Contained</option>
+                                </optgroup>
+
+                                <optgroup label="Accessible Rooms">
+                                    <option value="wheelchair_self" {{ old('room_type') == 'wheelchair_self' ? 'selected' : '' }}>Wheelchair Accessible - Self Contained</option>
+                                    <option value="wheelchair_shared" {{ old('room_type') == 'wheelchair_shared' ? 'selected' : '' }}>Wheelchair Accessible - Shared Bathroom</option>
+                                    <option value="ground_floor_self" {{ old('room_type') == 'ground_floor_self' ? 'selected' : '' }}>Ground Floor Room - Self Contained</option>
+                                    <option value="ground_floor_shared" {{ old('room_type') == 'ground_floor_shared' ? 'selected' : '' }}>Ground Floor Room - Shared Bathroom</option>
+                                </optgroup>
+
+                                <optgroup label="Budget Rooms">
+                                    <option value="budget_single" {{ old('room_type') == 'budget_single' ? 'selected' : '' }}>Budget Single - Shared Bathroom</option>
+                                    <option value="budget_single_kitchen" {{ old('room_type') == 'budget_single_kitchen' ? 'selected' : '' }}>Budget Single - Shared Kitchen &amp; Bathroom</option>
+                                    <option value="budget_double" {{ old('room_type') == 'budget_double' ? 'selected' : '' }}>Budget Double - Shared Bathroom</option>
+                                    <option value="budget_dorm" {{ old('room_type') == 'budget_dorm' ? 'selected' : '' }}>Budget Dormitory - Shared Bathroom</option>
+                                </optgroup>
+
+                                <optgroup label="Gender-Specific Rooms">
+                                    <option value="female_only_self" {{ old('room_type') == 'female_only_self' ? 'selected' : '' }}>Female Only - Self Contained</option>
+                                    <option value="female_only_shared" {{ old('room_type') == 'female_only_shared' ? 'selected' : '' }}>Female Only - Shared Bathroom</option>
+                                    <option value="male_only_self" {{ old('room_type') == 'male_only_self' ? 'selected' : '' }}>Male Only - Self Contained</option>
+                                    <option value="male_only_shared" {{ old('room_type') == 'male_only_shared' ? 'selected' : '' }}>Male Only - Shared Bathroom</option>
+                                </optgroup>
+                            </select>
+                            @error('room_type')
                                 <p class="mt-1 text-[10px] text-red-600">{{ $message }}</p>
                             @enderror
                         </div>

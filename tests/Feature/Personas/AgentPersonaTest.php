@@ -477,5 +477,277 @@ class AgentPersonaTest extends TestCase
 
         $this->assertNotNull($withdrawal->fresh()->processed_at);
     }
+
+    /**
+     * Agent can add a room to their registered hostel.
+     */
+    public function test_agent_can_add_room_to_their_hostel(): void
+    {
+        $user = User::create([
+            'name' => 'Room Agent',
+            'email' => 'agent_room'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '080'.str_pad((string)random_int(0, 9999999), 7, '0', STR_PAD_LEFT),
+            'role' => 'hostel_agent',
+            'email_verified_at' => now(),
+        ]);
+
+        $agent = HostelAgent::create([
+            'user_id' => $user->id,
+            'agent_code' => 'AG-ROOM'.uniqid(),
+            'phone' => $user->phone,
+            'total_commission' => 0,
+            'available_balance' => 0,
+            'withdrawn_amount' => 0,
+            'total_hostels_added' => 1,
+            'total_rooms_added' => 0,
+            'status' => 'active',
+            'approved_at' => now(),
+        ]);
+
+        $hostel = \App\Models\Hostel::forceCreate([
+            'name' => 'Agent Hostel One',
+            'description' => 'A nice hostel.',
+            'location' => 'amamoma',
+            'address' => '123 Main St',
+            'user_id' => $user->id,
+            'status' => 'active',
+        ]);
+
+        $payload = [
+            'room_number' => 'A101',
+            'room_type' => 'single_room',
+            'capacity' => 2,
+            'price_per_year' => 1200.00,
+            'description' => 'Comfortable single room',
+            'is_available' => 1,
+        ];
+
+        $this->actingAs($user)
+            ->post(route('agent.hostels.add-room', $hostel->uuid), $payload)
+            ->assertRedirect(route('agent.hostels.show', $hostel->uuid))
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('rooms', [
+            'hostel_id' => $hostel->id,
+            'number' => 'A101',
+            'room_type' => 'single_room',
+            'capacity' => 2,
+            'room_cost' => 1200.00,
+            'status' => 'available',
+        ]);
+
+        $this->assertEquals(1, $agent->fresh()->total_rooms_added);
+        $this->assertEquals(20.00, (float) $agent->fresh()->available_balance);
+        $this->assertDatabaseHas('agent_commissions', [
+            'hostel_agent_id' => $agent->id,
+            'amount' => 20.00,
+            'type' => 'room_added',
+        ]);
+    }
+
+    /**
+     * Agent cannot add duplicate room number in same hostel.
+     */
+    public function test_agent_cannot_add_duplicate_room_number_in_same_hostel(): void
+    {
+        $user = User::create([
+            'name' => 'Room Agent 2',
+            'email' => 'agent_room_dup'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '080'.str_pad((string)random_int(0, 9999999), 7, '0', STR_PAD_LEFT),
+            'role' => 'hostel_agent',
+            'email_verified_at' => now(),
+        ]);
+
+        $agent = HostelAgent::create([
+            'user_id' => $user->id,
+            'agent_code' => 'AG-ROOM-DUP'.uniqid(),
+            'phone' => $user->phone,
+            'total_commission' => 0,
+            'available_balance' => 0,
+            'withdrawn_amount' => 0,
+            'total_hostels_added' => 1,
+            'total_rooms_added' => 1,
+            'status' => 'active',
+            'approved_at' => now(),
+        ]);
+
+        $hostel = \App\Models\Hostel::forceCreate([
+            'name' => 'Agent Hostel Two',
+            'description' => 'Another nice hostel.',
+            'location' => 'amamoma',
+            'address' => '124 Main St',
+            'user_id' => $user->id,
+            'status' => 'active',
+        ]);
+
+        \App\Models\Room::create([
+            'hostel_id' => $hostel->id,
+            'number' => 'B202',
+            'room_type' => 'shared_2',
+            'capacity' => 2,
+            'room_cost' => 800.00,
+            'status' => 'available',
+            'gender' => 'any',
+        ]);
+
+        $payload = [
+            'room_number' => 'B202',
+            'room_type' => 'single_room',
+            'capacity' => 1,
+            'price_per_year' => 1000.00,
+            'description' => 'Dup room attempt',
+            'is_available' => 1,
+        ];
+
+        $this->actingAs($user)
+            ->post(route('agent.hostels.add-room', $hostel->uuid), $payload)
+            ->assertRedirect()
+            ->assertSessionHas('error');
+
+        $this->assertEquals(1, \App\Models\Room::where('hostel_id', $hostel->id)->where('number', 'B202')->count());
+        $this->assertEquals(0.00, (float) $agent->fresh()->available_balance);
+    }
+
+    /**
+     * Agent can delete a room from their registered hostel.
+     */
+    public function test_agent_can_delete_room(): void
+    {
+        $user = User::create([
+            'name' => 'Delete Agent',
+            'email' => 'agent_del'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '080'.str_pad((string)random_int(0, 9999999), 7, '0', STR_PAD_LEFT),
+            'role' => 'hostel_agent',
+            'email_verified_at' => now(),
+        ]);
+
+        $agent = HostelAgent::create([
+            'user_id' => $user->id,
+            'agent_code' => 'AG-DEL'.uniqid(),
+            'phone' => $user->phone,
+            'total_commission' => 0,
+            'available_balance' => 0,
+            'withdrawn_amount' => 0,
+            'total_hostels_added' => 1,
+            'total_rooms_added' => 1,
+            'status' => 'active',
+            'approved_at' => now(),
+        ]);
+
+        $hostel = \App\Models\Hostel::forceCreate([
+            'name' => 'Agent Hostel Three',
+            'description' => 'A hostel with rooms to delete.',
+            'location' => 'amamoma',
+            'address' => '125 Main St',
+            'user_id' => $user->id,
+            'status' => 'active',
+        ]);
+
+        $room = \App\Models\Room::create([
+            'hostel_id' => $hostel->id,
+            'number' => 'C303',
+            'room_type' => 'shared_2',
+            'capacity' => 2,
+            'room_cost' => 800.00,
+            'status' => 'available',
+            'gender' => 'any',
+        ]);
+
+        $this->actingAs($user)
+            ->delete(route('agent.hostels.delete-room', [$hostel->uuid, $room->uuid]))
+            ->assertRedirect(route('agent.hostels.show', $hostel->uuid))
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseMissing('rooms', [
+            'id' => $room->id,
+        ]);
+
+        $this->assertEquals(0, $agent->fresh()->total_rooms_added);
+    }
+
+    /**
+     * Agent cannot delete a room with active bookings.
+     */
+    public function test_agent_cannot_delete_room_with_active_bookings(): void
+    {
+        $user = User::create([
+            'name' => 'Delete Active Agent',
+            'email' => 'agent_del_act'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '080'.str_pad((string)random_int(0, 9999999), 7, '0', STR_PAD_LEFT),
+            'role' => 'hostel_agent',
+            'email_verified_at' => now(),
+        ]);
+
+        $agent = HostelAgent::create([
+            'user_id' => $user->id,
+            'agent_code' => 'AG-DEL-ACT'.uniqid(),
+            'phone' => $user->phone,
+            'total_commission' => 0,
+            'available_balance' => 0,
+            'withdrawn_amount' => 0,
+            'total_hostels_added' => 1,
+            'total_rooms_added' => 1,
+            'status' => 'active',
+            'approved_at' => now(),
+        ]);
+
+        $hostel = \App\Models\Hostel::forceCreate([
+            'name' => 'Agent Hostel Four',
+            'description' => 'A hostel with active booked rooms.',
+            'location' => 'amamoma',
+            'address' => '126 Main St',
+            'user_id' => $user->id,
+            'status' => 'active',
+        ]);
+
+        $room = \App\Models\Room::create([
+            'hostel_id' => $hostel->id,
+            'number' => 'D404',
+            'room_type' => 'shared_2',
+            'capacity' => 2,
+            'room_cost' => 800.00,
+            'status' => 'available',
+            'gender' => 'any',
+        ]);
+
+        // Create a student user for the booking
+        $student = User::create([
+            'name' => 'Student Tester',
+            'email' => 'student'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '080'.str_pad((string)random_int(0, 9999999), 7, '0', STR_PAD_LEFT),
+            'role' => 'student',
+            'email_verified_at' => now(),
+        ]);
+
+        // Create active/confirmed booking
+        \App\Models\Booking::create([
+            'booking_number' => 'BK-' . uniqid(),
+            'user_id' => $student->id,
+            'room_id' => $room->id,
+            'hostel_id' => $hostel->id,
+            'check_in_date' => now()->toDateString(),
+            'check_out_date' => now()->addYear()->toDateString(),
+            'booking_status' => 'confirmed',
+            'payment_status' => 'paid',
+            'total_price' => 800.00,
+            'total_amount' => 800.00,
+        ]);
+
+        $this->actingAs($user)
+            ->delete(route('agent.hostels.delete-room', [$hostel->uuid, $room->uuid]))
+            ->assertRedirect()
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseHas('rooms', [
+            'id' => $room->id,
+        ]);
+
+        $this->assertEquals(1, $agent->fresh()->total_rooms_added);
+    }
 }
 
