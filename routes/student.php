@@ -2,10 +2,14 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\SupportController;
 
 Route::middleware(['auth', 'student'])->prefix('student')->name('student.')->group(function () {
     // Dashboard
     Route::get('/dashboard', [StudentController::class, 'dashboard'])->name('dashboard');
+
+    // 24/7 Support Hub
+    Route::get('/support', [SupportController::class, 'index'])->name('support');
 
     // Fee Payment
     Route::get('/payment', [StudentController::class, 'showPaymentForm'])->name('payment');

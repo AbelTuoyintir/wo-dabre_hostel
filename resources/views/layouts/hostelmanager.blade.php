@@ -23,6 +23,8 @@
 <body class="font-sans antialiased bg-gray-100">
     @yield('content')
 
+    @include('components.support-widget')
+
     @stack('scripts')
 </body>
 </html>

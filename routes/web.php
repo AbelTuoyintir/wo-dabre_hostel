@@ -10,6 +10,7 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\HostelManagerDashboard;
 use App\Http\Controllers\StudentDashboard;
+use App\Http\Controllers\SupportController;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
 
@@ -129,6 +130,11 @@ Route::get('/test-upload', function() {
     $testSize = 100 * 1024 * 1024; // 100MB
     echo "Can handle 100MB file: " . ($testSize < (int) ini_get('upload_max_filesize') * 1024 * 1024 ? 'Yes' : 'No') . "\n";
 });
+
+// 24/7 Support Routes (Shared & AJAX for Global Widget)
+Route::post('/support/ticket', [SupportController::class, 'storeTicket'])->name('support.ticket.store');
+Route::get('/support/ticket/{ticket:uuid}/messages', [SupportController::class, 'getMessages'])->name('support.ticket.messages');
+Route::post('/support/ticket/{ticket:uuid}/message', [SupportController::class, 'sendMessage'])->name('support.ticket.message.send');
 
 require __DIR__.'/auth.php';
 require __DIR__.'/admin.php';
