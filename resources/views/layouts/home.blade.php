@@ -649,6 +649,8 @@
         }
     </script>
 
+    @include('components.support-widget')
+
     @stack('scripts')
 </body>
 </html>

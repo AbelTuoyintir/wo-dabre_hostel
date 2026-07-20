@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\HostelController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\Admin\AgentManagementController;
+use App\Http\Controllers\SupportController;
 
 Route::middleware(['auth', 'admin'])
     ->prefix('admin')
@@ -47,6 +48,11 @@ Route::middleware(['auth', 'admin'])
 
         // Image proxy logs
         Route::get('/image-proxy-logs', [AdminController::class, 'imageProxyLogs'])->name('image-proxy-logs');
+
+        // 24/7 Support Tickets Admin
+        Route::get('/support-tickets', [SupportController::class, 'adminIndex'])->name('support.index');
+        Route::post('/support-tickets/{ticket:uuid}/reply', [SupportController::class, 'adminReply'])->name('support.reply');
+        Route::post('/support-tickets/{ticket:uuid}/close', [SupportController::class, 'adminClose'])->name('support.close');
 
         Route::get('/agents', [AgentManagementController::class, 'index'])->name('agents.index');
         Route::get('/agents/export', [AgentManagementController::class, 'export'])->name('agents.export');
