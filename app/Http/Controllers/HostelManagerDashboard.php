@@ -392,6 +392,7 @@ class HostelManagerDashboard extends Controller
     $validated = $request->validate([
         'hostel_id' => 'required|exists:hostels,id',
         'number' => 'required|string|max:255',
+        'room_type' => 'required|string|max:255',
         'capacity' => 'required|integer|min:1',
         'price_per_month' => 'required|numeric|min:0',
         'gender' => 'required|in:male,female,any',
@@ -421,6 +422,7 @@ class HostelManagerDashboard extends Controller
     $room = Room::create([
         'hostel_id' => $validated['hostel_id'],
         'number' => $validated['number'],
+        'room_type' => $validated['room_type'],
         'floor' => $validated['floor'] ?? null,
         'capacity' => $validated['capacity'],
         'price_per_month' => $validated['price_per_month'],
@@ -449,6 +451,7 @@ class HostelManagerDashboard extends Controller
 
         $validated = $request->validate([
             'number' => 'required|string|max:255',
+            'room_type' => 'required|string|max:255',
             'capacity' => 'required|integer|min:1',
             'price_per_semester' => 'required|numeric|min:0',
             'gender' => 'required|in:male,female,any',

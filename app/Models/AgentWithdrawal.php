@@ -48,12 +48,16 @@ class AgentWithdrawal extends Model
             if (empty($withdrawal->hostel_agent_id) && !empty($withdrawal->agent_id)) {
                 $withdrawal->hostel_agent_id = $withdrawal->agent_id;
             }
+            unset($withdrawal->agent_id);
+            unset($withdrawal->attributes['agent_id']);
         });
 
         static::updating(function (self $withdrawal) {
             if (empty($withdrawal->hostel_agent_id) && !empty($withdrawal->agent_id)) {
                 $withdrawal->hostel_agent_id = $withdrawal->agent_id;
             }
+            unset($withdrawal->agent_id);
+            unset($withdrawal->attributes['agent_id']);
         });
     }
 

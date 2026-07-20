@@ -11,11 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('agent_withdrawals', function (Blueprint $table) {
-            // Compatibility for tests/older code that still uses agent_id.
-            // The canonical column in this app is hostel_agent_id.
-            $table->foreignId('hostel_agent_id')->nullable()->constrained('hostel_agents')->nullOnDelete();
-        });
+        if (!Schema::hasColumn('agent_withdrawals', 'hostel_agent_id')) {
+            Schema::table('agent_withdrawals', function (Blueprint $table) {
+                // Compatibility for tests/older code that still uses agent_id.
+                // The canonical column in this app is hostel_agent_id.
+                $table->foreignId('hostel_agent_id')->nullable()->constrained('hostel_agents')->nullOnDelete();
+            });
+        }
     }
 
     /**
