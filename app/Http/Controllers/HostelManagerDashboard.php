@@ -1139,12 +1139,106 @@ class HostelManagerDashboard extends Controller
             'address' => 'nullable|string',
             'city' => 'nullable|string',
             'region' => 'nullable|string',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
+            'phone_1' => 'nullable|string|max:20',
+            'phone_2' => 'nullable|string|max:20',
+            'contact_email' => 'nullable|email|max:255',
+            'status' => 'required|in:active,inactive,maintenance',
+            'featured_image' => 'nullable|image|max:5120',
+            'images' => 'nullable|array',
+            'images.*' => 'nullable|file|mimetypes:image/*,video/*|max:102400',
+            'removed_images' => 'nullable|array',
+            'removed_images.*' => 'exists:hostel_images,id',
         ]);
 
-        $hostel->update($validated);
+        // Map form fields to DB columns
+        $hostelData = [
+            'name' => $validated['name'],
+            'description' => $validated['description'] ?? null,
+            'address' => $validated['address'] ?? null,
+            'phone' => $validated['phone_1'] ?? null,
+            'email' => $validated['contact_email'] ?? null,
+            'status' => $validated['status'],
+        ];
+
+        // SQLite column protection (ensure columns exist before setting)
+        if (\Illuminate\Support\Facades\Schema::hasColumn('hostels', 'phone_1')) {
+            $hostelData['phone_1'] = $validated['phone_1'] ?? null;
+        }
+        if (\Illuminate\Support\Facades\Schema::hasColumn('hostels', 'phone_2')) {
+            $hostelData['phone_2'] = $validated['phone_2'] ?? null;
+        }
+        if (\Illuminate\Support\Facades\Schema::hasColumn('hostels', 'contact_email')) {
+            $hostelData['contact_email'] = $validated['contact_email'] ?? null;
+        }
+        if (\Illuminate\Support\Facades\Schema::hasColumn('hostels', 'city')) {
+            $hostelData['city'] = $validated['city'] ?? null;
+        }
+        if (\Illuminate\Support\Facades\Schema::hasColumn('hostels', 'region')) {
+            $hostelData['region'] = $validated['region'] ?? null;
+        }
+        if (\Illuminate\Support\Facades\Schema::hasColumn('hostels', 'latitude')) {
+            $hostelData['latitude'] = $validated['latitude'] ?? null;
+        }
+        if (\Illuminate\Support\Facades\Schema::hasColumn('hostels', 'longitude')) {
+            $hostelData['longitude'] = $validated['longitude'] ?? null;
+        }
+
+        $hostel->update($hostelData);
+
+        // Handle featured_image upload (saves as primary in hostel_images table)
+        if ($request->hasFile('featured_image')) {
+            // Delete old primary images
+            $oldPrimaries = $hostel->images()->where('is_primary', true)->get();
+            foreach ($oldPrimaries as $oldPrimary) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($oldPrimary->image_path);
+                $oldPrimary->delete();
+            }
+
+            $featuredPath = $request->file('featured_image')->store('hostels/covers', 'public');
+            $hostel->images()->create([
+                'image_path' => $featuredPath,
+                'type' => 'hostel',
+                'is_primary' => true,
+                'media_kind' => 'image',
+                'order' => 0
+            ]);
+        }
+
+        // Handle gallery images/videos deletion
+        if (!empty($validated['removed_images'])) {
+            $imagesToRemove = \App\Models\HostelImage::whereIn('id', $validated['removed_images'])
+                ->where('hostel_id', $hostel->id)
+                ->get();
+
+            foreach ($imagesToRemove as $img) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($img->image_path);
+                $img->delete();
+            }
+        }
+
+        // Handle new gallery images/videos upload
+        if ($request->hasFile('images')) {
+            $maxOrder = $hostel->images()->where('is_primary', false)->max('order') ?? 0;
+            $order = $maxOrder + 1;
+
+            foreach ($request->file('images') as $file) {
+                $path = $file->store('hostels/gallery', 'public');
+                $mediaKind = str_starts_with($file->getMimeType() ?? '', 'video/') ? 'video' : 'image';
+
+                $hostel->images()->create([
+                    'image_path' => $path,
+                    'media_kind' => $mediaKind,
+                    'is_primary' => false,
+                    'order' => $order++,
+                    'type' => 'hostel',
+                ]);
+            }
+        }
 
         return redirect()->route('hostel-manager.hostels.show', $hostel)
-            ->with('success', 'Hostel updated successfully.');
+            ->with('success', 'Hostel updated successfully with images/videos.');
     }
 
     public function toggleHostelStatus(Hostel $hostel)

@@ -139,6 +139,23 @@ class Hostel extends Model
             ->count();
     }
 
+    public function getFeaturedImageAttribute()
+    {
+        // Try to get primary image from hostel_images relation
+        $primary = $this->primaryImage;
+        if ($primary) {
+            return $primary->image_path;
+        }
+
+        // Fallback to the first image if no primary is marked
+        $first = $this->images()->first();
+        if ($first) {
+            return $first->image_path;
+        }
+
+        return null;
+    }
+
     public function getReviewsCountAttribute()
     {
         return $this->reviews()->count();
