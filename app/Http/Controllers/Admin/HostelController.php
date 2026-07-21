@@ -115,7 +115,7 @@ class HostelController extends Controller
             'amenities.*' => 'exists:amenities,id',
             'description' => 'nullable|string',
             'cover_image' => 'required|image|mimes:jpeg,png,jpg,gif|max:10240', // 10MB max
-            'gallery_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240', // 10MB max per image
+            'gallery_images.*' => 'nullable|file|mimetypes:image/*,video/*|max:102400', // 100MB max per file
             'gallery_images' => 'nullable|array|max:5', // Maximum 5 gallery images
         ]);
 
@@ -160,10 +160,12 @@ class HostelController extends Controller
             $order = 1; // Start from 1 since cover image is at 0
             foreach ($request->file('gallery_images') as $image) {
                 $path = $image->store('hostels/gallery', 'public');
+                $mediaKind = str_starts_with($image->getMimeType() ?? '', 'video/') ? 'video' : 'image';
 
                 // Save as gallery image
                 $hostel->images()->create([
                     'image_path' => $path,
+                    'media_kind' => $mediaKind,
                     'type' => 'hostel',
                     'is_primary' => false,
                     'order' => $order++
@@ -238,7 +240,7 @@ class HostelController extends Controller
             'is_approved' => 'sometimes|boolean',
             'cover_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
             'gallery_images' => 'nullable|array|max:5',
-            'gallery_images.*' => 'image|mimes:jpeg,png,jpg,gif|max:10240',
+            'gallery_images.*' => 'nullable|file|mimetypes:image/*,video/*|max:102400',
             'removed_images' => 'nullable|array',
             'removed_images.*' => 'exists:hostel_images,id',
             'primary_image_id' => 'nullable|exists:hostel_images,id',
@@ -314,9 +316,11 @@ class HostelController extends Controller
 
                 foreach ($request->file('gallery_images') as $image) {
                     $path = $image->store('hostels/gallery', 'public');
+                    $mediaKind = str_starts_with($image->getMimeType() ?? '', 'video/') ? 'video' : 'image';
 
                     $hostel->images()->create([
                         'image_path' => $path,
+                        'media_kind' => $mediaKind,
                         'type' => 'hostel',
                         'is_primary' => false,
                         'order' => $order++

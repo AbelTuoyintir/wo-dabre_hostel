@@ -106,180 +106,352 @@
 
         <!-- Image Management Section -->
         <div class="bg-white rounded-lg shadow border p-6">
-            <h3 class="text-lg font-semibold mb-4">Manage Hostel Images</h3>
+            <h3 class="text-lg font-semibold mb-4 text-gray-800 flex items-center">
+                <svg class="w-5 h-5 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                Manage Hostel Images
+            </h3>
 
-
-            <script>
-                // Define functions before they're used in onclick handlers
-                let removedImages = [];
-
-                function markForRemoval(imageId) {
-                    if (confirm('Are you sure you want to remove this image?')) {
-                        removedImages = removedImages.filter(id => String(id) !== String(imageId));
-                        removedImages.push(imageId);
-                        updateRemovedImagesInput();
-                        const imageContainer = document.querySelector(`[data-image-id="${imageId}"]`);
-                        if (imageContainer) {
-                            imageContainer.style.opacity = '0.5';
-                            imageContainer.style.pointerEvents = 'none';
-                            imageContainer.classList.add('bg-gray-100');
-                            let removalBadge = imageContainer.querySelector('.marked-for-removal-badge');
-                            if (!removalBadge) {
-                                removalBadge = document.createElement('div');
-                                removalBadge.className = 'marked-for-removal-badge absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold z-10';
-                                imageContainer.appendChild(removalBadge);
-                            }
-                            removalBadge.textContent = 'Marked for Removal';
-                        }
-                    }
-                }
-
-                function updateRemovedImagesInput() {
-                    const container = document.getElementById('removed-images-container');
-                    container.innerHTML = '';
-                    removedImages.forEach(id => {
-                        const input = document.createElement('input');
-                        input.type = 'hidden';
-                        input.name = 'removed_images[]';
-                        input.value = id;
-                        container.appendChild(input);
-                    });
-                }
-
-                function setAsPrimary(imageId) {
-                    document.getElementById('primary_image_id').value = imageId;
-                    document.querySelectorAll('[data-image-id]').forEach(container => {
-                        container.classList.remove('bg-blue-50', 'border-blue-300');
-                        const existingBadge = container.querySelector('.bg-blue-500');
-                        if (existingBadge) {
-                            existingBadge.remove();
-                        }
-                    });
-                    const selectedContainer = document.querySelector(`[data-image-id="${imageId}"]`);
-                    selectedContainer.classList.add('bg-blue-50', 'border-blue-300');
-                    const badgeContainer = selectedContainer.querySelector('.absolute.top-3.left-3');
-                    if (badgeContainer) {
-                        badgeContainer.innerHTML = '<span class="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">Primary</span>';
-                    }
-                    alert('Primary image updated. Save the form to confirm changes.');
-                }
-
-                function previewNewCover(input) {
-                    const preview = document.getElementById('new-cover-preview');
-                    if (input.files && input.files[0]) {
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            preview.querySelector('img').src = e.target.result;
-                            preview.classList.remove('hidden');
-                        }
-                        reader.readAsDataURL(input.files[0]);
-                    }
-                }
-
-                function previewNewGallery(input) {
-                    const preview = document.getElementById('new-gallery-preview');
-                    preview.innerHTML = '';
-                    if (input.files && input.files.length > 0) {
-                        preview.classList.remove('hidden');
-                        for (let i = 0; i < input.files.length; i++) {
-                            const reader = new FileReader();
-                            reader.onload = function(e) {
-                                const div = document.createElement('div');
-                                div.className = 'relative';
-                                div.innerHTML = `
-                                    <img src="${e.target.result}" class="w-full h-24 object-cover rounded-lg">
-                                    <span class="absolute top-1 right-1 bg-green-500 text-white text-xs px-1 rounded">New</span>
-                                `;
-                                preview.appendChild(div);
-                            }
-                            reader.readAsDataURL(input.files[i]);
-                        }
-                    }
-                }
-            </script>
+            <!-- Hidden inputs container for removed/primary changed -->
+            <div id="removed-images-container"></div>
+            <input type="hidden" name="primary_image_id" id="primary_image_id" value="">
 
             <!-- Current Images Display -->
             @if($hostel->images->count() > 0)
-                <div class="mb-6">
-                    <h4 class="text-md font-medium mb-3">Current Images</h4>
+                <div class="mb-8">
+                    <h4 class="text-sm font-semibold text-gray-700 mb-4">Current Media Gallery</h4>
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="current-images">
                         @foreach($hostel->images()->orderBy('is_primary', 'desc')->orderBy('order')->get() as $image)
-                            <div class="relative group border rounded-lg p-2 {{ $image->is_primary ? 'bg-blue-50 border-blue-300' : '' }}" data-image-id="{{ $image->id }}">
-                                  <img src="{{ image_url($image->image_path) }}"
-                                      class="w-full h-32 object-cover rounded-lg mb-2"
-                                     onerror="this.style.opacity='0.5';this.nextElementSibling.style.display='block';">
-
-                                <!-- Image Labels -->
-                                <div class="absolute top-3 left-3 flex gap-1">
-                                    @if($image->is_primary)
-                                        <span class="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
-                                            Primary
-                                        </span>
+                            <div class="relative group border rounded-xl overflow-hidden shadow-sm p-2 transition duration-300 {{ $image->is_primary ? 'bg-blue-50 border-blue-300' : 'border-gray-200 bg-white' }}" data-image-id="{{ $image->id }}">
+                                <div class="aspect-video bg-black rounded-lg overflow-hidden flex items-center justify-center relative">
+                                    @if($image->media_kind == 'video')
+                                        <video class="w-full h-full object-cover" muted preload="metadata">
+                                            <source src="{{ image_url($image->image_path) }}">
+                                        </video>
+                                        <div class="absolute inset-0 flex items-center justify-center bg-black/30">
+                                            <i class="fas fa-play text-white drop-shadow"></i>
+                                        </div>
+                                    @else
+                                        <img src="{{ image_url($image->image_path) }}" alt="Hostel image" class="w-full h-full object-cover">
                                     @endif
+
+                                    <!-- Label Badge -->
+                                    <div class="absolute top-2 left-2 primary-badge-wrap">
+                                        @if($image->is_primary)
+                                            <span class="bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                                                Primary
+                                            </span>
+                                        @endif
+                                    </div>
                                 </div>
 
-                                <!-- Image Actions -->
-                                <div class="flex justify-between items-center mt-2">
-                                    <div class="flex gap-2">
+                                <!-- Action Buttons -->
+                                <div class="flex justify-between items-center mt-3 pt-2 border-t border-gray-100">
+                                    <div class="flex gap-1.5">
                                         @if(!$image->is_primary)
                                             <button type="button"
                                                     onclick="setAsPrimary({{ $image->id }})"
-                                                    class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200">
+                                                    class="text-[10px] bg-blue-100 text-blue-700 px-2 py-1 rounded-md font-semibold hover:bg-blue-200 transition-colors">
                                                 Make Primary
                                             </button>
                                         @endif
 
                                         <button type="button"
                                                 onclick="markForRemoval({{ $image->id }})"
-                                                class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded hover:bg-red-200">
+                                                class="text-[10px] bg-red-50 text-red-700 px-2 py-1 rounded-md font-semibold hover:bg-red-100 transition-colors">
                                             Remove
                                         </button>
                                     </div>
 
-                                    <!-- Order Indicator -->
                                     @if(!$image->is_primary)
-                                        <span class="text-xs text-gray-500">Order: {{ $image->order }}</span>
+                                        <span class="text-[10px] text-gray-400 font-medium">Order: {{ $image->order }}</span>
                                     @endif
                                 </div>
                             </div>
                         @endforeach
                     </div>
-
-                    <!-- Hidden inputs for removed images -->
-                    <div id="removed-images-container"></div>
-
-                    <!-- Hidden input for primary image change -->
-                    <input type="hidden" name="primary_image_id" id="primary_image_id" value="">
                 </div>
             @endif
 
             <!-- Add New Images Section -->
-            <div class="border-t pt-6">
-                <h4 class="text-md font-medium mb-3">Add New Images</h4>
+            <div class="border-t border-gray-100 pt-6">
+                <h4 class="text-sm font-semibold text-gray-700 mb-4">Add New Media</h4>
 
-                <!-- New Cover Image -->
-                <div class="mb-4">
-                    <label class="block text-sm font-medium mb-2">New Cover Image (optional)</label>
-                    <p class="text-xs text-gray-500 mb-2">Upload a new image to replace or add as primary</p>
-                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-4">
-                        <input type="file" name="cover_image" accept="image/*" class="w-full" onchange="previewNewCover(this)">
-                        <div id="new-cover-preview" class="mt-2 hidden">
-                            <img src="" class="h-32 w-auto rounded-lg" alt="Preview">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- New Cover Image -->
+                    <div class="space-y-2">
+                        <label class="block text-xs font-semibold text-gray-600">New Cover Image (replaces or adds primary)</label>
+
+                        <div class="relative group cursor-pointer border-2 border-dashed border-gray-300 rounded-xl p-6 bg-gray-50 hover:bg-indigo-50/30 hover:border-indigo-500 transition-all duration-300 text-center" id="cover-dropzone">
+                            <input type="file" name="cover_image" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onchange="previewNewCover(this)">
+
+                            <div class="space-y-2" id="cover-prompt">
+                                <div class="mx-auto w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform duration-300">
+                                    <i class="fas fa-upload"></i>
+                                </div>
+                                <div class="text-xs text-gray-600">
+                                    <span class="font-semibold text-indigo-600 hover:text-indigo-500">Upload cover image</span> or drag and drop
+                                </div>
+                                <p class="text-[10px] text-gray-400">PNG, JPG, JPEG up to 10MB</p>
+                            </div>
+
+                            <!-- Preview -->
+                            <div id="new-cover-preview" class="hidden relative inline-block mx-auto max-w-full">
+                                <img src="" class="max-h-36 rounded-lg shadow-sm border object-cover" alt="Cover preview">
+                                <button type="button" onclick="removeNewCover(event)" class="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center shadow-md transition-colors z-20">
+                                    &times;
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- New Gallery Images -->
-                <div>
-                    <label class="block text-sm font-medium mb-2">Additional Gallery Images (max 5)</label>
-                    <p class="text-xs text-gray-500 mb-2">Upload multiple new images to add to gallery</p>
-                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-4">
-                        <input type="file" name="gallery_images[]" multiple accept="image/*" class="w-full" onchange="previewNewGallery(this)">
-                        <div id="new-gallery-preview" class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 hidden"></div>
+                    <!-- New Gallery Images -->
+                    <div class="space-y-2">
+                        <label class="block text-xs font-semibold text-gray-600">Additional Gallery Media (Images &amp; Videos, max 5)</label>
+
+                        <div class="relative group cursor-pointer border-2 border-dashed border-gray-300 rounded-xl p-6 bg-gray-50 hover:bg-indigo-50/30 hover:border-indigo-500 transition-all duration-300 text-center" id="gallery-dropzone">
+                            <input type="file" name="gallery_images[]" multiple accept="image/*,video/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onchange="previewNewGallery(this)">
+
+                            <div class="space-y-2" id="gallery-prompt">
+                                <div class="mx-auto w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center text-pink-600 group-hover:scale-110 transition-transform duration-300">
+                                    <i class="fas fa-images"></i>
+                                </div>
+                                <div class="text-xs text-gray-600">
+                                    <span class="font-semibold text-pink-600 hover:text-pink-500">Upload multiple gallery files</span> or drag and drop
+                                </div>
+                                <p class="text-[10px] text-gray-400">Images and MP4/WebM videos up to 100MB each</p>
+                            </div>
+                        </div>
+
+                        <!-- Preview Grid -->
+                        <div id="gallery-preview" class="hidden space-y-2">
+                            <p class="text-[11px] font-semibold text-gray-600">New Files to Upload:</p>
+                            <div id="new-gallery-preview" class="grid grid-cols-2 gap-2"></div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <script>
+            let removedImages = [];
+
+            function markForRemoval(imageId) {
+                if (confirm('Are you sure you want to remove this image?')) {
+                    removedImages = removedImages.filter(id => String(id) !== String(imageId));
+                    removedImages.push(imageId);
+                    updateRemovedImagesInput();
+
+                    const imageContainer = document.querySelector(`[data-image-id="${imageId}"]`);
+                    if (imageContainer) {
+                        imageContainer.style.opacity = '0.3';
+                        imageContainer.style.pointerEvents = 'none';
+                        imageContainer.classList.add('bg-gray-100');
+
+                        let badge = imageContainer.querySelector('.marked-for-removal-badge');
+                        if (!badge) {
+                            badge = document.createElement('div');
+                            badge.className = 'marked-for-removal-badge absolute inset-0 flex items-center justify-center bg-red-500/20 text-white font-bold text-xs uppercase z-10';
+                            badge.innerHTML = '<span>Marked for Removal</span>';
+                            imageContainer.appendChild(badge);
+                        }
+                    }
+                }
+            }
+
+            function updateRemovedImagesInput() {
+                const container = document.getElementById('removed-images-container');
+                container.innerHTML = '';
+                removedImages.forEach(id => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'removed_images[]';
+                    input.value = id;
+                    container.appendChild(input);
+                });
+            }
+
+            function setAsPrimary(imageId) {
+                document.getElementById('primary_image_id').value = imageId;
+
+                document.querySelectorAll('[data-image-id]').forEach(container => {
+                    container.classList.remove('bg-blue-50', 'border-blue-300');
+                    const existingBadge = container.querySelector('.primary-badge-wrap');
+                    if (existingBadge) {
+                        existingBadge.innerHTML = '';
+                    }
+                });
+
+                const selectedContainer = document.querySelector(`[data-image-id="${imageId}"]`);
+                if (selectedContainer) {
+                    selectedContainer.classList.add('bg-blue-50', 'border-blue-300');
+                    const badgeContainer = selectedContainer.querySelector('.primary-badge-wrap');
+                    if (badgeContainer) {
+                        badgeContainer.innerHTML = '<span class="bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">Primary</span>';
+                    }
+                }
+                alert('Primary image updated. Save the form to confirm changes.');
+            }
+
+            function previewNewCover(input) {
+                const preview = document.getElementById('new-cover-preview');
+                const prompt = document.getElementById('cover-prompt');
+                const img = preview.querySelector('img');
+
+                if (input.files && input.files[0]) {
+                    const file = input.files[0];
+                    if (file.size > 10 * 1024 * 1024) {
+                        alert("Cover image must not exceed 10MB!");
+                        input.value = '';
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        img.src = e.target.result;
+                        preview.classList.remove('hidden');
+                        prompt.classList.add('hidden');
+                    }
+                    reader.readAsDataURL(file);
+                } else {
+                    preview.classList.add('hidden');
+                    prompt.classList.remove('hidden');
+                }
+            }
+
+            function removeNewCover(event) {
+                if (event) {
+                    event.stopPropagation();
+                    event.preventDefault();
+                }
+                const input = document.querySelector('input[name="cover_image"]');
+                input.value = '';
+                const preview = document.getElementById('new-cover-preview');
+                const prompt = document.getElementById('cover-prompt');
+                preview.classList.add('hidden');
+                prompt.classList.remove('hidden');
+            }
+
+            function previewNewGallery(input) {
+                const previewContainer = document.getElementById('gallery-preview');
+                const previewGrid = document.getElementById('new-gallery-preview');
+                const prompt = document.getElementById('gallery-prompt');
+                previewGrid.innerHTML = '';
+
+                if (input.files && input.files.length > 0) {
+                    if (input.files.length > 5) {
+                        alert("Maximum 5 additional gallery files allowed! Keeping first 5.");
+                        const dt = new DataTransfer();
+                        Array.from(input.files).slice(0, 5).forEach(f => dt.items.add(f));
+                        input.files = dt.files;
+                    }
+
+                    previewContainer.classList.remove('hidden');
+                    prompt.classList.add('hidden');
+
+                    Array.from(input.files).forEach((file, index) => {
+                        const wrapper = document.createElement('div');
+                        wrapper.className = 'relative group border rounded-xl overflow-hidden shadow-sm bg-black aspect-video flex items-center justify-center';
+
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            if (file.type.startsWith('video/')) {
+                                const video = document.createElement('video');
+                                video.src = e.target.result;
+                                video.className = 'w-full h-full object-cover';
+                                video.controls = false;
+                                video.muted = true;
+                                video.preload = 'metadata';
+
+                                const overlay = document.createElement('div');
+                                overlay.className = 'absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-40 transition-opacity group-hover:bg-opacity-20';
+                                overlay.innerHTML = `
+                                    <svg class="w-8 h-8 text-white drop-shadow" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <span class="text-[9px] text-white bg-black/60 px-1 py-0.5 rounded mt-1 font-semibold">${(file.size / 1024 / 1024).toFixed(1)}MB</span>
+                                `;
+
+                                wrapper.appendChild(video);
+                                wrapper.appendChild(overlay);
+
+                                wrapper.addEventListener('mouseenter', function() {
+                                    video.play();
+                                });
+                                wrapper.addEventListener('mouseleave', function() {
+                                    video.pause();
+                                    video.currentTime = 0;
+                                });
+                            } else {
+                                const img = document.createElement('img');
+                                img.src = e.target.result;
+                                img.className = 'w-full h-full object-cover';
+
+                                const overlay = document.createElement('div');
+                                overlay.className = 'absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent p-1.5 text-left opacity-0 group-hover:opacity-100 transition-opacity';
+                                overlay.innerHTML = `<span class="text-[9px] text-white font-medium block truncate">${file.name}</span>`;
+
+                                wrapper.appendChild(img);
+                                wrapper.appendChild(overlay);
+                            }
+
+                            const removeBtn = document.createElement('button');
+                            removeBtn.type = 'button';
+                            removeBtn.className = 'absolute top-1.5 right-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-md transition-colors z-20';
+                            removeBtn.innerHTML = '&times;';
+                            removeBtn.onclick = function(ev) {
+                                ev.stopPropagation();
+                                ev.preventDefault();
+                                removeNewGalleryImage(index);
+                            };
+                            wrapper.appendChild(removeBtn);
+
+                            previewGrid.appendChild(wrapper);
+                        }
+                        reader.readAsDataURL(file);
+                    });
+                } else {
+                    previewContainer.classList.add('hidden');
+                    prompt.classList.remove('hidden');
+                }
+            }
+
+            function removeNewGalleryImage(index) {
+                const input = document.querySelector('input[name="gallery_images[]"]');
+                const dt = new DataTransfer();
+                const files = input.files;
+
+                const fileArray = Array.from(files);
+                fileArray.splice(index, 1);
+
+                fileArray.forEach(file => {
+                    dt.items.add(file);
+                });
+
+                input.files = dt.files;
+
+                previewNewGallery(input);
+            }
+
+            // Dropzones enhancements
+            ['cover-dropzone', 'gallery-dropzone'].forEach(id => {
+                const zone = document.getElementById(id);
+                if (!zone) return;
+
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    zone.addEventListener(eventName, e => {
+                        zone.classList.add('border-indigo-500', 'bg-indigo-50/50');
+                    }, false);
+                });
+
+                ['dragleave', 'drop'].forEach(eventName => {
+                    zone.addEventListener(eventName, e => {
+                        zone.classList.remove('border-indigo-500', 'bg-indigo-50/50');
+                    }, false);
+                });
+            });
+        </script>
 
         <!-- Description -->
         <div class="bg-white rounded-lg shadow border p-6">

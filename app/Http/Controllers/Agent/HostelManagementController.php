@@ -48,9 +48,6 @@ class HostelManagementController extends Controller
 
         $agent = Auth::user()->agent;
 
-// Upload featured image (images only)
-        $featuredPath = $request->file('featured_image')->store('hostels', 'public');
-
         $hostelData = [
             'name' => $request->name,
             'description' => $request->description,
@@ -58,7 +55,6 @@ class HostelManagementController extends Controller
             'address' => $request->address,
             'latitude' => $request->latitude,
             'longitude' => $request->longitude,
-            'featured_image' => $featuredPath,
             'status' => 'pending',
             'is_verified' => false
         ];
@@ -72,6 +68,18 @@ class HostelManagementController extends Controller
         }
 
         $hostel = Hostel::create($hostelData);
+
+        // Upload featured image as primary image in hostel_images table
+        if ($request->hasFile('featured_image')) {
+            $featuredPath = $request->file('featured_image')->store('hostels/covers', 'public');
+            $hostel->images()->create([
+                'image_path' => $featuredPath,
+                'type' => 'hostel',
+                'is_primary' => true,
+                'media_kind' => 'image',
+                'order' => 0
+            ]);
+        }
 
         // Attach amenities
         if ($request->amenities) {

@@ -103,63 +103,78 @@
 
         <!-- Hostel Images -->
         <div class="bg-white rounded-lg shadow border p-6">
+            <h3 class="text-lg font-semibold mb-4 text-gray-800 flex items-center">
+                <svg class="w-5 h-5 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                Hostel Media Gallery
+            </h3>
 
-            <h3 class="text-lg font-semibold mb-4">Hostel Images</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Cover Image -->
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700">Cover Image *</label>
 
-            <!-- Cover Image -->
-            <div class="mb-6">
-                <label class="block text-sm font-medium mb-2">Cover Image *</label>
-                <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-blue-500 transition-colors">
-                    <div class="text-center" id="cover-image-preview">
-                        <!-- Preview will be shown here -->
-                        <div class="mb-3">
-                            <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H8a4 4 0 01-4-4V12a4 4 0 014-4h32a4 4 0 014 4v16.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                <path d="M30 28l-6-6-6 6M20 16h.01" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
+                    <div class="relative group cursor-pointer border-2 border-dashed border-gray-300 rounded-xl p-6 bg-gray-50 hover:bg-indigo-50/30 hover:border-indigo-500 transition-all duration-300 text-center" id="cover-dropzone">
+                        <input type="file"
+                               class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                               id="cover_image" name="cover_image" accept="image/*" onchange="previewCoverImage(this)">
+
+                        <div class="space-y-2" id="cover-prompt">
+                            <div class="mx-auto w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform duration-300">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                </svg>
+                            </div>
+                            <div class="text-sm text-gray-600">
+                                <span class="font-semibold text-indigo-600 hover:text-indigo-500">Click to upload cover</span> or drag and drop
+                            </div>
+                            <p class="text-xs text-gray-500">PNG, JPG, JPEG up to 10MB</p>
                         </div>
-                        <div class="text-sm text-gray-600">
-                            <label for="cover_image" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500">
-                                <span>Upload a cover image</span>
-                                <input id="cover_image" name="cover_image" type="file" class="sr-only" accept="image/*" onchange="previewCoverImage(this)">
-                            </label>
-                            <p class="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to 10MB</p>
+
+                        <!-- Cover Image Preview -->
+                        <div id="cover-image-preview" class="hidden relative inline-block mx-auto max-w-full">
+                            <!-- Previews will show here -->
                         </div>
                     </div>
-                </div>
-                @error('cover_image')
-                    <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
-                @enderror
-            </div>
 
-            <!-- Gallery Images -->
-            <div>
-                <label class="block text-sm font-medium mb-2">Gallery Images</label>
-                <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-blue-500 transition-colors">
-                    <div class="text-center">
-                        <div class="mb-3">
-                            <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H8a4 4 0 01-4-4V12a4 4 0 014-4h32a4 4 0 014 4v16.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                <path d="M30 28l-6-6-6 6M20 16h.01" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                        </div>
-                        <div class="text-sm text-gray-600">
-                            <label for="gallery_images" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500">
-                                <span>Upload multiple images</span>
-                                <input id="gallery_images" name="gallery_images[]" type="file" class="sr-only" accept="image/*" multiple onchange="previewGalleryImages(this)">
-                            </label>
-                            <p class="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to 10MB each (max 5 images)</p>
+                    @error('cover_image')
+                        <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- Gallery Images -->
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700">Gallery Media (Images &amp; Videos)</label>
+
+                    <div class="relative group cursor-pointer border-2 border-dashed border-gray-300 rounded-xl p-6 bg-gray-50 hover:bg-indigo-50/30 hover:border-indigo-500 transition-all duration-300 text-center" id="gallery-dropzone">
+                        <input type="file"
+                               class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                               id="gallery_images" name="gallery_images[]" accept="image/*,video/*" multiple onchange="previewGalleryImages(this)">
+
+                        <div class="space-y-2" id="gallery-prompt">
+                            <div class="mx-auto w-12 h-12 rounded-full bg-pink-100 flex items-center justify-center text-pink-600 group-hover:scale-110 transition-transform duration-300">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h18M3 16h18"></path>
+                                </svg>
+                            </div>
+                            <div class="text-sm text-gray-600">
+                                <span class="font-semibold text-pink-600 hover:text-pink-500">Click to upload multiple</span> or drag and drop
+                            </div>
+                            <p class="text-xs text-gray-500">Images and MP4/WebM videos up to 100MB each (max 5)</p>
                         </div>
                     </div>
 
                     <!-- Gallery Preview Grid -->
-                    <div id="gallery-preview" class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 hidden">
-                        <!-- Images will be displayed here dynamically -->
+                    <div id="gallery-preview" class="hidden space-y-2">
+                        <p class="text-xs font-semibold text-gray-600">Selected Gallery Files:</p>
+                        <div id="gallery-preview-grid" class="grid grid-cols-2 md:grid-cols-3 gap-3"></div>
                     </div>
+
+                    @error('gallery_images.*')
+                        <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
-                @error('gallery_images.*')
-                    <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
-                @enderror
             </div>
         </div>
 
@@ -190,114 +205,182 @@
     // Preview Cover Image
     function previewCoverImage(input) {
         const previewContainer = document.getElementById('cover-image-preview');
+        const prompt = document.getElementById('cover-prompt');
+        previewContainer.innerHTML = '';
+
         if (input.files && input.files[0]) {
+            const file = input.files[0];
+            if (file.size > 10 * 1024 * 1024) {
+                alert("Cover image must not exceed 10MB!");
+                input.value = '';
+                return;
+            }
+
             const reader = new FileReader();
             reader.onload = function(e) {
                 previewContainer.innerHTML = `
-                    <div class="relative">
-                        <img src="${e.target.result}" class="max-h-48 mx-auto rounded-lg shadow-md" alt="Cover preview">
-                        <button type="button" onclick="removeCoverImage()" class="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1 hover:bg-red-600">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
+                    <div class="relative inline-block mx-auto">
+                        <img src="${e.target.result}" class="max-h-48 rounded-lg shadow-sm border object-cover" alt="Cover preview">
+                        <button type="button" onclick="removeCoverImage(event)" class="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-md transition-colors z-20">
+                            &times;
                         </button>
                     </div>
                 `;
+                previewContainer.classList.remove('hidden');
+                prompt.classList.add('hidden');
             }
-            reader.readAsDataURL(input.files[0]);
+            reader.readAsDataURL(file);
+        } else {
+            previewContainer.classList.add('hidden');
+            prompt.classList.remove('hidden');
         }
     }
 
-    function removeCoverImage() {
+    function removeCoverImage(event) {
+        if (event) {
+            event.stopPropagation();
+            event.preventDefault();
+        }
         const input = document.getElementById('cover_image');
         input.value = '';
         const previewContainer = document.getElementById('cover-image-preview');
-        previewContainer.innerHTML = `
-            <div class="mb-3">
-                <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H8a4 4 0 01-4-4V12a4 4 0 014-4h32a4 4 0 014 4v16.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                    <path d="M30 28l-6-6-6 6M20 16h.01" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-            </div>
-            <div class="text-sm text-gray-600">
-                <label for="cover_image" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500">
-                    <span>Upload a cover image</span>
-                    <input id="cover_image" name="cover_image" type="file" class="sr-only" accept="image/*" onchange="previewCoverImage(this)">
-                </label>
-                <p class="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to 10MB</p>
-            </div>
-        `;
+        const prompt = document.getElementById('cover-prompt');
+        previewContainer.innerHTML = '';
+        previewContainer.classList.add('hidden');
+        prompt.classList.remove('hidden');
     }
 
-    // Preview Gallery Images
+    // Preview Gallery Images/Videos
     function previewGalleryImages(input) {
+        const previewGrid = document.getElementById('gallery-preview-grid');
         const previewContainer = document.getElementById('gallery-preview');
-        previewContainer.innerHTML = '';
+        const prompt = document.getElementById('gallery-prompt');
+        previewGrid.innerHTML = '';
 
         if (input.files && input.files.length > 0) {
-            previewContainer.classList.remove('hidden');
-
-            for (let i = 0; i < Math.min(input.files.length, 5); i++) {
-                const file = input.files[i];
-                const reader = new FileReader();
-
-                reader.onload = function(e) {
-                    const previewDiv = document.createElement('div');
-                    previewDiv.className = 'relative group';
-                    previewDiv.innerHTML = `
-                        <img src="${e.target.result}" class="w-full h-24 object-cover rounded-lg shadow-sm" alt="Gallery preview">
-                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all rounded-lg"></div>
-                        <button type="button" onclick="removeGalleryImage(this, ${i})" class="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
-                        </button>
-                    `;
-                    previewContainer.appendChild(previewDiv);
-                }
-
-                reader.readAsDataURL(file);
-            }
-
-            // Show message if more than 5 files selected
             if (input.files.length > 5) {
-                const warningDiv = document.createElement('div');
-                warningDiv.className = 'col-span-full text-center text-sm text-amber-600 mt-2';
-                warningDiv.innerHTML = 'Maximum 5 images allowed. Only the first 5 will be uploaded.';
-                previewContainer.appendChild(warningDiv);
+                alert("Maximum 5 gallery files allowed! Keeping first 5.");
+                const dt = new DataTransfer();
+                Array.from(input.files).slice(0, 5).forEach(f => dt.items.add(f));
+                input.files = dt.files;
             }
+
+            previewContainer.classList.remove('hidden');
+            prompt.classList.add('hidden');
+
+            Array.from(input.files).forEach((file, index) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'relative group border rounded-xl overflow-hidden shadow-sm bg-black aspect-video flex items-center justify-center';
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    if (file.type.startsWith('video/')) {
+                        const video = document.createElement('video');
+                        video.src = e.target.result;
+                        video.className = 'w-full h-full object-cover';
+                        video.controls = false;
+                        video.muted = true;
+                        video.preload = 'metadata';
+
+                        const overlay = document.createElement('div');
+                        overlay.className = 'absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-40 transition-opacity group-hover:bg-opacity-20';
+                        overlay.innerHTML = `
+                            <svg class="w-8 h-8 text-white drop-shadow" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="text-[9px] text-white bg-black/60 px-1 py-0.5 rounded mt-1 font-semibold">${(file.size / 1024 / 1024).toFixed(1)}MB</span>
+                        `;
+
+                        wrapper.appendChild(video);
+                        wrapper.appendChild(overlay);
+
+                        wrapper.addEventListener('mouseenter', function() {
+                            video.play();
+                        });
+                        wrapper.addEventListener('mouseleave', function() {
+                            video.pause();
+                            video.currentTime = 0;
+                        });
+                    } else {
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.className = 'w-full h-full object-cover';
+
+                        const overlay = document.createElement('div');
+                        overlay.className = 'absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent p-1.5 text-left opacity-0 group-hover:opacity-100 transition-opacity';
+                        overlay.innerHTML = `<span class="text-[9px] text-white font-medium block truncate">${file.name}</span>`;
+
+                        wrapper.appendChild(img);
+                        wrapper.appendChild(overlay);
+                    }
+
+                    const removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.className = 'absolute top-1.5 right-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-md transition-colors z-20';
+                    removeBtn.innerHTML = '&times;';
+                    removeBtn.onclick = function(ev) {
+                        ev.stopPropagation();
+                        ev.preventDefault();
+                        removeGalleryImage(index);
+                    };
+                    wrapper.appendChild(removeBtn);
+
+                    previewGrid.appendChild(wrapper);
+                }
+                reader.readAsDataURL(file);
+            });
         } else {
             previewContainer.classList.add('hidden');
+            prompt.classList.remove('hidden');
         }
     }
 
-    function removeGalleryImage(button, index) {
+    function removeGalleryImage(index) {
         const input = document.getElementById('gallery_images');
         const dt = new DataTransfer();
+        const files = input.files;
 
-        for (let i = 0; i < input.files.length; i++) {
-            if (i !== index) {
-                dt.items.add(input.files[i]);
-            }
-        }
+        const fileArray = Array.from(files);
+        fileArray.splice(index, 1);
+
+        fileArray.forEach(file => {
+            dt.items.add(file);
+        });
 
         input.files = dt.files;
 
-        // Refresh preview
         previewGalleryImages(input);
     }
+
+    // Dropzones enhancements
+    ['cover-dropzone', 'gallery-dropzone'].forEach(id => {
+        const zone = document.getElementById(id);
+        if (!zone) return;
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            zone.addEventListener(eventName, e => {
+                zone.classList.add('border-indigo-500', 'bg-indigo-50/50');
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            zone.addEventListener(eventName, e => {
+                zone.classList.remove('border-indigo-500', 'bg-indigo-50/50');
+            }, false);
+        });
+    });
 </script>
 @endpush
 
 @push('styles')
 <style>
-    /* Optional custom styles for better appearance */
-    .border-dashed {
-        background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' stroke='%23CBD5E0' stroke-width='2' stroke-dasharray='6%2c 14' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+    #gallery-preview-grid > div {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
-
-    .border-dashed:hover {
-        background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' stroke='%233B82F6' stroke-width='2' stroke-dasharray='6%2c 14' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+    #gallery-preview-grid > div:hover {
+        transform: scale(1.03);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        z-index: 10;
     }
 </style>
 @endpush
