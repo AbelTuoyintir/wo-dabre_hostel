@@ -211,7 +211,13 @@
         if (input.files && input.files[0]) {
             const file = input.files[0];
             if (file.size > 10 * 1024 * 1024) {
-                alert("Cover image must not exceed 10MB!");
+                Swal.fire({
+                    title: 'File Too Large',
+                    text: 'Cover image must not exceed 10MB!',
+                    icon: 'warning',
+                    confirmButtonColor: '#3b82f6',
+                    customClass: { popup: 'rounded-xl' }
+                });
                 input.value = '';
                 return;
             }
@@ -259,7 +265,13 @@
 
         if (input.files && input.files.length > 0) {
             if (input.files.length > 5) {
-                alert("Maximum 5 gallery files allowed! Keeping first 5.");
+                Swal.fire({
+                    title: 'Limit Exceeded',
+                    text: 'Maximum 5 gallery files allowed! Extra files have been truncated.',
+                    icon: 'warning',
+                    confirmButtonColor: '#3b82f6',
+                    customClass: { popup: 'rounded-xl' }
+                });
                 const dt = new DataTransfer();
                 Array.from(input.files).slice(0, 5).forEach(f => dt.items.add(f));
                 input.files = dt.files;

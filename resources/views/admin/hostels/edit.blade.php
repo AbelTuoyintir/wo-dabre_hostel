@@ -237,27 +237,68 @@
         <script>
             let removedImages = [];
 
-            function markForRemoval(imageId) {
-                if (confirm('Are you sure you want to remove this image?')) {
-                    removedImages = removedImages.filter(id => String(id) !== String(imageId));
-                    removedImages.push(imageId);
-                    updateRemovedImagesInput();
-
-                    const imageContainer = document.querySelector(`[data-image-id="${imageId}"]`);
-                    if (imageContainer) {
-                        imageContainer.style.opacity = '0.3';
-                        imageContainer.style.pointerEvents = 'none';
-                        imageContainer.classList.add('bg-gray-100');
-
-                        let badge = imageContainer.querySelector('.marked-for-removal-badge');
-                        if (!badge) {
-                            badge = document.createElement('div');
-                            badge.className = 'marked-for-removal-badge absolute inset-0 flex items-center justify-center bg-red-500/20 text-white font-bold text-xs uppercase z-10';
-                            badge.innerHTML = '<span>Marked for Removal</span>';
-                            imageContainer.appendChild(badge);
-                        }
+            // Setup play-on-hover for existing videos on load
+            document.addEventListener('DOMContentLoaded', function() {
+                document.querySelectorAll('video').forEach(video => {
+                    const group = video.closest('.group');
+                    if (group) {
+                        group.addEventListener('mouseenter', function() {
+                            video.play().catch(err => console.log('Video play error:', err));
+                        });
+                        group.addEventListener('mouseleave', function() {
+                            video.pause();
+                            video.currentTime = 0;
+                        });
                     }
-                }
+                });
+            });
+
+            function markForRemoval(imageId) {
+                Swal.fire({
+                    title: 'Mark image for removal?',
+                    text: "This image will be deleted once you click 'Save Hostel' to save your changes.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ef4444',
+                    cancelButtonColor: '#6b7280',
+                    confirmButtonText: 'Yes, mark for removal',
+                    cancelButtonText: 'Cancel',
+                    customClass: {
+                        popup: 'rounded-xl',
+                        confirmButton: 'bg-red-500 hover:bg-red-600',
+                        cancelButton: 'bg-gray-500 hover:bg-gray-600'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        removedImages = removedImages.filter(id => String(id) !== String(imageId));
+                        removedImages.push(imageId);
+                        updateRemovedImagesInput();
+
+                        const imageContainer = document.querySelector(`[data-image-id="${imageId}"]`);
+                        if (imageContainer) {
+                            imageContainer.style.opacity = '0.3';
+                            imageContainer.style.pointerEvents = 'none';
+                            imageContainer.classList.add('bg-gray-100');
+
+                            let badge = imageContainer.querySelector('.marked-for-removal-badge');
+                            if (!badge) {
+                                badge = document.createElement('div');
+                                badge.className = 'marked-for-removal-badge absolute inset-0 flex items-center justify-center bg-red-500/20 text-white font-bold text-xs uppercase z-10';
+                                badge.innerHTML = '<span>Marked for Removal</span>';
+                                imageContainer.appendChild(badge);
+                            }
+                        }
+
+                        Swal.fire({
+                            title: 'Marked for Removal!',
+                            text: 'Click Save Hostel at the bottom to apply changes.',
+                            icon: 'success',
+                            timer: 1500,
+                            showConfirmButton: false,
+                            customClass: { popup: 'rounded-xl' }
+                        });
+                    }
+                });
             }
 
             function updateRemovedImagesInput() {
@@ -291,7 +332,15 @@
                         badgeContainer.innerHTML = '<span class="bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">Primary</span>';
                     }
                 }
-                alert('Primary image updated. Save the form to confirm changes.');
+
+                Swal.fire({
+                    title: 'Primary Image Selected!',
+                    text: 'Primary image updated. Save the form to confirm changes.',
+                    icon: 'success',
+                    timer: 2000,
+                    showConfirmButton: false,
+                    customClass: { popup: 'rounded-xl' }
+                });
             }
 
             function previewNewCover(input) {
@@ -302,7 +351,13 @@
                 if (input.files && input.files[0]) {
                     const file = input.files[0];
                     if (file.size > 10 * 1024 * 1024) {
-                        alert("Cover image must not exceed 10MB!");
+                        Swal.fire({
+                            title: 'File Too Large',
+                            text: 'Cover image must not exceed 10MB!',
+                            icon: 'warning',
+                            confirmButtonColor: '#3b82f6',
+                            customClass: { popup: 'rounded-xl' }
+                        });
                         input.value = '';
                         return;
                     }
@@ -341,7 +396,13 @@
 
                 if (input.files && input.files.length > 0) {
                     if (input.files.length > 5) {
-                        alert("Maximum 5 additional gallery files allowed! Keeping first 5.");
+                        Swal.fire({
+                            title: 'Limit Exceeded',
+                            text: 'Maximum 5 additional gallery files allowed! Extra files have been truncated.',
+                            icon: 'warning',
+                            confirmButtonColor: '#3b82f6',
+                            customClass: { popup: 'rounded-xl' }
+                        });
                         const dt = new DataTransfer();
                         Array.from(input.files).slice(0, 5).forEach(f => dt.items.add(f));
                         input.files = dt.files;
