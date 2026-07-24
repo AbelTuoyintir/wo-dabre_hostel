@@ -257,7 +257,13 @@
         if (file) {
             // Client side file size validation
             if (file.size > 5 * 1024 * 1024) {
-                alert("Featured image must not exceed 5MB!");
+                Swal.fire({
+                    title: 'File Too Large',
+                    text: 'Featured image must not exceed 5MB!',
+                    icon: 'warning',
+                    confirmButtonColor: '#4f46e5',
+                    customClass: { popup: 'rounded-xl' }
+                });
                 event.target.value = '';
                 return;
             }
@@ -303,7 +309,13 @@
         
         if (files.length > 0) {
             if (files.length > 5) {
-                alert("You can select up to 5 gallery files maximum!");
+                Swal.fire({
+                    title: 'Limit Exceeded',
+                    text: 'You can select up to 5 gallery files maximum! Extra files have been truncated.',
+                    icon: 'warning',
+                    confirmButtonColor: '#4f46e5',
+                    customClass: { popup: 'rounded-xl' }
+                });
                 // Keep only first 5
                 const dt = new DataTransfer();
                 Array.from(files).slice(0, 5).forEach(f => dt.items.add(f));

@@ -379,6 +379,22 @@
             });
         }
 
+        // Setup play-on-hover for existing videos on load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('video').forEach(video => {
+                const group = video.closest('.group');
+                if (group) {
+                    group.addEventListener('mouseenter', function() {
+                        video.play().catch(err => console.log('Video play error:', err));
+                    });
+                    group.addEventListener('mouseleave', function() {
+                        video.pause();
+                        video.currentTime = 0;
+                    });
+                }
+            });
+        });
+
         // Preview Replacement for Featured Image
         function previewFeaturedImage(event) {
             const file = event.target.files[0];
@@ -389,7 +405,13 @@
 
             if (file) {
                 if (file.size > 5 * 1024 * 1024) {
-                    alert("Featured image must not exceed 5MB!");
+                    Swal.fire({
+                        title: 'File Too Large',
+                        text: 'Featured image must not exceed 5MB!',
+                        icon: 'warning',
+                        confirmButtonColor: '#4f46e5',
+                        customClass: { popup: 'rounded-xl' }
+                    });
                     event.target.value = '';
                     return;
                 }
@@ -444,7 +466,13 @@
 
             if (files.length > 0) {
                 if (files.length > 5) {
-                    alert("You can select up to 5 gallery files maximum!");
+                    Swal.fire({
+                        title: 'Limit Exceeded',
+                        text: 'You can select up to 5 gallery files maximum! Extra files have been truncated.',
+                        icon: 'warning',
+                        confirmButtonColor: '#4f46e5',
+                        customClass: { popup: 'rounded-xl' }
+                    });
                     const dt = new DataTransfer();
                     Array.from(files).slice(0, 5).forEach(f => dt.items.add(f));
                     event.target.files = dt.files;
