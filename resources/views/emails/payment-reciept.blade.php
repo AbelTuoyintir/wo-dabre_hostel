@@ -191,7 +191,7 @@
         </div>
 
         <div class="footer">
-            <p>&copy; {{ date('Y') }} University of Cape Coast Hostel Booking System. All rights reserved.</p>
+            <p>&copy; {{ date('Y') }} University of Cape Coast SRC Hostel Booking Service. All rights reserved.</p>
             <p style="font-size: 12px;">For any inquiries, please contact support@ucchostels.com</p>
         </div>
     </div>

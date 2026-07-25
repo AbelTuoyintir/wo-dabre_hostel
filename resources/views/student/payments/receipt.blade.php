@@ -38,11 +38,11 @@
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div class="flex items-center gap-4">
                     <div class="bg-white p-3 rounded-2xl shadow-lg">
-                        <img src="{{ asset('wodabre-logo.png') }}" alt="Wo-dabre Logo" class="w-12 h-12">
+                        <img src="{{ asset('srclogo.png') }}" alt="SRC Logo" class="w-12 h-12">
                     </div>
                     <div>
-                        <h1 class="text-3xl font-black tracking-tight">Wo-dabre</h1>
-                        <p class="text-slate-400 text-sm font-medium uppercase tracking-widest">Student Housing</p>
+                        <h1 class="text-3xl font-black tracking-tight">UCC SRC Hostel Service</h1>
+                        <p class="text-slate-400 text-sm font-medium uppercase tracking-widest">Student Housing Service</p>
                     </div>
                 </div>
                 <div class="text-right">
