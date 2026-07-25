@@ -133,7 +133,7 @@ class BookingController extends Controller
     {
         try {
             \Log::info('Booking store request received', [
-                'request_data' => $request->except(['_token'])
+                'request_data' => $this->sanitizeForLog($request->except(['_token']))
             ]);
 
             $validated = $request->validate([
@@ -148,7 +148,7 @@ class BookingController extends Controller
                 'gender' => 'required|in:male,female',
             ]);
 
-            \Log::info('Validation passed', ['validated_data' => $validated]);
+            \Log::info('Validation passed', ['validated_data' => $this->sanitizeForLog($validated)]);
 
             $room = Room::findOrFail($validated['room_id']);
             \Log::info('Room found', ['room_id' => $room->id, 'room_gender' => $room->gender]);
@@ -336,7 +336,7 @@ class BookingController extends Controller
                 ],
             ];
 
-            \Log::info('Guest payment details:', $paymentData);
+            \Log::info('Guest payment details:', $this->sanitizeForLog($paymentData));
 
             session(['payment_reference' => $reference]);
 
@@ -395,7 +395,7 @@ class BookingController extends Controller
                 ],
             ];
 
-            \Log::info('Student Payment Data sent to Paystack:', $paymentData);
+            \Log::info('Student Payment Data sent to Paystack:', $this->sanitizeForLog($paymentData));
 
             session(['payment_reference' => $reference]);
 
@@ -420,7 +420,7 @@ class BookingController extends Controller
 
         try {
             $paymentDetails = Paystack::getPaymentData();
-            \Log::info('Payment callback received:', ['paymentDetails' => $paymentDetails]);
+            \Log::info('Payment callback received:', ['paymentDetails' => $this->sanitizeForLog($paymentDetails)]);
 
             if (!$paymentDetails['status'] || $paymentDetails['data']['status'] !== 'success') {
                 return redirect()->route('student.hostels.browse')
@@ -430,18 +430,18 @@ class BookingController extends Controller
             $metadata = $paymentDetails['data']['metadata'] ?? null;
 
             \Log::info('Raw metadata received:', [
-                'metadata' => $metadata,
+                'metadata' => $this->sanitizeForLog($metadata),
                 'metadata_type' => gettype($metadata)
             ]);
 
             if (!is_array($metadata)) {
-                \Log::error('Metadata is not an array', ['metadata' => $metadata]);
+                \Log::error('Metadata is not an array', ['metadata' => $this->sanitizeForLog($metadata)]);
                 return redirect()->route('student.hostels.browse')
                     ->with('error', 'Invalid payment data format. Please contact support.');
             }
 
             if (!isset($metadata['booking_data'])) {
-                \Log::error('Missing booking_data in metadata', ['metadata' => $metadata]);
+                \Log::error('Missing booking_data in metadata', ['metadata' => $this->sanitizeForLog($metadata)]);
                 return redirect()->route('student.hostels.browse')
                     ->with('error', 'Invalid booking data. Please contact support.');
             }
@@ -477,7 +477,7 @@ class BookingController extends Controller
                     \Log::info('Routing to student payment processor');
                     // For students, verify user_id exists
                     if (!isset($metadata['user_id'])) {
-                        \Log::error('Student payment missing user_id', ['metadata' => $metadata]);
+                        \Log::error('Student payment missing user_id', ['metadata' => $this->sanitizeForLog($metadata)]);
                         throw new \Exception('Missing user ID for student payment');
                     }
                     $booking = $this->processStudentPayment($paymentDetails, $metadata);
@@ -514,14 +514,14 @@ class BookingController extends Controller
         $bookingData = $metadata['booking_data'];
 
         if (!isset($metadata['guest_data']) || !is_array($metadata['guest_data'])) {
-            \Log::error('Invalid guest_data', ['metadata' => $metadata]);
+            \Log::error('Invalid guest_data', ['metadata' => $this->sanitizeForLog($metadata)]);
             throw new \Exception('Invalid guest data');
         }
 
         $guestData = $metadata['guest_data'];
 
         if (!isset($guestData['temp_password'])) {
-            \Log::error('Missing temp_password in guest_data', ['guestData' => $guestData]);
+            \Log::error('Missing temp_password in guest_data', ['guestData' => $this->sanitizeForLog($guestData)]);
             throw new \Exception('Missing temporary password');
         }
 
@@ -566,7 +566,7 @@ class BookingController extends Controller
 
         $userId = $metadata['user_id'] ?? null;
         if (!$userId) {
-            \Log::error('Missing user_id for authenticated user', ['metadata' => $metadata]);
+            \Log::error('Missing user_id for authenticated user', ['metadata' => $this->sanitizeForLog($metadata)]);
             throw new \Exception('Missing user ID');
         }
 
@@ -943,5 +943,31 @@ class BookingController extends Controller
         } catch (\Exception $e) {
             \Log::error('Failed to send confirmation email: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Mask sensitive fields (like passwords) from data arrays before logging.
+     *
+     * @param mixed $data
+     * @return mixed
+     */
+    public function sanitizeForLog($data)
+    {
+        if (!is_array($data)) {
+            return $data;
+        }
+
+        $sanitized = [];
+        foreach ($data as $key => $value) {
+            // Mask any key that resembles a password or credential field
+            if (in_array(strtolower($key), ['temp_password', 'password', 'password_confirmation', 'current_password', 'secret', 'key'])) {
+                $sanitized[$key] = '[MASKED]';
+            } elseif (is_array($value)) {
+                $sanitized[$key] = $this->sanitizeForLog($value);
+            } else {
+                $sanitized[$key] = $value;
+            }
+        }
+        return $sanitized;
     }
 }

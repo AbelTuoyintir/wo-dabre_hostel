@@ -99,4 +99,50 @@ class PaymentProcessingTest extends TestCase
         // Room occupancy should have incremented
         $this->assertEquals(1, Room::find($room->id)->current_occupancy);
     }
+
+    /**
+     * Test that the sanitizeForLog method correctly masks sensitive credential keys recursively.
+     */
+    public function test_sanitize_for_log_masks_sensitive_data()
+    {
+        $controller = new BookingController();
+
+        $inputData = [
+            'name' => 'John Doe',
+            'email' => 'john@example.com',
+            'temp_password' => 'SuperSecret123!',
+            'metadata' => [
+                'user_id' => 123,
+                'password' => 'AnotherSecret!!!',
+                'password_confirmation' => 'AnotherSecret!!!',
+                'nested' => [
+                    'current_password' => 'MyOldPassword',
+                    'harmless_key' => 'keep_this_intact',
+                    'secret' => 'some_api_secret',
+                    'key' => 'some_api_key'
+                ]
+            ]
+        ];
+
+        $expectedData = [
+            'name' => 'John Doe',
+            'email' => 'john@example.com',
+            'temp_password' => '[MASKED]',
+            'metadata' => [
+                'user_id' => 123,
+                'password' => '[MASKED]',
+                'password_confirmation' => '[MASKED]',
+                'nested' => [
+                    'current_password' => '[MASKED]',
+                    'harmless_key' => 'keep_this_intact',
+                    'secret' => '[MASKED]',
+                    'key' => '[MASKED]'
+                ]
+            ]
+        ];
+
+        $sanitized = $controller->sanitizeForLog($inputData);
+
+        $this->assertEquals($expectedData, $sanitized);
+    }
 }
