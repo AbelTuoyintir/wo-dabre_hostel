@@ -151,6 +151,7 @@ class HostelController extends Controller
                 'image_path' => $coverPath,
                 'type' => 'hostel',
                 'is_primary' => true,
+                'media_kind' => 'image',
                 'order' => 0
             ]);
         }
@@ -294,6 +295,9 @@ class HostelController extends Controller
 
             // Handle new cover image upload
             if ($request->hasFile('cover_image')) {
+                // Set other images to non-primary
+                $hostel->images()->update(['is_primary' => false]);
+
                 $path = $request->file('cover_image')->store('hostels/covers', 'public');
 
                 // If this should be the primary image
@@ -301,6 +305,7 @@ class HostelController extends Controller
                     'image_path' => $path,
                     'type' => 'hostel',
                     'is_primary' => true,
+                    'media_kind' => 'image',
                     'order' => 0
                 ]);
             }
