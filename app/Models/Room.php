@@ -1,0 +1,144 @@
+<?php
+
+namespace App\Models;
+
+use App\Models\Concerns\HasRouteUuid;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Room extends Model
+{
+    use HasFactory, HasRouteUuid;
+
+    /**
+     * Mass assignable attributes
+     */
+    protected $fillable = [
+        'number',
+        'capacity',
+        'hostel_id',
+        'gender',
+        'status',
+        'room_type',
+        'room_cost',
+        'floor',
+        'size_sqm',
+        'window_type',
+        'description',
+        'furnished',
+        'private_bathroom',
+    ];
+
+    /**
+     * Attribute casting
+     */
+    protected $casts = [
+        'capacity' => 'integer',
+        'room_cost' => 'float',
+        'furnished' => 'boolean',
+        'private_bathroom' => 'boolean',
+    ];
+
+    /**
+     * Room belongs to a Hostel
+     */
+    public function hostel()
+    {
+        return $this->belongsTo(Hostel::class);
+    }
+
+    public function images()
+    {
+        return $this->hasMany(HostelImage::class)
+            ->where('type', 'room')
+            ->where('media_kind', 'image');
+    }
+
+    public function roomVideo()
+    {
+        return $this->hasOne(HostelImage::class)
+            ->where('type', 'room')
+            ->where('media_kind', 'video');
+    }
+
+    public function primaryImage()
+    {
+        return $this->hasOne(HostelImage::class)->where('type', 'room')->where('is_primary', true);
+    }
+
+    /**
+     * Room has many Bookings
+     */
+    public function bookings()
+    {
+        return $this->hasMany(Booking::class);
+    }
+
+    /**
+     * Status constants (avoid magic strings)
+     */
+    public const STATUS_FULL = 'full';
+    public const STATUS_AVAILABLE = 'available';
+    public const STATUS_UNAVAILABLE = 'unavailable';
+    public const STATUS_INACTIVE = 'inactive';
+
+    /**
+     * Gender constants
+     */
+    public const GENDER_MALE = 'male';
+    public const GENDER_FEMALE = 'female';
+    public const GENDER_ANY = 'any';
+
+    /**
+     * Calculate occupancy rate percentage
+     */
+    public function occupancyRate()
+    {
+        if (!$this->capacity || $this->capacity == 0) {
+            return 0;
+        }
+        return round(($this->current_occupancy ?? 0) / $this->capacity * 100);
+    }
+
+    /**
+     * Get available spaces in room
+     */
+   public function isAvailable()
+    {
+        return $this->status === 'available'
+            && $this->current_occupancy < $this->capacity;
+    }
+
+    public function availableSpaces()
+    {
+        return max(0, $this->capacity - ($this->current_occupancy ?? 0));
+    }
+
+    /**
+     * Get current booking query
+     */
+    public function currentBooking()
+    {
+        return $this->bookings()
+            ->whereIn('status', ['confirmed', 'checked_in'])
+            ->where('check_out_date', '>', now());
+    }
+
+    /**
+     * Get the room cost attribute
+     * This is used by the booking form and controller
+     */
+    public function getRoomCostAttribute()
+    {
+        return $this->attributes['room_cost'] ?? null;
+    }
+    /**
+ * Get the images for the room
+    */
+      public function roomImages()
+    {
+        return $this->hasMany(HostelImage::class)
+            ->where('type', 'room')
+            ->where('media_kind', 'image');
+    }
+}

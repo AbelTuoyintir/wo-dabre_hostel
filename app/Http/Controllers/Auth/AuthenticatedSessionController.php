@@ -1,0 +1,113 @@
+<?php
+
+namespace App\Http\Controllers\Auth;
+
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\LoginRequest;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\View\View;
+
+class AuthenticatedSessionController extends Controller
+{
+    /**
+     * Display the login view.
+     * This is the 'create()' method that's missing
+     */
+    public function create(): View
+    {
+        return view('auth.login');
+    }
+
+    /**
+     * Handle an incoming authentication request.
+     */
+    public function store(LoginRequest $request): RedirectResponse
+    {
+        $request->authenticate();
+
+        $request->session()->regenerate();
+
+        // Add your persona-based redirect logic here
+        return $this->authenticated($request, Auth::user());
+    }
+
+    /**
+     * Destroy an authenticated session.
+     */
+    public function destroy(Request $request): RedirectResponse
+    {
+        Auth::guard('web')->logout();
+
+        $request->session()->invalidate();
+
+        $request->session()->regenerateToken();
+
+        return redirect('/');
+    }
+
+    /**
+     * Handle post-authentication redirect based on role
+     */
+    protected function authenticated(Request $request, $user): RedirectResponse
+    {
+        // Check if account is active
+        if (!$user->is_active) {
+            Auth::logout();
+            return redirect()->route('login')->withErrors([
+                'email' => 'Your account is deactivated.'
+            ]);
+        }
+
+        // Persona-specific checks and redirects
+        switch ($user->role) {
+            case 'admin':
+                return redirect()->route('admin.dashboard');
+
+            case 'hostel_manager':
+                if (!$user->hostel_id) {
+                    return redirect()->route('hostel-manager.profile')
+                        ->with('warning', 'Awaiting hostel assignment from admin.');
+                }
+                return redirect()->route('hostel-manager.dashboard');
+
+            case 'hostel_agent':
+                // Check if agent profile exists
+                if (!$user->agent) {
+                    return redirect()->route('agent.complete-profile')
+                        ->with('warning', 'Please complete your agent profile to continue.');
+                }
+                
+                // Check agent status
+                if ($user->agent->status === 'pending') {
+                    return redirect()->route('agent.pending')
+                        ->with('warning', 'Your agent application is pending approval. You will be notified once approved.');
+                }
+                
+                if ($user->agent->status === 'suspended') {
+                    Auth::logout();
+                    return redirect()->route('login')->withErrors([
+                        'email' => 'Your agent account has been suspended. Please contact support.'
+                    ]);
+                }
+                
+                // Status is 'active'
+                if ($user->agent->status === 'active') {
+                    return redirect()->route('agent.dashboard');
+                }
+                
+                // Fallback for any other status
+                return redirect()->route('agent.complete-profile')
+                    ->with('warning', 'Please complete your agent profile.');
+
+            case 'student':
+                return redirect()->route('student.dashboard');
+
+            default:
+                return redirect(route('hostels.index', absolute: false))->withErrors([
+                    'email' => 'Unknown user role. Contact administrator.'
+                ]);
+        }
+    }
+}

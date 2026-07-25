@@ -1,0 +1,629 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Hostel;
+use App\Models\Room;
+use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Schema;
+
+class HostelController extends Controller
+{
+    /**
+     * Display a listing of approved hostels for students
+     */
+    public function index(Request $request)
+    {
+        if (!Schema::hasTable('hostels') || !Schema::hasTable('rooms')) {
+            $hostels = new LengthAwarePaginator(collect(), 0, 12);
+
+            return view('welcome', [
+                'hostels' => $hostels,
+                'locations' => collect(),
+                'transformedHostels' => collect(),
+                'stats' => [
+                    'total_hostels' => 0,
+                    'total_rooms' => 0,
+                    'locations_count' => 0,
+                ],
+            ]);
+        }
+
+        $query = Hostel::query()
+            ->where('is_approved', true)
+            ->where('status', 'active')
+            ->with(['primaryImage', 'images', 'rooms' => function($q) {
+                $q->where('status', 'available')
+                  ->whereColumn('current_occupancy', '<', 'capacity');
+            }]);
+
+        // Filter by location
+        if ($request->filled('location') && $request->location != 'all') {
+            $query->where('location', 'like', '%' . $request->location . '%');
+        }
+
+        // Filter by price range (based on room_cost which is yearly rate)
+        if ($request->filled('price_range')) {
+            $priceRange = $request->price_range;
+
+            $query->whereHas('rooms', function($q) use ($priceRange) {
+                if ($priceRange == '0-2000') {
+                    $q->where('room_cost', '<', 2000);
+                } elseif ($priceRange == '2000-4000') {
+                    $q->whereBetween('room_cost', [2000, 4000]);
+                } elseif ($priceRange == '4000-1500') {
+                    $q->whereBetween('room_cost', [1000, 1500]);
+                } elseif ($priceRange == '1500-2000') {
+                    $q->whereBetween('room_cost', [1500, 2000]);
+                } elseif ($priceRange == '2000+') {
+                    $q->where('room_cost', '>', 2000);
+                }
+            });
+        }
+
+        // Filter by gender preference
+        if ($request->filled('gender')) {
+            $query->whereHas('rooms', function($q) use ($request) {
+                $q->whereIn('gender', [$request->gender, 'any']);
+            });
+        }
+
+        // Amenities filtering removed because the related table is not available in this database.
+
+        // Filter by room features
+        if ($request->filled('furnished')) {
+            $query->whereHas('rooms', function($q) {
+                $q->where('furnished', true);
+            });
+        }
+
+        if ($request->filled('private_bathroom')) {
+            $query->whereHas('rooms', function($q) {
+                $q->where('private_bathroom', true);
+            });
+        }
+
+        // Search by name, description, or location
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhere('location', 'like', "%{$search}%")
+                  ->orWhere('address', 'like', "%{$search}%");
+            });
+        }
+
+
+        // Sorting options
+        switch ($request->sort) {
+            case 'price_low':
+                $query->withAvg('rooms', 'room_cost')
+                      ->orderBy('rooms_avg_room_cost');
+                break;
+            case 'price_high':
+                $query->withAvg('rooms', 'room_cost')
+                      ->orderByDesc('rooms_avg_room_cost');
+                break;
+            case 'rating':
+                $query->orderByDesc('rating');
+                break;
+            case 'newest':
+                $query->orderByDesc('created_at');
+                break;
+            default:
+                $query->orderByDesc('is_featured')
+                      ->orderByDesc('rating')
+                      ->orderByDesc('created_at');
+        }
+
+        // Get unique locations for filter dropdown
+        // Guard for unit/feature tests that may not have run the full schema
+        $locations = Cache::remember('hostel_locations', 3600, function() {
+            if (!\Illuminate\Support\Facades\Schema::hasTable('hostels')) {
+                return collect();
+            }
+
+            return Hostel::where('is_approved', true)
+                ->where('status', 'active')
+                ->select('location')
+                ->distinct()
+                ->whereNotNull('location')
+                ->orderBy('location')
+                ->pluck('location');
+        });
+
+        // For API requests (AJAX from welcome page)
+        if ($request->wantsJson() || $request->ajax()) {
+            $hostels = $query->paginate(12);
+
+            // Transform data for frontend
+            $transformedHostels = $hostels->map(function($hostel) {
+                return [
+                    'id' => $hostel->id,
+                    'uuid' => $hostel->uuid,
+                    'name' => $hostel->name,
+                    'location' => $hostel->location,
+                    'description' => $hostel->description,
+                    'rating' => $hostel->rating,
+                    'is_featured' => $hostel->is_featured,
+                    'primary_image' => $hostel->primaryImage ? [
+                        // Accept both image_path and path column names
+                        'image_path' => $hostel->primaryImage->image_path ?? $hostel->primaryImage->path,
+                    ] : null,
+
+                    'images' => $hostel->images->map(function($image) {
+                        return ['image_path' => $image->image_path];
+                    }),
+                    'amenities' => $hostel->amenities,
+                    'rooms' => $hostel->rooms->map(function($room) {
+                        return [
+                            'id' => $room->id,
+                            'number' => $room->number,
+                            'room_cost' => $room->room_cost,
+                            'capacity' => $room->capacity,
+                            'gender' => $room->gender
+                        ];
+                    }),
+                    'min_price' => $hostel->rooms->min('room_cost'),
+                    'available_rooms_count' => $hostel->rooms->count()
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'data' => $transformedHostels,
+                'hostels' => [
+                    'data' => $transformedHostels,
+                    'current_page' => $hostels->currentPage(),
+                    'last_page' => $hostels->lastPage(),
+                    'per_page' => $hostels->perPage(),
+                    'total' => $hostels->total()
+                ]
+            ]);
+        }
+
+        // For regular web requests - pass data to Blade view
+        // Always pass data to view for server-side rendering
+        \Log::info('HostelController@index - query hostels count', ['count' => (clone $query)->count()]);
+        $hostels = $query->paginate(12)->withQueryString();
+        \Log::info('HostelController@index - paginated hostels', ['total' => $hostels->total(), 'per_page' => $hostels->perPage(), 'current_page' => $hostels->currentPage(), 'transformed_will_map' => $hostels->count()]);
+
+        // Transform hostels for Blade view
+
+        $transformedHostels = $hostels->map(function($hostel) {
+            return [
+                'id' => $hostel->id,
+                'uuid' => $hostel->uuid,
+                'name' => $hostel->name,
+                'location' => $hostel->location,
+                'address' => $hostel->address,
+                'description' => $hostel->description,
+                'rating' => $hostel->rating,
+                'is_featured' => $hostel->is_featured,
+                    'primary_image' => $hostel->primaryImage ? [
+                        // Accept both image_path and path column names
+                        'image_path' => $hostel->primaryImage->image_path ?? $hostel->primaryImage->path,
+                    ] : null,
+
+
+                'images' => $hostel->images->map(function($image) {
+                    return ['image_path' => $image->image_path];
+                }),
+                'amenities' => $hostel->amenities,
+                'rooms' => $hostel->rooms,
+                'min_price' => $hostel->rooms->min('room_cost'),
+                'available_rooms_count' => $hostel->rooms->count()
+            ];
+        });
+
+        // Get statistics
+        $stats = [
+            'total_hostels' => Hostel::where('is_approved', true)->where('status', 'active')->count(),
+            'total_rooms' => Room::whereHas('hostel', function($q) {
+                $q->where('is_approved', true)->where('status', 'active');
+            })->where('status', 'available')->count(),
+            'locations_count' => $locations->count()
+        ];
+
+        return view('welcome', compact('hostels', 'locations', 'transformedHostels', 'stats'));
+    }
+
+    /**
+     * Display the specified hostel for students
+     */
+    public function show($id)
+    {
+        $hostel = $this->resolveHostelByRouteKey($id)->load([
+            'images',
+            'reviews' => function($q) {
+                $q->with('user')
+                  ->latest()
+                  ->limit(10);
+            },
+            'reviews.user',
+            'rooms' => function($q) {
+                $q->withCount('bookings')
+                  ->where('status', 'available')
+                  ->whereColumn('current_occupancy', '<', 'capacity')
+                  ->orderBy('price_per_month');
+            }
+        ]);
+
+        if (!$hostel->is_approved || $hostel->status !== 'active') {
+            abort(404);
+        }
+
+        // Calculate average rating
+        $averageRating = $hostel->reviews->avg('rating');
+        $reviewCount = $hostel->reviews->count();
+
+        // Get room statistics
+        $roomStats = [
+            'total' => $hostel->rooms()->count(),
+            'available' => $hostel->rooms()
+                ->where('status', 'available')
+                ->whereColumn('current_occupancy', '<', 'capacity')
+                ->count(),
+            'min_price' => $hostel->rooms()
+                ->where('status', 'available')
+                ->min('price_per_month'),
+            'max_price' => $hostel->rooms()
+                ->where('status', 'available')
+                ->max('price_per_month'),
+        ];
+
+        // Group rooms by type/capacity
+        $roomsByType = $hostel->rooms()
+            ->where('status', 'available')
+            ->whereColumn('current_occupancy', '<', 'capacity')
+            ->get()
+            ->groupBy('capacity');
+
+        // Get related hostels in same location
+        $relatedHostels = Hostel::where('location', $hostel->location)
+            ->where('id', '!=', $hostel->id)
+            ->where('is_approved', true)
+            ->where('status', 'active')
+            ->with(['primaryImage', 'rooms' => function($q) {
+                $q->where('status', 'available')
+                  ->whereColumn('current_occupancy', '<', 'capacity');
+            }])
+            ->limit(3)
+            ->get()
+            ->map(function($related) {
+                $related->min_price = $related->rooms()->min('price_per_month');
+                return $related;
+            });
+
+        // Check if user has already booked this hostel
+        $userBooking = null;
+        if (auth()->check()) {
+            $userBooking = auth()->user()
+                ->bookings()
+                ->whereHas('room', function($q) use ($hostel) {
+                    $q->where('hostel_id', $hostel->id);
+                })
+                ->whereIn('status', ['pending', 'confirmed'])
+                ->first();
+        }
+
+        return view('admin.hostels.show', compact(
+            'hostel',
+            'relatedHostels',
+            'averageRating',
+            'reviewCount',
+            'roomStats',
+            'roomsByType',
+            'userBooking'
+        ));
+    }
+
+    /**
+     * Search hostels by location (AJAX)
+     */
+    public function search(Request $request)
+    {
+        $request->validate([
+            'location' => 'required|string|min:2',
+        ]);
+
+        $hostels = Hostel::where('is_approved', true)
+            ->where('status', 'active')
+            ->where(function($q) use ($request) {
+                $q->where('location', 'like', '%' . $request->location . '%')
+                  ->orWhere('name', 'like', '%' . $request->location . '%')
+                  ->orWhere('address', 'like', '%' . $request->location . '%');
+            })
+            ->with(['primaryImage', 'rooms' => function($q) {
+                $q->where('status', 'available')
+                  ->whereColumn('current_occupancy', '<', 'capacity');
+            }])
+            ->limit(5)
+            ->get()
+            ->map(function($hostel) {
+                return [
+                    'id' => $hostel->id,
+                    'uuid' => $hostel->uuid,
+                    'name' => $hostel->name,
+                    'location' => $hostel->location,
+                    'address' => $hostel->address,
+                    'image' => $hostel->primaryImage?->url ?? $hostel->primaryImage?->path,
+                    'min_price' => $hostel->rooms()->min('price_per_month'),
+                    'rating' => $hostel->rating,
+                    'url' => route('hostels.guest.show', $hostel->uuid ?? $hostel->id)
+                ];
+            });
+
+        return response()->json($hostels);
+    }
+
+    /**
+     * Get available rooms for a specific hostel (AJAX)
+     */
+    public function getAvailableRooms(Request $request, Hostel $hostel)
+    {
+        if (!$hostel->is_approved || $hostel->status !== 'active') {
+            return response()->json(['error' => 'Hostel not available'], 404);
+        }
+
+        $rooms = $hostel->rooms()
+            ->where('status', 'available')
+            ->whereColumn('current_occupancy', '<', 'capacity')
+            ->when($request->filled('gender'), function($q) use ($request) {
+                $q->whereIn('gender', [$request->gender, 'any']);
+            })
+            ->when($request->filled('min_price'), function($q) use ($request) {
+                $q->where('price_per_month', '>=', $request->min_price);
+            })
+            ->when($request->filled('max_price'), function($q) use ($request) {
+                $q->where('price_per_month', '<=', $request->max_price);
+            })
+            ->when($request->filled('capacity'), function($q) use ($request) {
+                $q->where('capacity', $request->capacity);
+            })
+            ->when($request->filled('furnished'), function($q) use ($request) {
+                $q->where('furnished', $request->furnished);
+            })
+            ->when($request->filled('private_bathroom'), function($q) use ($request) {
+                $q->where('private_bathroom', $request->private_bathroom);
+            })
+            ->withCount('bookings')
+            ->get()
+            ->map(function($room) {
+                return [
+                    'id' => $room->id,
+                    'number' => $room->number,
+                    'capacity' => $room->capacity,
+                    'available_spaces' => $room->availableSpaces(),
+                    'price' => $room->price_per_month,
+                    'gender' => $room->gender,
+                    'furnished' => $room->furnished,
+                    'private_bathroom' => $room->private_bathroom,
+                    'size' => $room->size_sqm,
+                    'floor' => $room->floor,
+                    'window_type' => $room->window_type,
+                    'description' => $room->description
+                ];
+            });
+
+        return response()->json($rooms);
+    }
+
+    /**
+     * Get all available locations for autocomplete
+     */
+    public function getLocations(Request $request)
+    {
+        if (!Schema::hasTable('hostels')) {
+            return response()->json([]);
+        }
+
+        $query = Hostel::where('is_approved', true)
+            ->where('status', 'active')
+            ->select('location')
+            ->distinct();
+
+        if ($request->filled('search')) {
+            $query->where('location', 'like', '%' . $request->search . '%');
+        }
+
+        $locations = $query->orderBy('location')
+            ->limit(10)
+            ->pluck('location');
+
+        return response()->json($locations);
+    }
+
+    /**
+ * Display the specified hostel for guests
+ */
+   public function guestShow($id)
+{
+    $hostel = $this->resolveHostelByRouteKey($id)->load([
+        'images',        // For hostel images
+        'primaryImage',
+        'rooms' => function($q) {
+            $q->where('status', 'available')
+              ->where(function($query) {
+                  $query->whereNull('current_occupancy')
+                        ->orWhereColumn('current_occupancy', '<', 'capacity');
+              })
+              ->with('roomImages'); // Load room images using the new relationship
+        }
+    ]);
+
+    if (!$hostel->is_approved || $hostel->status !== 'active') {
+        abort(404);
+    }
+
+    // Get available rooms
+    $availableRooms = $hostel->rooms;
+
+    // Calculate min price
+    $hostel->min_price = $availableRooms->min('room_cost');
+
+    //show the number of available space for each room.
+    // $availableRooms = Room::where()
+
+    // Get similar hostels in same location
+    $similarHostels = Hostel::where('is_approved', true)
+        ->where('status', 'active')
+        ->where('location', $hostel->location)
+        ->where('id', '!=', $hostel->id)
+        ->with(['primaryImage'])
+        ->limit(3)
+        ->get()
+        ->map(function($similar) {
+            $similar->min_price = $similar->rooms()
+                ->where('status', 'available')
+                ->whereColumn('current_occupancy', '<', 'capacity')
+                ->min('room_cost');
+            return $similar;
+        });
+
+    // Get locations for footer
+    $locations = Cache::remember('hostel_locations', 3600, function() {
+        return Hostel::where('is_approved', true)
+            ->where('status', 'active')
+            ->select('location')
+            ->distinct()
+            ->orderBy('location')
+            ->pluck('location')
+            ->take(5);
+    });
+
+    return view('admin.hostels.guestShow', compact('hostel', 'availableRooms', 'similarHostels', 'locations'));
+}
+
+    /**
+     * Compare selected hostels
+     */
+    public function compare(Request $request)
+    {
+        $ids = explode(',', $request->query('ids', ''));
+        $ids = array_filter($ids);
+
+        if (empty($ids)) {
+            return redirect()->route('hostels.index')->with('warning', 'Please select hostels to compare.');
+        }
+
+        $hostels = Hostel::whereIn('uuid', $ids)
+            ->orWhereIn('id', $ids)
+            ->where('is_approved', true)
+            ->where('status', 'active')
+            ->with(['primaryImage', 'rooms'])
+            ->get();
+
+        if ($hostels->isEmpty()) {
+            return redirect()->route('hostels.index')->with('error', 'Selected hostels could not be found.');
+        }
+
+        return view('hostels.compare', compact('hostels'));
+    }
+
+    private function resolveHostelByRouteKey(string $value): Hostel
+    {
+        return Hostel::query()
+            ->where('uuid', $value)
+            ->orWhere('id', $value)
+            ->firstOrFail();
+    }
+    // /**
+    //  * Show hostel reviews page
+    //  */
+    // public function reviews(Hostel $hostel)
+    // {
+    //     if (!$hostel->is_approved || $hostel->status !== 'active') {
+    //         abort(404);
+    //     }
+
+    //     $reviews = $hostel->reviews()
+    //         ->with('user')
+    //         ->latest()
+    //         ->paginate(20);
+
+    //     $ratingDistribution = [
+    //         5 => $hostel->reviews()->where('rating', 5)->count(),
+    //         4 => $hostel->reviews()->where('rating', 4)->count(),
+    //         3 => $hostel->reviews()->where('rating', 3)->count(),
+    //         2 => $hostel->reviews()->where('rating', 2)->count(),
+    //         1 => $hostel->reviews()->where('rating', 1)->count(),
+    //     ];
+
+    //     return view('hostels.reviews', compact('hostel', 'reviews', 'ratingDistribution'));
+    // }
+
+    /**
+     * Show hostel rooms page
+     */
+    public function rooms(Hostel $hostel, Request $request)
+    {
+        if (!$hostel->is_approved || $hostel->status !== 'active') {
+            abort(404);
+        }
+
+        $rooms = $hostel->rooms()
+            ->where('status', 'available')
+            ->whereColumn('current_occupancy', '<', 'capacity')
+            ->when($request->filled('gender'), function($q) use ($request) {
+                $q->whereIn('gender', [$request->gender, 'any']);
+            })
+            ->when($request->filled('min_price'), function($q) use ($request) {
+                $q->where('price_per_month', '>=', $request->min_price);
+            })
+            ->when($request->filled('max_price'), function($q) use ($request) {
+                $q->where('price_per_month', '<=', $request->max_price);
+            })
+            ->orderBy('price_per_month')
+            ->paginate(12);
+
+        return view('admin.rooms.index', compact('hostel', 'rooms'));
+    }
+
+    /**
+     * Show hostel amenities
+     */
+    public function amenities(Hostel $hostel)
+    {
+        if (!$hostel->is_approved || $hostel->status !== 'active') {
+            abort(404);
+        }
+
+        $amenities = $hostel->amenities ?? [];
+
+        // Group amenities by category
+        $groupedAmenities = [
+            'Basic' => ['wifi' => 'Free WiFi', 'parking' => 'Parking', 'security' => '24/7 Security', 'laundry' => 'Laundry', 'kitchen' => 'Kitchen'],
+            'Comfort' => ['ac' => 'Air Conditioning', 'heating' => 'Heating', 'elevator' => 'Elevator', 'furnished' => 'Furnished'],
+            'Recreation' => ['gym' => 'Gym', 'pool' => 'Swimming Pool', 'garden' => 'Garden', 'common_room' => 'Common Room', 'tv_lounge' => 'TV Lounge'],
+            'Services' => ['cleaning' => 'Cleaning Service', 'meal_plan' => 'Meal Plan', 'shuttle' => 'Shuttle', 'reception' => '24/7 Reception'],
+        ];
+
+        return view('admin.hostels.amenities', compact('hostel', 'amenities', 'groupedAmenities'));
+    }
+
+    public function seedAmenities()
+{
+    $amenities = [
+        ['name' => 'Water', 'icon' => 'droplet'],
+        ['name' => 'Electricity', 'icon' => 'bolt'],
+        ['name' => 'Kitchenette', 'icon' => 'utensils'],
+        ['name' => 'Parking Area', 'icon' => 'parking'],
+        ['name' => 'Standby Generator', 'icon' => 'generator'],
+        ['name' => 'DSTV', 'icon' => 'tv'],
+        ['name' => 'Internet', 'icon' => 'wifi'],
+    ];
+
+    foreach ($amenities as $amenity) {
+        Amenity::firstOrCreate(
+            ['name' => $amenity['name']],
+            ['icon' => $amenity['icon']]
+        );
+    }
+
+    return redirect()->back()->with('success', 'Amenities seeded successfully!');
+}
+}
