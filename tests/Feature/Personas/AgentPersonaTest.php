@@ -749,5 +749,68 @@ class AgentPersonaTest extends TestCase
 
         $this->assertEquals(1, $agent->fresh()->total_rooms_added);
     }
+
+    /**
+     * Agent can edit and update their hostel.
+     */
+    public function test_agent_can_edit_and_update_their_hostel(): void
+    {
+        $user = User::factory()->create([
+            'role' => 'hostel_agent',
+            'email_verified_at' => now(),
+        ]);
+
+        $agent = HostelAgent::create([
+            'user_id' => $user->id,
+            'agent_code' => 'AG-TEST'.uniqid(),
+            'phone' => $user->phone ?? '0123456789',
+            'total_commission' => 0,
+            'available_balance' => 0,
+            'withdrawn_amount' => 0,
+            'total_hostels_added' => 1,
+            'total_rooms_added' => 0,
+            'is_approved' => true,
+            'status' => 'active',
+        ]);
+
+        $hostel = \App\Models\Hostel::forceCreate([
+            'name' => 'Original Agent Hostel',
+            'description' => 'Original description.',
+            'location' => 'amamoma',
+            'address' => 'Original Address',
+            'status' => 'pending',
+            'user_id' => $user->id,
+        ]);
+
+        // 1. Can load the Edit form
+        $this->actingAs($user)
+            ->get(route('agent.hostels.edit', $hostel->id))
+            ->assertOk()
+            ->assertViewIs('agent.hostels.edit')
+            ->assertViewHas('hostel')
+            ->assertViewHas('amenities');
+
+        // 2. Can update the hostel
+        $payload = [
+            'name' => 'Updated Agent Hostel',
+            'description' => 'Updated description text that is long enough.',
+            'location' => 'amamoma',
+            'address' => 'Updated Address',
+            'latitude' => 5.1234,
+            'longitude' => -1.1234,
+            'agent_fee' => 150.00,
+        ];
+
+        $this->actingAs($user)
+            ->put(route('agent.hostels.update', $hostel->id), $payload)
+            ->assertRedirect(route('agent.hostels.show', $hostel->id));
+
+        $this->assertDatabaseHas('hostels', [
+            'id' => $hostel->id,
+            'name' => 'Updated Agent Hostel',
+            'location' => 'amamoma',
+            'address' => 'Updated Address',
+        ]);
+    }
 }
 

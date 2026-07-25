@@ -120,6 +120,110 @@ $hostel->images()->create([
         return view('agent.hostels.show', compact('hostel'));
     }
 
+    public function edit($id)
+    {
+        $agent = Auth::user()->agent;
+        $hostel = $this->getAgentHostelQuery($agent)
+            ->with(['rooms', 'amenities', 'images'])
+            ->findOrFail($id);
+
+        $amenities = Amenity::all();
+
+        return view('agent.hostels.edit', compact('hostel', 'amenities'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $agent = Auth::user()->agent;
+        $hostel = $this->getAgentHostelQuery($agent)
+            ->findOrFail($id);
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'required|string',
+            'location' => 'required|string',
+            'address' => 'required|string',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
+            'agent_fee' => 'nullable|numeric|min:0',
+            'amenities' => 'array',
+            'images.*' => 'nullable|file|mimetypes:image/*,video/*|max:102400',
+            'featured_image' => 'nullable|image|max:5120',
+            'removed_images' => 'nullable|array',
+            'removed_images.*' => 'exists:hostel_images,id',
+        ]);
+
+        $hostel->update([
+            'name' => $request->name,
+            'description' => $request->description,
+            'location' => $request->location,
+            'address' => $request->address,
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude,
+            'agent_fee' => $request->agent_fee,
+        ]);
+
+        // Sync amenities
+        if ($request->has('amenities')) {
+            $hostel->amenities()->sync($request->amenities);
+        } else {
+            $hostel->amenities()->detach();
+        }
+
+        // Handle featured_image upload (saves as primary in hostel_images table)
+        if ($request->hasFile('featured_image')) {
+            // Delete old primary images
+            $oldPrimaries = $hostel->images()->where('is_primary', true)->get();
+            foreach ($oldPrimaries as $oldPrimary) {
+                Storage::disk('public')->delete($oldPrimary->image_path);
+                $oldPrimary->delete();
+            }
+
+            $featuredPath = $request->file('featured_image')->store('hostels/covers', 'public');
+            $hostel->images()->create([
+                'image_path' => $featuredPath,
+                'type' => 'hostel',
+                'is_primary' => true,
+                'media_kind' => 'image',
+                'order' => 0
+            ]);
+        }
+
+        // Handle gallery images/videos deletion via removed_images
+        if (!empty($request->removed_images)) {
+            $imagesToRemove = \App\Models\HostelImage::whereIn('id', $request->removed_images)
+                ->where('hostel_id', $hostel->id)
+                ->get();
+
+            foreach ($imagesToRemove as $img) {
+                Storage::disk('public')->delete($img->image_path);
+                $img->delete();
+            }
+        }
+
+        // Handle new gallery images/videos upload
+        if ($request->hasFile('images')) {
+            $maxOrder = $hostel->images()->where('is_primary', false)->max('order') ?? 0;
+            $order = $maxOrder + 1;
+
+            foreach ($request->file('images') as $file) {
+                $path = $file->store('hostels/gallery', 'public');
+                $mediaKind = str_starts_with($file->getMimeType() ?? '', 'video/') ? 'video' : 'image';
+
+                $hostel->images()->create([
+                    'image_path' => $path,
+                    'media_kind' => $mediaKind,
+                    'is_primary' => false,
+                    'order' => $order++,
+                    'type' => 'hostel',
+                ]);
+            }
+        }
+
+        return redirect()->route('agent.hostels.show', $hostel->id)
+            ->with('success', 'Hostel updated successfully!');
+    }
+
     private function getAgentHostelQuery($agent)
     {
         $query = Hostel::query();
