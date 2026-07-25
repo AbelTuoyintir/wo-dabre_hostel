@@ -361,13 +361,13 @@
                         </span>
                     </div>
                 </form>
-                @endif
+                @endif {{-- THIS WAS MISSING --}}
             </div>
         </div>
     </div>
 </div>
 
-
+<style>
     @keyframes shake {
         0%, 100% { transform: translateX(0); }
         10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
@@ -378,7 +378,7 @@
     }
 </style>
 
-
+<script>
 document.addEventListener('DOMContentLoaded', function() {
     const checkIn = document.getElementById('check_in_date');
     const checkOut = document.getElementById('check_out_date');
@@ -386,12 +386,16 @@ document.addEventListener('DOMContentLoaded', function() {
     const submitBtn = document.getElementById('submitBtn');
     const dateError = document.getElementById('dateError');
     const dateErrorMessage = document.getElementById('dateErrorMessage');
+    const roomCostDisplay = document.getElementById('roomCostDisplay');
+    const totalAmount = document.getElementById('totalAmount');
 
-    if (!checkIn || !checkOut || !priceSummary || !submitBtn || !dateError || !dateErrorMessage) {
+    // Early return if elements don't exist
+    if (!checkIn || !checkOut || !priceSummary || !submitBtn || !dateError || !dateErrorMessage || !roomCostDisplay || !totalAmount) {
+        console.warn('Some required elements are missing');
         return;
     }
 
-    const roomCost = {{ $room->room_cost ?? 0 }};
+    const roomCost = parseFloat('{{ $room->room_cost ?? 0 }}');
 
     function showDateError(message) {
         dateErrorMessage.textContent = message;
@@ -406,25 +410,43 @@ document.addEventListener('DOMContentLoaded', function() {
     function resetSummary() {
         priceSummary.classList.add('hidden');
         submitBtn.disabled = true;
+        roomCostDisplay.textContent = '₵0.00';
+        totalAmount.textContent = '₵0.00';
     }
 
-
+    function calculateTotal() {
         if (!roomCost || roomCost <= 0) {
             resetSummary();
             return;
         }
 
+        // Validate dates
+        if (checkIn.value && checkOut.value) {
+            const checkInDate = new Date(checkIn.value);
+            const checkOutDate = new Date(checkOut.value);
+            
+            if (checkOutDate <= checkInDate) {
+                showDateError('Check-out date must be after check-in date');
+                resetSummary();
+                return;
+            }
+        }
+
         clearDateError();
-
-
-        document.getElementById('roomCostDisplay').textContent = '₵' + roomCost.toFixed(2);
-        document.getElementById('totalAmount').textContent = '₵' + roomCost.toFixed(2);
-
+        
+        // Update display
+        roomCostDisplay.textContent = '₵' + roomCost.toFixed(2);
+        totalAmount.textContent = '₵' + roomCost.toFixed(2);
+        
         priceSummary.classList.remove('hidden');
         submitBtn.disabled = false;
     }
 
-    // Calculate immediately since room cost is fixed
+    // Add event listeners for date validation
+    checkIn.addEventListener('change', calculateTotal);
+    checkOut.addEventListener('change', calculateTotal);
+
+    // Calculate on load
     calculateTotal();
 });
 </script>

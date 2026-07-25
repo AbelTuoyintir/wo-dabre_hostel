@@ -7,6 +7,7 @@ use App\Models\Hostel;
 use App\Models\HostelImage;
 use App\Models\User;
 use App\Models\Booking;
+use App\Support\PaystackSplitService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
@@ -438,5 +439,176 @@ class HostelController extends Controller
         return redirect()
             ->back()
             ->with('success', 'Image deleted successfully.');
+    }
+
+    // ============================================================
+    // Paystack Subaccount Management
+    // ============================================================
+
+    /**
+     * Show subaccount setup form for a hostel.
+     */
+    public function showSubaccountForm(Hostel $hostel, PaystackSplitService $paystackSplit)
+    {
+        $banks = [];
+
+        // Fetch banks from Paystack
+        $bankResponse = $paystackSplit->getBanks('ghana');
+        if ($bankResponse['success']) {
+            $banks = $bankResponse['data'];
+        }
+
+        // If hostel already has a subaccount, fetch its status
+        $subaccountDetails = null;
+        if ($hostel->subaccount_code) {
+            $subaccountResponse = $paystackSplit->fetchSubaccount($hostel->subaccount_code);
+            if ($subaccountResponse['success']) {
+                $subaccountDetails = $subaccountResponse['data'];
+            }
+        }
+
+        return view('admin.hostels.subaccount', compact('hostel', 'banks', 'subaccountDetails'));
+    }
+
+    /**
+     * Verify bank account details via Paystack.
+     */
+    public function verifyBankAccount(Request $request, Hostel $hostel, PaystackSplitService $paystackSplit)
+    {
+        $validated = $request->validate([
+            'account_number' => 'required|string|size:10',
+            'bank_code' => 'required|string',
+        ]);
+
+        $response = $paystackSplit->verifyBankAccount(
+            $validated['account_number'],
+            $validated['bank_code']
+        );
+
+        if (!$response['success']) {
+            return response()->json([
+                'success' => false,
+                'message' => $response['message'] ?? 'Could not verify bank account',
+            ], 422);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Bank account verified successfully',
+            'data' => $response['data'],
+        ]);
+    }
+
+    /**
+     * Store/update subaccount for a hostel.
+     * Creates the subaccount on Paystack and saves the code locally.
+     */
+    public function storeSubaccount(Request $request, Hostel $hostel, PaystackSplitService $paystackSplit)
+    {
+        $validated = $request->validate([
+            'bank_code' => 'required|string',
+            'bank_name' => 'required|string|max:255',
+            'account_number' => 'required|string|size:10',
+            'account_name' => 'required|string|max:255',
+        ]);
+
+        // If hostel already has a subaccount, update it
+        if ($hostel->subaccount_code) {
+            $response = $paystackSplit->updateSubaccount($hostel, [
+                'bank_code' => $validated['bank_code'],
+                'account_number' => $validated['account_number'],
+                'account_name' => $validated['account_name'],
+            ]);
+
+            if (!$response['success']) {
+                return redirect()
+                    ->back()
+                    ->with('error', 'Failed to update subaccount: ' . ($response['message'] ?? 'Unknown error'));
+            }
+
+            // Update local record
+            $hostel->update([
+                'bank_name' => $validated['bank_name'],
+                'bank_code' => $validated['bank_code'],
+                'account_name' => $validated['account_name'],
+                'account_number' => $validated['account_number'],
+                'subaccount_status' => 'active',
+            ]);
+
+            return redirect()
+                ->route('admin.hostels.show', $hostel)
+                ->with('success', 'Subaccount updated successfully.');
+        }
+
+        // Create new subaccount on Paystack
+        $response = $paystackSplit->createSubaccount($hostel, [
+            'business_name' => $hostel->name . ' (SRC)',
+            'bank_code' => $validated['bank_code'],
+            'account_number' => $validated['account_number'],
+            'account_name' => $validated['account_name'],
+        ]);
+
+        if (!$response['success']) {
+            return redirect()
+                ->back()
+                ->with('error', 'Failed to create subaccount: ' . ($response['message'] ?? 'Unknown error'));
+        }
+
+        $subaccountCode = $response['data']['subaccount_code'] ?? null;
+
+        if (!$subaccountCode) {
+            return redirect()
+                ->back()
+                ->with('error', 'Subaccount created but no code returned. Please contact support.');
+        }
+
+        // Save subaccount details locally
+        $hostel->update([
+            'subaccount_code' => $subaccountCode,
+            'bank_name' => $validated['bank_name'],
+            'bank_code' => $validated['bank_code'],
+            'account_name' => $validated['account_name'],
+            'account_number' => $validated['account_number'],
+            'subaccount_status' => 'active',
+        ]);
+
+        return redirect()
+            ->route('admin.hostels.show', $hostel)
+            ->with('success', 'Paystack subaccount created successfully! Split payments are now active for this hostel.');
+    }
+
+    /**
+     * Refresh subaccount status from Paystack.
+     */
+    public function refreshSubaccount(Hostel $hostel, PaystackSplitService $paystackSplit)
+    {
+        if (!$hostel->subaccount_code) {
+            return redirect()
+                ->back()
+                ->with('error', 'No subaccount exists for this hostel.');
+        }
+
+        $response = $paystackSplit->fetchSubaccount($hostel->subaccount_code);
+
+        if (!$response['success']) {
+            return redirect()
+                ->back()
+                ->with('error', 'Failed to fetch subaccount: ' . ($response['message'] ?? 'Unknown error'));
+        }
+
+        $subaccountData = $response['data'];
+
+        // Update local status based on Paystack response
+        $paystackStatus = $subaccountData['status'] ?? 'active';
+
+        $hostel->update([
+            'subaccount_status' => $paystackStatus === 'active' ? 'active' : 'suspended',
+            'bank_name' => $subaccountData['settlement_bank'] ?? $hostel->bank_name,
+            'account_name' => $subaccountData['primary_contact_name'] ?? $hostel->account_name,
+        ]);
+
+        return redirect()
+            ->back()
+            ->with('success', 'Subaccount status refreshed. Status: ' . ucfirst($hostel->subaccount_status));
     }
 }

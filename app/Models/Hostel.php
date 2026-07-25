@@ -25,7 +25,13 @@ class Hostel extends Model
         'manager_id',
         'hostel_agent_id',
         'is_approved',
-        'is_featured'
+        'is_featured',
+        'subaccount_code',
+        'bank_name',
+        'bank_code',
+        'account_name',
+        'account_number',
+        'subaccount_status',
     ];
 
     public function rooms()

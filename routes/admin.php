@@ -28,6 +28,12 @@ Route::middleware(['auth', 'admin'])
         Route::patch('/hostels/{hostel:uuid}/images/{image:uuid}/primary', [HostelController::class, 'setPrimaryImage'])->name('hostels.image.primary');
         Route::delete('/hostels/{hostel:uuid}/images/{image:uuid}', [HostelController::class, 'destroyImage'])->name('hostels.image.destroy');
 
+        // Paystack Subaccount Management
+        Route::get('/hostels/{hostel:uuid}/subaccount', [HostelController::class, 'showSubaccountForm'])->name('hostels.subaccount.form');
+        Route::post('/hostels/{hostel:uuid}/subaccount/verify-bank', [HostelController::class, 'verifyBankAccount'])->name('hostels.subaccount.verify-bank');
+        Route::post('/hostels/{hostel:uuid}/subaccount', [HostelController::class, 'storeSubaccount'])->name('hostels.subaccount.store');
+        Route::get('/hostels/{hostel:uuid}/subaccount/refresh', [HostelController::class, 'refreshSubaccount'])->name('hostels.subaccount.refresh');
+
         // Rooms (Admin management)
         Route::get('/rooms/export', [RoomController::class, 'export'])->name('rooms.export');
         Route::patch('/rooms/{room:uuid}/status', [RoomController::class, 'updateStatus'])->name('rooms.status');

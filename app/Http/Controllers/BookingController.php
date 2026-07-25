@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Room;
 use App\Models\Hostel;
 use App\Models\Payment;
+use App\Support\PaystackSplitService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -170,14 +171,27 @@ class BookingController extends Controller
             
             \Log::info('Date calculation', ['nights' => $nights]);
 
-            // Charges (centralized via config/payments.php)
-            $agentFee = config('payments.agent_fee', 150);
+            // Charges using Paystack split payment structure
+            // Student pays: room_cost + platform_fee (2.80%) + paystack_buffer (1.97%) + banking_charge (0.35%)
             $roomCost = $validated['room_cost'];
-            $totalServiceRate = config('payments.total_service_charge_rate', 0.051);
-            $paystackFee = round($roomCost * config('payments.paystack_fee_rate', 0.0195), 2);
-            $totalServiceCharge = round($roomCost * $totalServiceRate, 2);
-            $finalTotal = round($roomCost + $totalServiceCharge, 2);
-            $netAmount = $roomCost + $agentFee; // platform/net amount reserved
+            $splitService = app(PaystackSplitService::class);
+            $costBreakdown = $splitService->calculateTotal($roomCost);
+            $platformFee = $costBreakdown['platform_fee'];
+            $finalTotal = $costBreakdown['total'];
+            $agentFee = 0;
+            $netAmount = $roomCost;
+
+            \Log::info('Split payment calculation', [
+                'room_cost' => $roomCost,
+                'platform_fee' => $platformFee,
+                'final_total' => $finalTotal,
+                'net_amount' => $netAmount,
+            ]);
+
+            // Retrieve the hostel's subaccount for split payment
+            $hostelModel = Hostel::find($validated['hostel_id']);
+            $subaccountCode = $hostelModel?->subaccount_code;
+            $transactionCharge = $splitService->getTransactionChargeInPesewas($roomCost);
 
             \Log::info('Final calculation', ['final_total' => $finalTotal, 'net_amount' => $netAmount]);
 
@@ -194,6 +208,9 @@ class BookingController extends Controller
                 'agent_fee' => $agentFee,
                 'net_amount' => $netAmount,
                 'final_total' => $finalTotal,
+                'platform_fee' => $platformFee,
+                'transaction_charge' => $transactionCharge,
+                'subaccount_code' => $subaccountCode,
                 'room_gender' => $room->gender,
                 'room_occupancy' => $room->current_occupancy,
                 'guest_data' => [
@@ -261,11 +278,17 @@ class BookingController extends Controller
 
     // Calculate fee breakdown
     $roomCost = (float) $validated['room_cost'];
-    $totalServiceRate = config('payments.total_service_charge_rate', 0.051);
-    $totalServiceCharge = round($roomCost * $totalServiceRate, 2);
-    $finalTotal = round($roomCost + $totalServiceCharge, 2);
+    $splitService = app(PaystackSplitService::class);
+    $costBreakdown = $splitService->calculateTotal($roomCost);
+    $platformFee = $costBreakdown['platform_fee'];
+    $finalTotal = $costBreakdown['total'];
     $agentFee = 0;
     $netAmount = $roomCost;
+
+    // Retrieve the hostel's subaccount for split payment
+    $hostelModel = Hostel::find($validated['hostel_id']);
+    $subaccountCode = $hostelModel?->subaccount_code;
+    $transactionCharge = $splitService->getTransactionChargeInPesewas($roomCost);
 
     \Log::info('Student booking - Cost calculation:', [
         'user_id' => $user->id,
@@ -283,8 +306,10 @@ class BookingController extends Controller
             'check_in_date' => $validated['check_in_date'],
             'check_out_date' => $validated['check_out_date'],
             'room_cost' => $roomCost,
-            'total_service_charge' => $totalServiceCharge,
             'final_total' => $finalTotal,
+            'platform_fee' => $platformFee,
+            'transaction_charge' => $transactionCharge,
+            'subaccount_code' => $subaccountCode,
             'agent_fee' => $agentFee,
             'net_amount' => $netAmount,
             'room_gender' => $room->gender,
@@ -345,6 +370,17 @@ class BookingController extends Controller
                 ],
             ];
 
+            // Add split payment configuration if the hostel has a subaccount
+            $hostelModel = Hostel::find($pendingBooking['hostel_id']);
+            if ($hostelModel && $hostelModel->subaccount_code) {
+                $paymentData['subaccount'] = $hostelModel->subaccount_code;
+                $paymentData['transaction_charge'] = $pendingBooking['transaction_charge'] ?? 0;
+                \Log::info('Guest payment with split:', [
+                    'subaccount' => $hostelModel->subaccount_code,
+                    'transaction_charge' => $paymentData['transaction_charge'],
+                ]);
+            }
+
             \Log::info('Guest payment details:', $paymentData);
 
             session(['payment_reference' => $reference]);
@@ -403,6 +439,16 @@ class BookingController extends Controller
             ];
 
             \Log::info('Student Payment Data sent to Paystack:', $paymentData);
+
+                        // Add split payment configuration if the hostel has a subaccount
+                        if (!empty($pendingBooking['subaccount_code'])) {
+                            $paymentData['subaccount'] = $pendingBooking['subaccount_code'];
+                            $paymentData['transaction_charge'] = $pendingBooking['transaction_charge'] ?? 0;
+                            \Log::info('Student payment with split:', [
+                                'subaccount' => $pendingBooking['subaccount_code'],
+                                'transaction_charge' => $paymentData['transaction_charge'],
+                            ]);
+                        }
 
             session(['payment_reference' => $reference]);
 

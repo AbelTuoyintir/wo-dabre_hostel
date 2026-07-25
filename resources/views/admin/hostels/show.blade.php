@@ -330,8 +330,69 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                         </svg>
-                        <span class="text-sm text-gray-900">{{ $hostel->location }}</span>
+                    <span class="text-sm text-gray-900">{{ $hostel->location }}</span>
                     </div>
+                </div>
+            </div>
+
+            <!-- Paystack Subaccount -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
+                    <h3 class="text-lg font-medium text-gray-900">Payment Subaccount</h3>
+                    <a href="{{ route('admin.hostels.subaccount.form', $hostel) }}"
+                       class="text-sm text-blue-600 hover:text-blue-800">
+                        <i class="fas fa-cog mr-1"></i> Manage
+                    </a>
+                </div>
+                <div class="p-6">
+                    @if($hostel->subaccount_code)
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-500">Status</span>
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full
+                                    @if($hostel->subaccount_status === 'active')
+                                        bg-green-100 text-green-700
+                                    @elseif($hostel->subaccount_status === 'pending')
+                                        bg-yellow-100 text-yellow-700
+                                    @else
+                                        bg-red-100 text-red-700
+                                    @endif">
+                                    {{ ucfirst($hostel->subaccount_status) }}
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-500">Bank</span>
+                                <span class="text-sm text-gray-900">{{ $hostel->bank_name ?? 'N/A' }}</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-500">Account</span>
+                                <span class="text-sm text-gray-900">
+                                    @if($hostel->account_number)
+                                        ****{{ substr($hostel->account_number, -4) }}
+                                    @else
+                                        N/A
+                                    @endif
+                                </span>
+                            </div>
+                            <div class="pt-2">
+                                <a href="{{ route('admin.hostels.subaccount.form', $hostel) }}"
+                                   class="inline-flex items-center text-sm text-blue-600 hover:text-blue-800">
+                                    <i class="fas fa-sync-alt mr-1"></i> View / Update Details
+                                </a>
+                            </div>
+                        </div>
+                    @else
+                        <div class="text-center py-4">
+                            <div class="inline-flex items-center justify-center w-12 h-12 bg-gray-100 rounded-full mb-3">
+                                <i class="fas fa-university text-gray-400 text-xl"></i>
+                            </div>
+                            <p class="text-sm text-gray-500 mb-2">No payment subaccount set up</p>
+                            <a href="{{ route('admin.hostels.subaccount.form', $hostel) }}"
+                               class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition">
+                                <i class="fas fa-plus mr-2"></i> Set Up Subaccount
+                            </a>
+                        </div>
+                    @endif
                 </div>
             </div>
 

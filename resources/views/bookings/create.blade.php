@@ -261,24 +261,12 @@ if (checkIn && checkOut && priceSummary && submitBtn && dateError) {
 
         clearDateError();
 
-        // If yearly room cost is available, use it directly with the fee breakdown
+        // If yearly room cost is available, use it directly
         if (yearlyRoomCost && yearlyRoomCost > 0) {
             const roomCost = yearlyRoomCost;
 
-            // Fee rates (matching config/payments.php)
-            const PAYSTACK_RATE = 0.0195;
-            const PLATFORM_RATE = 0.028;
-            const BANKING_RATE = 0.0035;
-            const TOTAL_SERVICE_RATE = 0.051;
-
-            const paystackFee = parseFloat((roomCost * PAYSTACK_RATE).toFixed(2));
-            const platformFee = parseFloat((roomCost * PLATFORM_RATE).toFixed(2));
-            const bankingFee = parseFloat((roomCost * BANKING_RATE).toFixed(2));
-            const totalServiceCharge = parseFloat((roomCost * TOTAL_SERVICE_RATE).toFixed(2));
-            const totalWithFees = parseFloat((roomCost + totalServiceCharge).toFixed(2));
-
             document.getElementById('roomCostDisplay').textContent = 'GHS ' + roomCost.toFixed(2);
-            document.getElementById('totalAmount').textContent = 'GHS ' + totalWithFees.toFixed(2);
+            document.getElementById('totalAmount').textContent = 'GHS ' + roomCost.toFixed(2);
 
             priceSummary.classList.remove('hidden');
             submitBtn.disabled = false;
