@@ -561,51 +561,51 @@ class BookingController extends Controller
      */
     private function processGuestPayment($paymentDetails, $metadata)
     {
-        try{
+        try {
             \Log::info('Processing guest payment callback');
 
-        $bookingData = $metadata['booking_data'];
+            $bookingData = $metadata['booking_data'];
 
-        if (!isset($metadata['guest_data']) || !is_array($metadata['guest_data'])) {
-            \Log::error('Invalid guest_data', ['metadata' => $metadata]);
-            throw new \Exception('Invalid guest data');
+            if (!isset($metadata['guest_data']) || !is_array($metadata['guest_data'])) {
+                \Log::error('Invalid guest_data', ['metadata' => $metadata]);
+                throw new \Exception('Invalid guest data');
+            }
+
+            $guestData = $metadata['guest_data'];
+
+            if (!isset($guestData['temp_password'])) {
+                \Log::error('Missing temp_password in guest_data', ['guestData' => $guestData]);
+                throw new \Exception('Missing temporary password');
+            }
+
+            $tempPassword = $guestData['temp_password'];
+            if ($tempPassword){
+                \Log::info('temporal password have been created. now guest data will now be
+                created in the database ');
+            }
+
+
+            // Create the user
+            $user = User::create([
+                'name' => $guestData['name'],
+                'email' => $guestData['email'],
+                'phone' => $guestData['phone'] ?? null,
+                'gender' => $guestData['gender'] ?? null,
+                'password' => Hash::make($tempPassword),
+                'role' => 'student',
+                'email_verified_at' => now(),
+            ]);
+
+            $password = $tempPassword;
+
+
+            \Log::info('Guest user created:', ['user_id' => $user->id, 'email' => $user->email,'gender'=>$user->gender]);
+
+            return $this->finalizeBooking($paymentDetails, $bookingData, $user, $password, true);
+        } catch (\Exception $e) {
+            \Log::error('guest payment process could not be completed: ' . $e->getMessage());
+            throw $e;
         }
-
-        $guestData = $metadata['guest_data'];
-
-        if (!isset($guestData['temp_password'])) {
-            \Log::error('Missing temp_password in guest_data', ['guestData' => $guestData]);
-            throw new \Exception('Missing temporary password');
-        }
-
-        $tempPassword = $guestData['temp_password'];
-        if ($tempPassword){
-            \Log::info('temporal password have been created. now guest data will now be 
-            created in the database ');
-        }
-
-
-        // Create the user
-        $user = User::create([
-            'name' => $guestData['name'],
-            'email' => $guestData['email'],
-            'phone' => $guestData['phone'] ?? null,
-            'gender' => $guestData['gender'] ?? null,
-            'password' => Hash::make($tempPassword),
-            'role' => 'student',
-            'email_verified_at' => now(),
-        ]);
-
-        $password = $tempPassword;
-
-
-        \Log::info('Guest user created:', ['user_id' => $user->id, 'email' => $user->email,'gender'=>$user->gender]);
-
-        return $this->finalizeBooking($paymentDetails, $bookingData, $user, $password, true);
-        }catch(Execption $e){
-            \log::error('guest payment process could not be completed', $e->getMessage());
-        }
-        
     }
 
     /**
@@ -700,7 +700,7 @@ class BookingController extends Controller
 // Calculate amounts for DB storage
         $roomCost = (float) ($bookingData['room_cost'] ?? 0);
         $agentFee = (float) ($bookingData['agent_fee'] ?? 0);
-        $finalPaid = (float) ($bookingData['final_total'] ?? $paymentDetails['data']['amount'] / 100 ?? $roomCost);
+        $finalPaid = (float) ($bookingData['final_total'] ?? (($paymentDetails['data']['amount'] ?? 0) / 100) ?? $roomCost);
         $totalAmount = $roomCost;  // hostel net: room cost
 
         // Create booking number
@@ -964,7 +964,7 @@ class BookingController extends Controller
      */
     private function verifyPaystackSignature($signature, $payload)
     {
-        $secretKey = config('paystack.secret');
+        $secretKey = config('paystack.secretKey');
         return hash_hmac('sha512', $payload, $secretKey) === $signature;
     }
 
