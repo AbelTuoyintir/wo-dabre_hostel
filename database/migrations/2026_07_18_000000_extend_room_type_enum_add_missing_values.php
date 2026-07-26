@@ -128,14 +128,19 @@ return new class extends Migration
         // Use raw SQL to MODIFY the existing column instead of ADD.
         // $table->enum() generates ALTER TABLE ... ADD, which fails because room_type already exists.
         // MODIFY COLUMN redefines the column including the ENUM allowed values.
-        DB::statement("ALTER TABLE rooms MODIFY COLUMN room_type ENUM('{$enumString}') NOT NULL");
+        // SQLite does not support ALTER TABLE MODIFY COLUMN ENUM, so we bypass it under SQLite.
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE rooms MODIFY COLUMN room_type ENUM('{$enumString}') NOT NULL");
+        }
     }
 
     public function down(): void
     {
         // Revert ENUM back to the original 4 values from the initial migration.
         if (Schema::hasTable('rooms') && Schema::hasColumn('rooms', 'room_type')) {
-            DB::statement("ALTER TABLE rooms MODIFY COLUMN room_type ENUM('single_room', 'shared_2', 'shared_4', 'executive') NOT NULL");
+            if (DB::getDriverName() !== 'sqlite') {
+                DB::statement("ALTER TABLE rooms MODIFY COLUMN room_type ENUM('single_room', 'shared_2', 'shared_4', 'executive') NOT NULL");
+            }
         }
     }
 };

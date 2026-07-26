@@ -1,0 +1,3 @@
+## 2026-07-26 - Visually-hidden interactive controls (sr-only vs hidden)
+**Learning:** Hiding checkbox inputs using `hidden` (or `display: none`) removes them from the accessibility tree and document focus flow. Screen readers and keyboard-only users cannot access or select these elements. Using `sr-only` keeps them accessible while hiding them visually. Additionally, focus-within styling on parent elements provides visual focus states.
+**Action:** Always use `sr-only` instead of `hidden` or `display: none` for visual-only hidden elements that require keyboard focus or screen-reader interactions, and pair them with `focus-within:ring-2` focus outlines.

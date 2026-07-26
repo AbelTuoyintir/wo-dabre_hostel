@@ -29,17 +29,17 @@
                                      class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110">
 
                                 @if($hostel['is_featured'])
-                                    <div class="absolute top-2 left-2">
+                                    <div class="absolute top-2 left-10">
                                         <span class="bg-white/95 px-1.5 py-0.5 rounded-md text-[8px] font-bold shadow-sm uppercase tracking-wider">Featured</span>
                                     </div>
                                 @endif
                                 
-                                <button class="absolute top-2 right-2 text-white text-base drop-shadow-md z-10 hover:scale-110 transition-transform">
+                                <button aria-label="Add {{ $hostel['name'] }} to wishlist" class="absolute top-2 right-2 text-white text-base drop-shadow-md z-10 hover:scale-110 transition-transform" onclick="event.preventDefault(); event.stopPropagation();">
                                     <i class="far fa-heart"></i>
                                 </button>
 
-                                <label class="absolute top-2 left-2 z-10 cursor-pointer" onclick="event.stopPropagation()">
-                                    <input type="checkbox" class="compare-checkbox hidden" data-id="{{ $hostel['uuid'] ?? $hostel['id'] }}" data-name="{{ $hostel['name'] }}" data-image="{{ $imageUrl }}">
+                                <label class="absolute top-2 left-2 z-10 cursor-pointer focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 rounded-full" onclick="event.stopPropagation()">
+                                    <input type="checkbox" class="compare-checkbox sr-only" data-id="{{ $hostel['uuid'] ?? $hostel['id'] }}" data-name="{{ $hostel['name'] }}" data-image="{{ $imageUrl }}" aria-label="Add {{ $hostel['name'] }} to comparison">
                                     <div class="bg-white/90 p-1.5 rounded-full shadow-sm border border-slate-200 hover:bg-white transition-colors flex items-center justify-center w-6 h-6 group-has-[:checked]:bg-rose-500 group-has-[:checked]:border-rose-500">
                                         <i class="fas fa-plus text-[8px] text-slate-600 group-has-[:checked]:text-white group-has-[:checked]:fa-check"></i>
                                     </div>
@@ -55,17 +55,17 @@
                             <!-- Details - More Compact -->
                             <div class="space-y-0.5">
                                 <div class="flex justify-between items-start">
-                                    {{-- <h3 class="font-semibold text-sm text-slate-800 truncate">{{ $hostel['name'] }}</h3> --}}
+                                    <h3 class="font-semibold text-sm text-slate-800 truncate">{{ $hostel['name'] }}</h3>
                                     <div class="flex items-center gap-0.5">
                                         <i class="fas fa-star text-[10px] text-amber-400"></i>
                                         <span class="text-xs font-light text-slate-600">{{ $hostel['rating'] ?? '4.5' }}</span>
                                     </div>
                                 </div>
                                 
-                                {{-- <div class="pt-0.5">
+                                <div class="pt-0.5">
                                     <span class="font-bold text-sm text-slate-800">₵{{ number_format($minPrice, 2) }}</span>
                                     <span class="text-slate-600 font-light text-[11px]">per year</span>
-                                </div> --}}
+                                </div>
                             </div>
                         </div>
                     </a>
@@ -110,7 +110,7 @@
                 <button id="compare-btn" class="bg-rose-500 hover:bg-rose-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                     Compare
                 </button>
-                <button id="clear-compare" class="text-slate-400 hover:text-slate-600 p-1.5 transition-colors">
+                <button id="clear-compare" aria-label="Clear selected hostels" class="text-slate-400 hover:text-slate-600 p-1.5 transition-colors">
                     <i class="fas fa-times text-xs"></i>
                 </button>
             </div>
