@@ -264,7 +264,34 @@
         previewGrid.innerHTML = '';
 
         if (input.files && input.files.length > 0) {
-            if (input.files.length > 5) {
+            const validFiles = [];
+            let hasLargeFile = false;
+
+            Array.from(input.files).forEach(file => {
+                if (file.size > 100 * 1024 * 1024) {
+                    hasLargeFile = true;
+                } else {
+                    validFiles.push(file);
+                }
+            });
+
+            if (hasLargeFile) {
+                Swal.fire({
+                    title: 'File Too Large',
+                    text: 'Some gallery files exceed the 100MB limit and were removed!',
+                    icon: 'warning',
+                    confirmButtonColor: '#3b82f6',
+                    customClass: { popup: 'rounded-xl' }
+                });
+
+                const dt = new DataTransfer();
+                validFiles.forEach(f => dt.items.add(f));
+                input.files = dt.files;
+            }
+
+            const filesToProcess = input.files;
+
+            if (filesToProcess.length > 5) {
                 Swal.fire({
                     title: 'Limit Exceeded',
                     text: 'Maximum 5 gallery files allowed! Extra files have been truncated.',
@@ -273,7 +300,7 @@
                     customClass: { popup: 'rounded-xl' }
                 });
                 const dt = new DataTransfer();
-                Array.from(input.files).slice(0, 5).forEach(f => dt.items.add(f));
+                Array.from(filesToProcess).slice(0, 5).forEach(f => dt.items.add(f));
                 input.files = dt.files;
             }
 
@@ -369,17 +396,45 @@
         const zone = document.getElementById(id);
         if (!zone) return;
 
-        ['dragenter', 'dragover'].forEach(eventName => {
+        // Prevent browser defaults for dragging
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
             zone.addEventListener(eventName, e => {
-                zone.classList.add('border-indigo-500', 'bg-indigo-50/50');
+                e.preventDefault();
+                e.stopPropagation();
+            }, false);
+        });
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            zone.addEventListener(eventName, () => {
+                zone.classList.add('border-indigo-500', 'bg-indigo-50/50', 'scale-[1.01]');
             }, false);
         });
 
         ['dragleave', 'drop'].forEach(eventName => {
-            zone.addEventListener(eventName, e => {
-                zone.classList.remove('border-indigo-500', 'bg-indigo-50/50');
+            zone.addEventListener(eventName, () => {
+                zone.classList.remove('border-indigo-500', 'bg-indigo-50/50', 'scale-[1.01]');
             }, false);
         });
+
+        zone.addEventListener('drop', e => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            const input = zone.querySelector('input[type="file"]');
+
+            if (input && files.length > 0) {
+                if (input.multiple) {
+                    input.files = files;
+                } else {
+                    // For single upload, assign only the first file
+                    const singleDt = new DataTransfer();
+                    singleDt.items.add(files[0]);
+                    input.files = singleDt.files;
+                }
+                // Trigger change event manually
+                const event = new Event('change', { bubbles: true });
+                input.dispatchEvent(event);
+            }
+        }, false);
     });
 </script>
 @endpush

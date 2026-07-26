@@ -27,9 +27,12 @@ class VisualVerificationSeeder extends Seeder
                 'location' => 'amamoma',
                 'is_approved' => true,
                 'status' => 'active',
-                'rating' => 4.8
+                'rating' => 4.8,
+                'manager_id' => $manager->id
             ]
         );
+
+        $h1->update(['manager_id' => $manager->id]);
 
         $r1 = Room::firstOrCreate(
             ['number' => 'A1', 'hostel_id' => $h1->id],
