@@ -115,10 +115,10 @@
                 <div class="space-y-2">
                     <label class="block text-sm font-medium text-gray-700">Cover Image *</label>
 
-                    <div class="relative group cursor-pointer border-2 border-dashed border-gray-300 rounded-xl p-6 bg-gray-50 hover:bg-indigo-50/30 hover:border-indigo-500 transition-all duration-300 text-center" id="cover-dropzone">
+                    <div class="relative group cursor-pointer border-2 border-dashed border-gray-300 rounded-xl p-6 bg-gray-50 hover:bg-indigo-50/30 hover:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-offset-2 focus-within:outline-none focus-within:border-indigo-500 transition-all duration-300 text-center" id="cover-dropzone">
                         <input type="file"
-                               class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                               id="cover_image" name="cover_image" accept="image/*" onchange="previewCoverImage(this)">
+                               class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 focus:outline-none"
+                               id="cover_image" name="cover_image" accept="image/*" aria-label="Upload cover image" onchange="previewCoverImage(this)">
 
                         <div class="space-y-2" id="cover-prompt">
                             <div class="mx-auto w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform duration-300">
@@ -147,10 +147,10 @@
                 <div class="space-y-2">
                     <label class="block text-sm font-medium text-gray-700">Gallery Media (Images &amp; Videos)</label>
 
-                    <div class="relative group cursor-pointer border-2 border-dashed border-gray-300 rounded-xl p-6 bg-gray-50 hover:bg-indigo-50/30 hover:border-indigo-500 transition-all duration-300 text-center" id="gallery-dropzone">
+                    <div class="relative group cursor-pointer border-2 border-dashed border-gray-300 rounded-xl p-6 bg-gray-50 hover:bg-indigo-50/30 hover:border-indigo-500 focus-within:ring-2 focus-within:ring-pink-500 focus-within:ring-offset-2 focus-within:outline-none focus-within:border-pink-500 transition-all duration-300 text-center" id="gallery-dropzone">
                         <input type="file"
-                               class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                               id="gallery_images" name="gallery_images[]" accept="image/*,video/*" multiple onchange="previewGalleryImages(this)">
+                               class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 focus:outline-none"
+                               id="gallery_images" name="gallery_images[]" accept="image/*,video/*" multiple aria-label="Upload multiple gallery files" onchange="previewGalleryImages(this)">
 
                         <div class="space-y-2" id="gallery-prompt">
                             <div class="mx-auto w-12 h-12 rounded-full bg-pink-100 flex items-center justify-center text-pink-600 group-hover:scale-110 transition-transform duration-300">
@@ -227,7 +227,7 @@
                 previewContainer.innerHTML = `
                     <div class="relative inline-block mx-auto">
                         <img src="${e.target.result}" class="max-h-48 rounded-lg shadow-sm border object-cover" alt="Cover preview">
-                        <button type="button" onclick="removeCoverImage(event)" class="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-md transition-colors z-20">
+                        <button type="button" aria-label="Remove cover image" onclick="removeCoverImage(event)" class="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-md transition-colors z-20 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1">
                             &times;
                         </button>
                     </div>
@@ -328,7 +328,8 @@
 
                     const removeBtn = document.createElement('button');
                     removeBtn.type = 'button';
-                    removeBtn.className = 'absolute top-1.5 right-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-md transition-colors z-20';
+                    removeBtn.setAttribute('aria-label', `Remove new gallery file ${file.name}`);
+                    removeBtn.className = 'absolute top-1.5 right-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-md transition-colors z-20 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1';
                     removeBtn.innerHTML = '&times;';
                     removeBtn.onclick = function(ev) {
                         ev.stopPropagation();
