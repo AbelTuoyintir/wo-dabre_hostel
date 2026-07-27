@@ -700,7 +700,7 @@ class BookingController extends Controller
 // Calculate amounts for DB storage
         $roomCost = (float) ($bookingData['room_cost'] ?? 0);
         $agentFee = (float) ($bookingData['agent_fee'] ?? 0);
-        $finalPaid = (float) ($bookingData['final_total'] ?? $paymentDetails['data']['amount'] / 100 ?? $roomCost);
+        $finalPaid = (float) ($bookingData['final_total'] ?? (($paymentDetails['data']['amount'] ?? 0) / 100) ?: $roomCost);
         $totalAmount = $roomCost;  // hostel net: room cost
 
         // Create booking number
