@@ -87,9 +87,12 @@ class SupportController extends Controller
      */
     public function getMessages(SupportTicket $ticket)
     {
-        // Simple security: check if ticket belongs to the user (if authenticated), or anyone if guest
-        if ($ticket->user_id && $ticket->user_id !== Auth::id()) {
-            abort(403, 'Unauthorized access to this ticket.');
+        // Security check: restrict ticket access to the owner or an admin
+        if ($ticket->user_id) {
+            $user = Auth::user();
+            if (!$user || ($user->id !== $ticket->user_id && $user->role !== 'admin')) {
+                abort(403, 'Unauthorized access to this ticket.');
+            }
         }
 
         return response()->json([
@@ -104,6 +107,14 @@ class SupportController extends Controller
      */
     public function sendMessage(Request $request, SupportTicket $ticket)
     {
+        // Security check: restrict messaging to the owner of the ticket or an admin
+        if ($ticket->user_id) {
+            $user = Auth::user();
+            if (!$user || ($user->id !== $ticket->user_id && $user->role !== 'admin')) {
+                abort(403, 'Unauthorized access to this ticket.');
+            }
+        }
+
         $validated = $request->validate([
             'message' => 'required|string',
         ]);

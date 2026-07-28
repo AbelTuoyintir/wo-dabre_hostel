@@ -56,8 +56,8 @@ class BookingCalculationTest extends TestCase
 
         // Calculation according to controller:
         // Service charge calculated server-side (no fee breakdown exposed to UI)
-        // Total Service Charge: 5.10% of room_cost
-        $expectedTotal = round(200.00 + round(200.00 * 0.051, 2), 2);
+        $totalServiceRate = config('payments.total_service_charge_rate', 0.051);
+        $expectedTotal = round($room->room_cost + round($room->room_cost * $totalServiceRate, 2), 2);
 
         $this->assertEquals($expectedTotal, $data['total']);
     }
