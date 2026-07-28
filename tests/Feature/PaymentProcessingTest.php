@@ -65,6 +65,7 @@ class PaymentProcessingTest extends TestCase
                 'status' => 'success',
                 'reference' => 'REF123456',
                 'currency' => 'GHS',
+                'amount' => 35000,
                 'channel' => 'card',
                 'metadata' => $metadata,
             ],

@@ -12,6 +12,10 @@ return new class extends Migration
             return;
         }
 
+        if (DB::getDriverName() === 'sqlite') {
+            return;
+        }
+
         $enumValues = [
             // Legacy values from original migration — retained for backward compatibility
             'single_room',
@@ -135,6 +139,10 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (DB::getDriverName() === 'sqlite') {
+            return;
+        }
+
         // Revert ENUM back to the original 4 values from the initial migration.
         if (Schema::hasTable('rooms') && Schema::hasColumn('rooms', 'room_type') && DB::getDriverName() !== 'sqlite') {
             DB::statement("ALTER TABLE rooms MODIFY COLUMN room_type ENUM('single_room', 'shared_2', 'shared_4', 'executive') NOT NULL");
