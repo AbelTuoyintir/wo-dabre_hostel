@@ -167,4 +167,83 @@ class SupportSystemTest extends TestCase
 
         $this->assertEquals('resolved', $ticket->fresh()->status);
     }
+
+    /**
+     * Test other students cannot access or message others' support tickets (IDOR protection).
+     */
+    public function test_student_cannot_access_or_message_others_ticket(): void
+    {
+        $studentA = User::create([
+            'name' => 'Student A',
+            'email' => 'student.a@example.com',
+            'password' => Hash::make('password123'),
+            'role' => 'student',
+            'email_verified_at' => now(),
+        ]);
+
+        $studentB = User::create([
+            'name' => 'Student B',
+            'email' => 'student.b@example.com',
+            'password' => Hash::make('password123'),
+            'role' => 'student',
+            'email_verified_at' => now(),
+        ]);
+
+        $ticketA = SupportTicket::create([
+            'user_id' => $studentA->id,
+            'subject' => "Student A's private issue",
+            'category' => 'technical',
+            'status' => 'open',
+        ]);
+
+        // Student B tries to fetch messages of Student A's ticket
+        $getResponse = $this->actingAs($studentB)->get(route('support.ticket.messages', ['ticket' => $ticketA->uuid]));
+        $getResponse->assertStatus(403);
+
+        // Student B tries to send a message to Student A's ticket
+        $sendResponse = $this->actingAs($studentB)->post(route('support.ticket.message.send', ['ticket' => $ticketA->uuid]), [
+            'message' => 'Sneaky injection',
+        ]);
+        $sendResponse->assertStatus(403);
+    }
+
+    /**
+     * Test admin is allowed to fetch messages or send messages to any student support ticket.
+     */
+    public function test_admin_can_fetch_and_send_messages_to_any_ticket(): void
+    {
+        $student = User::create([
+            'name' => 'Student Owner',
+            'email' => 'owner@example.com',
+            'password' => Hash::make('password123'),
+            'role' => 'student',
+            'email_verified_at' => now(),
+        ]);
+
+        $admin = User::create([
+            'name' => 'Admin Helper',
+            'email' => 'admin.helper@example.com',
+            'password' => Hash::make('password123'),
+            'role' => 'admin',
+            'email_verified_at' => now(),
+        ]);
+
+        $ticket = SupportTicket::create([
+            'user_id' => $student->id,
+            'subject' => 'Student problem',
+            'category' => 'technical',
+            'status' => 'open',
+        ]);
+
+        // Admin should be allowed to get messages
+        $getResponse = $this->actingAs($admin)->get(route('support.ticket.messages', ['ticket' => $ticket->uuid]));
+        $getResponse->assertOk();
+
+        // Admin should be allowed to send message
+        $sendResponse = $this->actingAs($admin)->post(route('support.ticket.message.send', ['ticket' => $ticket->uuid]), [
+            'message' => 'Admin response here',
+        ]);
+        // Since we are posting, it redirects back
+        $sendResponse->assertRedirect();
+    }
 }
