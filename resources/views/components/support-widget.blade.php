@@ -2,7 +2,8 @@
 <div x-data="supportWidget()" class="fixed bottom-6 right-6 z-50">
     <!-- Floating Support Bubble Button -->
     <button @click="toggleWidget()"
-            class="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-4 py-3.5 rounded-full shadow-2xl hover:shadow-indigo-500/20 hover:scale-105 active:scale-95 transition-all duration-300 focus:outline-none group">
+            aria-label="Toggle 24/7 Support Hub"
+            class="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-4 py-3.5 rounded-full shadow-2xl hover:shadow-indigo-500/20 hover:scale-105 active:scale-95 transition-all duration-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-yellow-400 focus-visible:ring-offset-2 group">
         <span class="relative flex h-3 w-3">
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
@@ -37,21 +38,21 @@
                         </p>
                     </div>
                 </div>
-                <button @click="toggleWidget()" class="p-2 hover:bg-white/10 rounded-full transition-colors text-white/80 hover:text-white">
+                <button @click="toggleWidget()" aria-label="Close Support Hub" class="p-2 hover:bg-white/10 rounded-full transition-colors text-white/80 hover:text-white focus:outline-none focus:ring-2 focus:ring-white">
                     <i class="fas fa-times text-lg"></i>
                 </button>
             </div>
         </div>
 
         <!-- Tabs Navigation -->
-        <div class="flex border-b border-gray-100 bg-gray-50/50 text-sm font-semibold">
-            <button @click="tab = 'chat'" :class="tab === 'chat' ? 'border-b-2 border-blue-600 text-blue-600 bg-white' : 'text-gray-500 hover:text-gray-700'" class="flex-1 py-3 text-center transition-all duration-200">
+        <div role="tablist" class="flex border-b border-gray-100 bg-gray-50/50 text-sm font-semibold">
+            <button role="tab" :aria-selected="tab === 'chat'" @click="tab = 'chat'" :class="tab === 'chat' ? 'border-b-2 border-blue-600 text-blue-600 bg-white' : 'text-gray-500 hover:text-gray-700'" class="flex-1 py-3 text-center transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:z-10">
                 <i class="fas fa-comments mr-1.5"></i>Live Chat
             </button>
-            <button @click="tab = 'faq'" :class="tab === 'faq' ? 'border-b-2 border-blue-600 text-blue-600 bg-white' : 'text-gray-500 hover:text-gray-700'" class="flex-1 py-3 text-center transition-all duration-200">
+            <button role="tab" :aria-selected="tab === 'faq'" @click="tab = 'faq'" :class="tab === 'faq' ? 'border-b-2 border-blue-600 text-blue-600 bg-white' : 'text-gray-500 hover:text-gray-700'" class="flex-1 py-3 text-center transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:z-10">
                 <i class="fas fa-question-circle mr-1.5"></i>FAQs
             </button>
-            <button @click="tab = 'contact'" :class="tab === 'contact' ? 'border-b-2 border-blue-600 text-blue-600 bg-white' : 'text-gray-500 hover:text-gray-700'" class="flex-1 py-3 text-center transition-all duration-200">
+            <button role="tab" :aria-selected="tab === 'contact'" @click="tab = 'contact'" :class="tab === 'contact' ? 'border-b-2 border-blue-600 text-blue-600 bg-white' : 'text-gray-500 hover:text-gray-700'" class="flex-1 py-3 text-center transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:z-10">
                 <i class="fas fa-phone mr-1.5"></i>Helpline
             </button>
         </div>
@@ -75,19 +76,19 @@
                     <form @submit.prevent="createTicket()" class="mt-5 text-left space-y-3">
                         @guest
                             <div>
-                                <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Your Name</label>
-                                <input type="text" x-model="guestName" required placeholder="Enter your full name"
+                                <label for="guest_name" class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Your Name</label>
+                                <input id="guest_name" type="text" x-model="guestName" required placeholder="Enter your full name"
                                        class="w-full text-xs px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none transition">
                             </div>
                             <div>
-                                <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Your Email</label>
-                                <input type="email" x-model="guestEmail" required placeholder="Enter email address"
+                                <label for="guest_email" class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Your Email</label>
+                                <input id="guest_email" type="email" x-model="guestEmail" required placeholder="Enter email address"
                                        class="w-full text-xs px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none transition">
                             </div>
                         @endguest
                         <div>
-                            <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Category</label>
-                            <select x-model="category" class="w-full text-xs px-3 py-2 border border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none transition">
+                            <label for="support_category" class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Category</label>
+                            <select id="support_category" x-model="category" class="w-full text-xs px-3 py-2 border border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none transition">
                                 <option value="general">General Inquiry</option>
                                 <option value="booking">Hostel Booking Issue</option>
                                 <option value="payment">Payment & Refunds</option>
@@ -95,13 +96,13 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Subject</label>
-                            <input type="text" x-model="subject" required placeholder="What do you need help with?"
+                            <label for="support_subject" class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Subject</label>
+                            <input id="support_subject" type="text" x-model="subject" required placeholder="What do you need help with?"
                                    class="w-full text-xs px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none transition">
                         </div>
                         <div>
-                            <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Describe your request</label>
-                            <textarea x-model="messageText" required placeholder="Describe the issue..." rows="3"
+                            <label for="support_message" class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Describe your request</label>
+                            <textarea id="support_message" x-model="messageText" required placeholder="Describe the issue..." rows="3"
                                       class="w-full text-xs px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none transition resize-none"></textarea>
                         </div>
 
@@ -122,7 +123,7 @@
                             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                             <span class="font-bold text-emerald-600 uppercase tracking-wide">ACTIVE</span>
                         </div>
-                        <button @click="resetChat()" class="text-red-500 hover:text-red-600 font-bold hover:underline">New Ticket</button>
+                        <button @click="resetChat()" class="text-red-500 hover:text-red-600 font-bold hover:underline focus:outline-none focus:ring-2 focus:ring-red-500 rounded px-1">New Ticket</button>
                     </div>
 
                     <!-- Messages Scroll area -->
@@ -145,10 +146,10 @@
 
                     <!-- Message sender form -->
                     <form @submit.prevent="sendMessage()" class="mt-3 flex gap-2 border-t border-gray-100 pt-3 bg-white p-2 rounded-xl shadow-inner">
-                        <input type="text" x-model="replyText" required placeholder="Type your message..."
-                               class="flex-1 text-xs px-3 py-2 border border-gray-200 rounded-xl focus:ring-1 focus:ring-blue-500 outline-none transition">
-                        <button type="submit"
-                                class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-xl text-xs transition flex items-center justify-center">
+                        <input type="text" x-model="replyText" required placeholder="Type your message..." aria-label="Type your message"
+                               class="flex-1 text-xs px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition">
+                        <button type="submit" aria-label="Send message"
+                                class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-xl text-xs transition flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-500">
                             <i class="fas fa-paper-plane"></i>
                         </button>
                     </form>
@@ -161,7 +162,7 @@
                 <!-- Search FAQ Input -->
                 <div class="relative">
                     <i class="fas fa-search absolute left-3.5 top-3 text-gray-400 text-xs"></i>
-                    <input type="text" x-model="faqSearch" placeholder="Search for answers..."
+                    <input type="text" x-model="faqSearch" placeholder="Search for answers..." aria-label="Search FAQs"
                            class="w-full text-xs pl-9 pr-4 py-2.5 border border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none transition">
                 </div>
 
@@ -169,7 +170,7 @@
                 <div class="space-y-2">
                     <template x-for="(faq, index) in filteredFAQs" :key="index">
                         <div class="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
-                            <button @click="toggleFAQ(index)" class="w-full flex items-center justify-between p-3.5 text-left text-xs font-semibold text-gray-700 hover:bg-gray-50/50 transition">
+                            <button @click="toggleFAQ(index)" :aria-expanded="activeFAQ === index" class="w-full flex items-center justify-between p-3.5 text-left text-xs font-semibold text-gray-700 hover:bg-gray-50/50 transition focus:outline-none focus:ring-2 focus:ring-blue-500/50">
                                 <span x-text="faq.question"></span>
                                 <i class="fas" :class="activeFAQ === index ? 'fa-chevron-up text-blue-600' : 'fa-chevron-down text-gray-400'"></i>
                             </button>
