@@ -40,11 +40,13 @@
                         @if($hostel->images->count() > 1)
                             <!-- Navigation Buttons -->
                             <button @click="activeImage = activeImage > 0 ? activeImage - 1 : images.length - 1"
-                                    class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75">
+                                    aria-label="Previous Image"
+                                    class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75 focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400 focus-visible:ring-offset-2">
                                 <i class="fas fa-chevron-left"></i>
                             </button>
                             <button @click="activeImage = activeImage < images.length - 1 ? activeImage + 1 : 0"
-                                    class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75">
+                                    aria-label="Next Image"
+                                    class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75 focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400 focus-visible:ring-offset-2">
                                 <i class="fas fa-chevron-right"></i>
                             </button>
 
@@ -52,7 +54,8 @@
                             <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
                                 <template x-for="(image, index) in images" :key="index">
                                     <button @click="activeImage = index"
-                                            class="w-2 h-2 rounded-full transition-all duration-200"
+                                            :aria-label="'Go to slide ' + (index + 1)"
+                                            class="w-2 h-2 rounded-full transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400"
                                             :class="activeImage === index ? 'bg-white w-4' : 'bg-white bg-opacity-50'">
                                     </button>
                                 </template>
