@@ -111,10 +111,14 @@
             </div>
             <div class="flex items-center gap-1.5">
                 <span id="compare-count" class="text-[10px] font-bold text-slate-500 min-w-max">0 selected</span>
-                <button id="compare-btn" class="bg-rose-500 hover:bg-rose-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                <button id="compare-btn"
+                        aria-label="Compare selected hostels"
+                        class="bg-rose-500 hover:bg-rose-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-2" disabled>
                     Compare
                 </button>
-                <button id="clear-compare" class="text-slate-400 hover:text-slate-600 p-1.5 transition-colors">
+                <button id="clear-compare"
+                        aria-label="Clear all selected hostels from comparison"
+                        class="text-slate-400 hover:text-slate-600 p-1.5 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 rounded-lg">
                     <i class="fas fa-times text-xs"></i>
                 </button>
             </div>
@@ -206,8 +210,10 @@
 
                 selectedContainer.innerHTML = selectedHostels.map(h => `
                     <div class="relative min-w-[40px] group">
-                        <img src="${h.image}" class="w-10 h-10 rounded-lg object-cover border-2 border-rose-500">
-                        <button onclick="removeHostel('${h.id}')" class="absolute -top-1.5 -right-1.5 bg-slate-800 text-white rounded-full w-4 h-4 flex items-center justify-center text-[7px] border border-white">
+                        <img src="${h.image}" class="w-10 h-10 rounded-lg object-cover border-2 border-rose-500" alt="${h.name}">
+                        <button onclick="removeHostel('${h.id}')"
+                                aria-label="Remove ${h.name} from comparison"
+                                class="absolute -top-1.5 -right-1.5 bg-slate-800 text-white rounded-full w-4 h-4 flex items-center justify-center text-[7px] border border-white focus:outline-none focus:ring-2 focus:ring-yellow-400">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
