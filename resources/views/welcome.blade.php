@@ -21,8 +21,9 @@
                         $availableCount = $hostel['available_rooms_count'] ?? 0;
                     @endphp
 
-                    <a href="{{ route('hostels.guest.show', $hostel['uuid'] ?? $hostel['id']) }}" class="group block">
-                        <div class="flex flex-col gap-2">
+                    <div class="group relative flex flex-col gap-2">
+                        <!-- Main Card Link -->
+                        <a href="{{ route('hostels.guest.show', $hostel['uuid'] ?? $hostel['id']) }}" class="block">
                             <!-- Image Container - Smaller -->
                             <div class="relative aspect-square overflow-hidden rounded-lg bg-slate-100">
                                 <img src="{{ $imageUrl }}" alt="{{ $hostel['name'] }}"
@@ -33,42 +34,45 @@
                                         <span class="bg-white/95 px-1.5 py-0.5 rounded-md text-[8px] font-bold shadow-sm uppercase tracking-wider">Featured</span>
                                     </div>
                                 @endif
-                                
-                                <button class="absolute top-2 right-2 text-white text-base drop-shadow-md z-10 hover:scale-110 transition-transform">
-                                    <i class="far fa-heart"></i>
-                                </button>
-
-                                <label class="absolute top-2 left-2 z-10 cursor-pointer" onclick="event.stopPropagation()">
-                                    <input type="checkbox" class="compare-checkbox hidden" data-id="{{ $hostel['uuid'] ?? $hostel['id'] }}" data-name="{{ $hostel['name'] }}" data-image="{{ $imageUrl }}">
-                                    <div class="bg-white/90 p-1.5 rounded-full shadow-sm border border-slate-200 hover:bg-white transition-colors flex items-center justify-center w-6 h-6 group-has-[:checked]:bg-rose-500 group-has-[:checked]:border-rose-500">
-                                        <i class="fas fa-plus text-[8px] text-slate-600 group-has-[:checked]:text-white group-has-[:checked]:fa-check"></i>
-                                    </div>
-                                </label>
 
                                 <div class="absolute bottom-2 left-2 right-2 flex justify-between items-end opacity-0 group-hover:opacity-100 transition-opacity">
                                      <span class="bg-white/90 text-slate-800 text-[9px] font-bold px-1.5 py-0.5 rounded shadow-sm">
                                         {{ $availableCount }} rooms left
-                                    </span>
+                                     </span>
                                 </div>
                             </div>
 
                             <!-- Details - More Compact -->
-                            <div class="space-y-0.5">
+                            <div class="space-y-0.5 mt-2">
                                 <div class="flex justify-between items-start">
-                                    {{-- <h3 class="font-semibold text-sm text-slate-800 truncate">{{ $hostel['name'] }}</h3> --}}
-                                    <div class="flex items-center gap-0.5">
+                                    <h3 class="font-semibold text-sm text-slate-800 truncate">{{ $hostel['name'] }}</h3>
+                                    <div class="flex items-center gap-0.5 min-w-max">
                                         <i class="fas fa-star text-[10px] text-amber-400"></i>
                                         <span class="text-xs font-light text-slate-600">{{ $hostel['rating'] ?? '4.5' }}</span>
                                     </div>
                                 </div>
                                 
-                                {{-- <div class="pt-0.5">
+                                <div class="pt-0.5">
                                     <span class="font-bold text-sm text-slate-800">₵{{ number_format($minPrice, 2) }}</span>
                                     <span class="text-slate-600 font-light text-[11px]">per year</span>
-                                </div> --}}
+                                </div>
                             </div>
-                        </div>
-                    </a>
+                        </a>
+
+                        <!-- Overlay controls positioned outside the link tag to keep HTML semantics clean and valid -->
+                        <button class="wishlist-btn absolute top-2 right-2 text-white text-base drop-shadow-md z-10 hover:scale-110 transition-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2 rounded-full p-1"
+                                aria-label="Add {{ $hostel['name'] }} to wishlist"
+                                data-name="{{ $hostel['name'] }}">
+                            <i class="far fa-heart"></i>
+                        </button>
+
+                        <label class="absolute top-2 left-2 z-10 cursor-pointer focus-within:ring-2 focus-within:ring-rose-500 focus-within:ring-offset-2 rounded-full outline-none" onclick="event.stopPropagation()">
+                            <input type="checkbox" class="compare-checkbox sr-only" data-id="{{ $hostel['uuid'] ?? $hostel['id'] }}" data-name="{{ $hostel['name'] }}" data-image="{{ $imageUrl }}" aria-label="Compare {{ $hostel['name'] }}">
+                            <div class="bg-white/90 p-1.5 rounded-full shadow-sm border border-slate-200 hover:bg-white transition-colors flex items-center justify-center w-6 h-6 group-has-[:checked]:bg-rose-500 group-has-[:checked]:border-rose-500">
+                                <i class="fas fa-plus text-[8px] text-slate-600 group-has-[:checked]:text-white group-has-[:checked]:fa-check"></i>
+                            </div>
+                        </label>
+                    </div>
                 @endforeach
             @else
                 <div class="col-span-full text-center py-16 bg-slate-50 rounded-xl border-2 border-dashed border-slate-200">
@@ -254,6 +258,27 @@
             selectedHostels = [];
             checkboxes.forEach(cb => cb.checked = false);
             updateBar();
+        });
+
+        // Wishlist heart button toggle with visual and interactive feedback
+        document.querySelectorAll('.wishlist-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const icon = this.querySelector('i');
+                const name = this.dataset.name;
+
+                if (icon.classList.contains('far')) {
+                    icon.classList.replace('far', 'fas');
+                    icon.classList.add('text-rose-500');
+                    showSuccessMessage(`${name} added to your wishlist!`);
+                } else {
+                    icon.classList.replace('fas', 'far');
+                    icon.classList.remove('text-rose-500');
+                    showInfoMessage(`${name} removed from your wishlist.`);
+                }
+            });
         });
     });
 </script>

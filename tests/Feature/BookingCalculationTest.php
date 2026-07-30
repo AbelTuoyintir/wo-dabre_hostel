@@ -55,14 +55,10 @@ class BookingCalculationTest extends TestCase
         $this->assertTrue($data['success']);
 
         // Calculation according to controller:
-        // agentFee = 150, systemCharge = 20, paystackFee = subTotal * 0.0195
-        $agentFee = 150;
-        $systemCharge = 20;
-        $subTotal = 200.00 + $agentFee + $systemCharge;
-        $expectedPaystack = round($subTotal * 0.0195, 2);
-        $expectedTotal = round($subTotal + ($subTotal * 0.0195), 2);
+        // Service charge calculated server-side (no fee breakdown exposed to UI)
+        $totalServiceRate = config('payments.total_service_charge_rate', 0.051);
+        $expectedTotal = round($room->room_cost + round($room->room_cost * $totalServiceRate, 2), 2);
 
-        $this->assertEquals($expectedPaystack, $data['paystack_fee']);
         $this->assertEquals($expectedTotal, $data['total']);
     }
 }
