@@ -20,6 +20,7 @@
     };
 
     $booking = $payment->booking;
+    $payerName = $payment->user?->name ?? $booking?->user?->name ?? 'N/A';
     $hostelName = $booking?->hostel?->name ?? 'N/A';
     $roomNumber = $booking?->room?->number ?? 'N/A';
     $checkIn = $booking?->check_in_date?->format('M d, Y') ?? 'N/A';
@@ -74,6 +75,10 @@
                 <div class="space-y-6">
                     <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2">Transaction Info</h3>
                     <div class="grid grid-cols-1 gap-4">
+                        <div>
+                            <p class="text-xs font-semibold text-slate-500 mb-1">Payer Name</p>
+                            <p class="text-sm font-bold text-slate-800">{{ $payerName }}</p>
+                        </div>
                         <div>
                             <p class="text-xs font-semibold text-slate-500 mb-1">Transaction ID</p>
                             <p class="text-sm font-bold text-slate-800 font-mono bg-slate-50 p-2 rounded-lg border border-slate-100">{{ $payment->transaction_id ?? 'N/A' }}</p>
@@ -150,7 +155,7 @@
 
             <!-- Footer Note -->
             <div class="text-center space-y-2 border-t border-slate-100 pt-8">
-                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Thank you for choosing Wo-dabre</p>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Thank you for choosing UCC SRC hostel Service</p>
                 <p class="text-[10px] text-slate-400 max-w-md mx-auto">This is an electronically generated receipt. For any discrepancies, please contact support at help@srchostel.com or call +233 24 123 4567.</p>
             </div>
         </div>

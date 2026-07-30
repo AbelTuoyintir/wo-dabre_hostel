@@ -177,7 +177,7 @@
                             <i class="fas fa-headset"></i>
                         </div>
                         <div>
-                            <span class="block text-[10px] text-indigo-300 font-bold uppercase tracking-wider">Wodabre Support line</span>
+                            <span class="block text-[10px] text-indigo-300 font-bold uppercase tracking-wider">UCC SRC Hostel Service Support line</span>
                             <span class="text-sm font-extrabold">+233 55 820 9825</span>
                         </div>
                     </div>
