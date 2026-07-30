@@ -246,4 +246,61 @@ class SupportSystemTest extends TestCase
         // Since we are posting, it redirects back
         $sendResponse->assertRedirect();
     }
+
+    /**
+     * Test that guests cannot access or message other guests' support tickets.
+     */
+    public function test_guest_cannot_access_or_message_others_guest_ticket(): void
+    {
+        // Guest A creates a ticket
+        $ticketA = SupportTicket::create([
+            'guest_name' => 'Guest A',
+            'guest_email' => 'guest.a@example.com',
+            'subject' => "Guest A's private issue",
+            'category' => 'technical',
+            'status' => 'open',
+        ]);
+
+        // A clean guest session (Guest B) tries to access Guest A's ticket messages
+        $getResponse = $this->get(route('support.ticket.messages', ['ticket' => $ticketA->uuid]));
+        $getResponse->assertStatus(403);
+
+        // Guest B tries to send a message to Guest A's ticket
+        $sendResponse = $this->post(route('support.ticket.message.send', ['ticket' => $ticketA->uuid]), [
+            'message' => 'Sneaky guest injection',
+        ]);
+        $sendResponse->assertStatus(403);
+    }
+
+    /**
+     * Test that a guest can access and message their own ticket when in session.
+     */
+    public function test_guest_can_access_and_message_own_ticket(): void
+    {
+        $payload = [
+            'guest_name' => 'John Guest',
+            'guest_email' => 'john@example.com',
+            'category' => 'booking',
+            'subject' => 'Guest question',
+            'message' => 'Hello I am a guest',
+        ];
+
+        // This request will create the ticket and put its UUID into Guest's session
+        $response = $this->post(route('support.ticket.store'), $payload);
+        $response->assertRedirect();
+
+        $ticket = SupportTicket::where('guest_email', 'john@example.com')->first();
+        $this->assertNotNull($ticket);
+
+        // Guest can fetch messages for their own ticket because its UUID is in their session
+        $getResponse = $this->get(route('support.ticket.messages', ['ticket' => $ticket->uuid]));
+        $getResponse->assertOk();
+        $getResponse->assertJson(['success' => true]);
+
+        // Guest can reply to their own ticket
+        $sendResponse = $this->post(route('support.ticket.message.send', ['ticket' => $ticket->uuid]), [
+            'message' => 'Follow up from same guest session',
+        ]);
+        $sendResponse->assertRedirect();
+    }
 }
