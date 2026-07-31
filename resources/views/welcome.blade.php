@@ -30,7 +30,7 @@
                                      class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110">
 
                                 @if($hostel['is_featured'])
-                                    <div class="absolute top-2 left-2">
+                                    <div class="absolute top-2 left-10">
                                         <span class="bg-white/95 px-1.5 py-0.5 rounded-md text-[8px] font-bold shadow-sm uppercase tracking-wider">Featured</span>
                                     </div>
                                 @endif
