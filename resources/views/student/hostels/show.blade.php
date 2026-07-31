@@ -151,11 +151,13 @@
                 <!-- Navigation Arrows -->
                 @if($hostel->images->count() > 1)
                 <button @click="activeImage = (activeImage - 1 + images.length) % images.length; autoPlay = false"
-                        class="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 backdrop-blur-sm text-white p-3 rounded-full hover:bg-black/70 transition-all hover:scale-110">
+                        aria-label="Previous Image"
+                        class="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 backdrop-blur-sm text-white p-3 rounded-full hover:bg-black/70 transition-all hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400 focus-visible:ring-offset-2">
                     <i class="fas fa-chevron-left text-xl"></i>
                 </button>
                 <button @click="activeImage = (activeImage + 1) % images.length; autoPlay = false"
-                        class="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 backdrop-blur-sm text-white p-3 rounded-full hover:bg-black/70 transition-all hover:scale-110">
+                        aria-label="Next Image"
+                        class="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 backdrop-blur-sm text-white p-3 rounded-full hover:bg-black/70 transition-all hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400 focus-visible:ring-offset-2">
                     <i class="fas fa-chevron-right text-xl"></i>
                 </button>
 
@@ -168,7 +170,8 @@
                 <div class="absolute bottom-6 left-1/2 -translate-x-1/2 flex space-x-2">
                     <template x-for="(_, index) in images" :key="index">
                         <button @click="activeImage = index; autoPlay = false"
-                                class="w-3 h-3 rounded-full transition-all duration-300"
+                                :aria-label="'Go to slide ' + (index + 1)"
+                                class="w-3 h-3 rounded-full transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400"
                                 :class="activeImage === index ? 'bg-white w-8' : 'bg-white/50 hover:bg-white/70'">
                         </button>
                     </template>
@@ -176,7 +179,8 @@
 
                 <!-- Play/Pause Button -->
                 <button @click="autoPlay = !autoPlay"
-                        class="absolute bottom-6 right-4 bg-black/50 backdrop-blur-sm text-white p-2 rounded-full hover:bg-black/70 transition">
+                        :aria-label="autoPlay ? 'Pause Slideshow' : 'Play Slideshow'"
+                        class="absolute bottom-6 right-4 bg-black/50 backdrop-blur-sm text-white p-2 rounded-full hover:bg-black/70 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400">
                     <i class="fas" :class="autoPlay ? 'fa-pause' : 'fa-play'"></i>
                 </button>
                 @endif
@@ -291,7 +295,7 @@
                 @foreach($hostel->amenities as $amenity)
                     <div class="amenity-tag bg-gray-50 rounded-xl px-4 py-3 flex items-center space-x-3 hover:bg-blue-50 cursor-default">
                         <i class="fas fa-check-circle text-green-500 text-lg"></i>
-                        <span class="text-gray-700 text-sm font-medium">{{ ucwords(str_replace('_', ' ', $amenity)) }}</span>
+                        <span class="text-gray-700 text-sm font-medium">{{ $amenity->name }}</span>
                     </div>
                 @endforeach
             </div>
@@ -536,7 +540,9 @@
 <div class="fixed bottom-6 right-6 z-50">
     <div x-data="{ open: false }" class="relative">
         <button @click="open = !open" 
-                class="bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition transform hover:scale-110">
+                aria-label="Toggle Quick Actions Menu"
+                :aria-expanded="open"
+                class="bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition transform hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400 focus-visible:ring-offset-2">
             <i class="fas fa-plus text-xl" :class="open ? 'fa-times' : 'fa-plus'"></i>
         </button>
         
@@ -545,7 +551,7 @@
              x-transition:enter="transition ease-out duration-200"
              x-transition:enter-start="transform opacity-0 scale-95"
              x-transition:enter-end="transform opacity-100 scale-100"
-             class="absolute bottom-16 right-0 bg-white rounded-2xl shadow-xl p-2 w-56"
+             class="absolute bottom-16 right-0 bg-white rounded-2xl shadow-xl p-2 w-56 animate-fade-in"
              style="display: none;">
             <a href="{{ route('student.hostels.browse') }}" class="no-loader flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 rounded-xl transition group">
                 <i class="fas fa-search text-blue-500 w-6 group-hover:scale-110 transition"></i>

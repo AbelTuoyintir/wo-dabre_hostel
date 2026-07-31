@@ -1,3 +1,15 @@
-## 2026-07-26 - Visually-hidden interactive controls (sr-only vs hidden)
-**Learning:** Hiding checkbox inputs using `hidden` (or `display: none`) removes them from the accessibility tree and document focus flow. Screen readers and keyboard-only users cannot access or select these elements. Using `sr-only` keeps them accessible while hiding them visually. Additionally, focus-within styling on parent elements provides visual focus states.
-**Action:** Always use `sr-only` instead of `hidden` or `display: none` for visual-only hidden elements that require keyboard focus or screen-reader interactions, and pair them with `focus-within:ring-2` focus outlines.
+# Palette's UX Journal
+
+Critical UX/accessibility learnings and reusable patterns for the UCC Hostel Booking System.
+
+## 2026-03-05 - [Self-Correction on Interactive Link Nesting]
+**Learning:** Nesting interactive elements like `<button>` or `<input>` inside an outer anchor link `<a>` breaks screen-readers and keyboard navigation, causing unexpected focus order.
+**Action:** Lift interactive controls (e.g., favorite/wishlist buttons, selection/comparison checkboxes) out of the anchor element by wrapping the card in a parent relative `div`.
+
+## 2026-03-05 - [Aria-Labeling and Accessible Focus Indicators]
+**Learning:** Icon-only buttons and checkboxes must always contain descriptive `aria-label` tags and visible focus rings (`focus-within:ring-2` / `focus-visible:ring-2`) to keep interfaces accessible to keyboard-only and screen-reader users.
+**Action:** Replace `hidden` inputs with `sr-only` so they remain focusable, and style focused states on their visual wrappers.
+
+## 2026-03-05 - [Image Carousel and Floating Control Accessibility]
+**Learning:** Interactive sliding carousels, dynamic toggle quick-actions, and comparison action triggers containing icon-only elements should have precise descriptive `aria-label` labels and focus visible offset outlines to support robust keyboard focus tracking.
+**Action:** Implement `aria-label`, `aria-expanded` and `focus-visible:ring-yellow-400` styling directly on the image slider navigation buttons and action items.

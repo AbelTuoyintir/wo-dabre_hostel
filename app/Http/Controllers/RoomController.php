@@ -54,7 +54,7 @@ class RoomController extends Controller
     /**
      * Store a newly created room
      */
-   public function store(Request $request)
+public function store(Request $request)
     {
         try {
             $validated = $request->validate([
@@ -77,6 +77,10 @@ class RoomController extends Controller
                 'gallery_images.*' => 'image|mimes:jpeg,png,jpg,gif|max:10240', // 10MB max per image
                 // Dedicated room video (optional)
                 'room_video' => 'nullable|file|mimetypes:video/mp4,video/webm|max:51200', // 50MB
+                // Temp image paths (pre-uploaded via AJAX)
+                'temp_cover_path' => 'nullable|string',
+                'temp_gallery_paths' => 'nullable|array',
+                'temp_gallery_paths.*' => 'string',
             ]);
 
             // Handle boolean fields
@@ -106,13 +110,25 @@ class RoomController extends Controller
                 // Create the room
                 $room = Room::create($validated);
 
-                // Handle cover image upload
+                // Handle cover image upload (direct file or temp path from AJAX upload)
+                $coverPath = null;
                 if ($request->hasFile('cover_image')) {
-                    $path = $request->file('cover_image')->store('rooms/covers', 'public');
+                    $coverPath = $request->file('cover_image')->store('rooms/covers', 'public');
+                } elseif ($request->filled('temp_cover_path')) {
+                    $tempPath = $request->temp_cover_path;
+                    $disk = \Illuminate\Support\Facades\Storage::disk('public');
+                    if ($disk->exists($tempPath)) {
+                        // Move/copy from temp to permanent location
+                        $newFilename = 'rooms/covers/' . basename($tempPath);
+                        $disk->copy($tempPath, $newFilename);
+                        $disk->delete($tempPath);
+                        $coverPath = $newFilename;
+                    }
+                }
 
-                    // Create primary image
+                if ($coverPath) {
                     $room->images()->create([
-                        'image_path' => $path,
+                        'image_path' => $coverPath,
                         'hostel_id' => $room->hostel_id,
                         'type' => 'room',
                         'is_primary' => true,
@@ -121,7 +137,7 @@ class RoomController extends Controller
 
                     \Log::info('Uploaded cover image for new room', [
                         'room_id' => $room->id,
-                        'image_path' => $path
+                        'image_path' => $coverPath
                     ]);
                 }
 
@@ -156,27 +172,50 @@ class RoomController extends Controller
                     ]);
                 }
 
-                // Handle gallery images upload
+                // Handle gallery images upload (direct files or temp paths from AJAX upload)
+                $galleryImages = collect();
                 if ($request->hasFile('gallery_images')) {
-                    $order = 1; // Start from 1 since cover image is at order 0
-                    $uploadedCount = 0;
-
                     foreach ($request->file('gallery_images') as $image) {
-                        if ($uploadedCount >= 5) break; // Limit to 5 images
+                        $galleryImages->push($image);
+                    }
+                }
+                if ($request->filled('temp_gallery_paths')) {
+                    $disk = \Illuminate\Support\Facades\Storage::disk('public');
+                    foreach ($request->temp_gallery_paths as $tempPath) {
+                        if ($disk->exists($tempPath)) {
+                            $galleryImages->push($tempPath);
+                        }
+                    }
+                }
 
+                $order = 1; // Start from 1 since cover image is at order 0
+                $uploadedCount = 0;
+
+                foreach ($galleryImages as $image) {
+                    if ($uploadedCount >= 5) break; // Limit to 5 images
+
+                    if ($image instanceof \Illuminate\Http\UploadedFile) {
                         $path = $image->store('rooms/gallery', 'public');
-
-$room->images()->create([
-                            'image_path' => $path,
-                            'hostel_id' => $room->hostel_id,
-                            'type' => 'room',
-                            'is_primary' => false,
-                            'order' => $order++
-                        ]);
-
-                        $uploadedCount++;
+                    } else {
+                        // It's a temp path string - move to permanent
+                        $newFilename = 'rooms/gallery/' . basename($image);
+                        $disk->copy($image, $newFilename);
+                        $disk->delete($image);
+                        $path = $newFilename;
                     }
 
+                    $room->images()->create([
+                        'image_path' => $path,
+                        'hostel_id' => $room->hostel_id,
+                        'type' => 'room',
+                        'is_primary' => false,
+                        'order' => $order++
+                    ]);
+
+                    $uploadedCount++;
+                }
+
+                if ($uploadedCount > 0) {
                     \Log::info('Uploaded gallery images for new room', [
                         'room_id' => $room->id,
                         'uploaded_count' => $uploadedCount
@@ -572,6 +611,88 @@ $path = $image->store('rooms/gallery', 'public');
             return back()
                 ->withInput()
                 ->with('error', 'An unexpected error occurred. Please try again later.');
+        }
+    }
+
+    /**
+     * Upload a single temp image via AJAX for the room create form progress bar.
+     */
+    public function uploadTempImage(Request $request)
+    {
+        $request->validate([
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:10240',
+            'type' => 'required|in:cover,gallery',
+        ]);
+
+        try {
+            $file = $request->file('image');
+            $tempId = uniqid('temp_', true);
+            $extension = $file->getClientOriginalExtension();
+            $filename = $tempId . '.' . $extension;
+            $path = $file->storeAs('temp/room-images', $filename, 'public');
+
+            return response()->json([
+                'success' => true,
+                'temp_id' => $tempId,
+                'filename' => $filename,
+                'path' => $path,
+                'url' => \Illuminate\Support\Facades\Storage::disk('public')->url($path),
+                'name' => $file->getClientOriginalName(),
+                'size' => $file->getSize(),
+                'type' => $request->type,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Temp image upload failed', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to upload image: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete a temp image via AJAX
+     */
+    public function deleteTempImage($tempId)
+    {
+        try {
+            // Find and delete the temp file
+            $disk = \Illuminate\Support\Facades\Storage::disk('public');
+            $files = $disk->files('temp/room-images');
+
+            $deleted = false;
+            foreach ($files as $file) {
+                if (str_contains($file, $tempId)) {
+                    $disk->delete($file);
+                    $deleted = true;
+                    break;
+                }
+            }
+
+            if (!$deleted) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Temp image not found.',
+                ], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Temp image deleted successfully.',
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Temp image delete failed', [
+                'error' => $e->getMessage(),
+                'temp_id' => $tempId,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete temp image: ' . $e->getMessage(),
+            ], 500);
         }
     }
 

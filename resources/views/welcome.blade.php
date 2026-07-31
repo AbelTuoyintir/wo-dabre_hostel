@@ -21,8 +21,9 @@
                         $availableCount = $hostel['available_rooms_count'] ?? 0;
                     @endphp
 
-                    <a href="{{ route('hostels.guest.show', $hostel['uuid'] ?? $hostel['id']) }}" class="group block">
-                        <div class="flex flex-col gap-2">
+                    <div class="group relative flex flex-col gap-2">
+                        <!-- Main Card Link -->
+                        <a href="{{ route('hostels.guest.show', $hostel['uuid'] ?? $hostel['id']) }}" class="block">
                             <!-- Image Container - Smaller -->
                             <div class="relative aspect-square overflow-hidden rounded-lg bg-slate-100">
                                 <img src="{{ $imageUrl }}" alt="{{ $hostel['name'] }}"
@@ -33,42 +34,41 @@
                                         <span class="bg-white/95 px-1.5 py-0.5 rounded-md text-[8px] font-bold shadow-sm uppercase tracking-wider">Featured</span>
                                     </div>
                                 @endif
-                                
-                                <button aria-label="Add {{ $hostel['name'] }} to wishlist" class="absolute top-2 right-2 text-white text-base drop-shadow-md z-10 hover:scale-110 transition-transform" onclick="event.preventDefault(); event.stopPropagation();">
-                                    <i class="far fa-heart"></i>
-                                </button>
-
-                                <label class="absolute top-2 left-2 z-10 cursor-pointer focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 rounded-full" onclick="event.stopPropagation()">
-                                    <input type="checkbox" class="compare-checkbox sr-only" data-id="{{ $hostel['uuid'] ?? $hostel['id'] }}" data-name="{{ $hostel['name'] }}" data-image="{{ $imageUrl }}" aria-label="Add {{ $hostel['name'] }} to comparison">
-                                    <div class="bg-white/90 p-1.5 rounded-full shadow-sm border border-slate-200 hover:bg-white transition-colors flex items-center justify-center w-6 h-6 group-has-[:checked]:bg-rose-500 group-has-[:checked]:border-rose-500">
-                                        <i class="fas fa-plus text-[8px] text-slate-600 group-has-[:checked]:text-white group-has-[:checked]:fa-check"></i>
-                                    </div>
-                                </label>
 
                                 <div class="absolute bottom-2 left-2 right-2 flex justify-between items-end opacity-0 group-hover:opacity-100 transition-opacity">
                                      <span class="bg-white/90 text-slate-800 text-[9px] font-bold px-1.5 py-0.5 rounded shadow-sm">
                                         {{ $availableCount }} rooms left
-                                    </span>
+                                     </span>
                                 </div>
                             </div>
 
                             <!-- Details - More Compact -->
-                            <div class="space-y-0.5">
+                            <div class="space-y-0.5 mt-2">
                                 <div class="flex justify-between items-start">
                                     <h3 class="font-semibold text-sm text-slate-800 truncate">{{ $hostel['name'] }}</h3>
-                                    <div class="flex items-center gap-0.5">
+                                    <div class="flex items-center gap-0.5 min-w-max">
                                         <i class="fas fa-star text-[10px] text-amber-400"></i>
                                         <span class="text-xs font-light text-slate-600">{{ $hostel['rating'] ?? '4.5' }}</span>
                                     </div>
                                 </div>
                                 
-                                <div class="pt-0.5">
-                                    <span class="font-bold text-sm text-slate-800">₵{{ number_format($minPrice, 2) }}</span>
-                                    <span class="text-slate-600 font-light text-[11px]">per year</span>
-                                </div>
                             </div>
-                        </div>
-                    </a>
+                        </a>
+
+                        <!-- Overlay controls positioned outside the link tag to keep HTML semantics clean and valid -->
+                        <button class="wishlist-btn absolute top-2 right-2 text-white text-base drop-shadow-md z-10 hover:scale-110 transition-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2 rounded-full p-1"
+                                aria-label="Add {{ $hostel['name'] }} to wishlist"
+                                data-name="{{ $hostel['name'] }}">
+                            <i class="far fa-heart"></i>
+                        </button>
+
+                        <label class="absolute top-2 left-2 z-10 cursor-pointer focus-within:ring-2 focus-within:ring-rose-500 focus-within:ring-offset-2 rounded-full outline-none" onclick="event.stopPropagation()">
+                            <input type="checkbox" class="compare-checkbox sr-only" data-id="{{ $hostel['uuid'] ?? $hostel['id'] }}" data-name="{{ $hostel['name'] }}" data-image="{{ $imageUrl }}" aria-label="Compare {{ $hostel['name'] }}">
+                            <div class="bg-white/90 p-1.5 rounded-full shadow-sm border border-slate-200 hover:bg-white transition-colors flex items-center justify-center w-6 h-6 group-has-[:checked]:bg-rose-500 group-has-[:checked]:border-rose-500">
+                                <i class="fas fa-plus text-[8px] text-slate-600 group-has-[:checked]:text-white group-has-[:checked]:fa-check"></i>
+                            </div>
+                        </label>
+                    </div>
                 @endforeach
             @else
                 <div class="col-span-full text-center py-16 bg-slate-50 rounded-xl border-2 border-dashed border-slate-200">
@@ -107,10 +107,14 @@
             </div>
             <div class="flex items-center gap-1.5">
                 <span id="compare-count" class="text-[10px] font-bold text-slate-500 min-w-max">0 selected</span>
-                <button id="compare-btn" class="bg-rose-500 hover:bg-rose-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                <button id="compare-btn"
+                        aria-label="Compare selected hostels"
+                        class="bg-rose-500 hover:bg-rose-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-2" disabled>
                     Compare
                 </button>
-                <button id="clear-compare" aria-label="Clear selected hostels" class="text-slate-400 hover:text-slate-600 p-1.5 transition-colors">
+                <button id="clear-compare"
+                        aria-label="Clear all selected hostels from comparison"
+                        class="text-slate-400 hover:text-slate-600 p-1.5 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 rounded-lg">
                     <i class="fas fa-times text-xs"></i>
                 </button>
             </div>
@@ -118,39 +122,53 @@
     </div>
 
     <!-- MOBILE BOTTOM NAVIGATION (Airbnb style) - More Compact -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-3 py-2 sm:hidden z-50 flex justify-around items-center">
-        <a href="{{ route('hostels.index') }}" class="flex flex-col items-center gap-0.5 {{ !request()->routeIs('hostels.index') || request()->hasAny(['location', 'search', 'price_range']) ? 'text-slate-400' : 'text-rose-500' }}">
-            <i class="fas fa-search text-base"></i>
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-3 py-2 sm:hidden z-50 flex justify-around items-center" aria-label="Mobile Bottom Navigation">
+        <a href="{{ route('hostels.index') }}"
+           class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2 {{ !request()->routeIs('hostels.index') || request()->hasAny(['location', 'search', 'price_range']) ? 'text-slate-400' : 'text-rose-500' }}"
+           aria-label="Explore Hostels">
+            <i class="fas fa-search text-base" aria-hidden="true"></i>
             <span class="text-[9px] font-medium">Explore</span>
         </a>
-        <a href="#" class="flex flex-col items-center gap-0.5 text-slate-400">
-            <i class="far fa-heart text-base"></i>
+        <a href="#"
+           class="flex flex-col items-center gap-0.5 text-slate-400 rounded-lg p-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2"
+           aria-label="Wishlists">
+            <i class="far fa-heart text-base" aria-hidden="true"></i>
             <span class="text-[9px] font-medium">Wishlists</span>
         </a>
-        <a href="#" class="flex flex-col items-center gap-0.5 text-slate-400">
-            <i class="fas fa-university text-base"></i>
+        <a href="#"
+           class="flex flex-col items-center gap-0.5 text-slate-400 rounded-lg p-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2"
+           aria-label="My Bookings">
+            <i class="fas fa-university text-base" aria-hidden="true"></i>
             <span class="text-[9px] font-medium">Bookings</span>
         </a>
         @auth
             @if(auth()->user()->role === 'student')
-                <a href="{{ route('student.dashboard') }}" class="flex flex-col items-center gap-0.5 text-slate-400">
-                    <i class="far fa-user-circle text-base"></i>
+                <a href="{{ route('student.dashboard') }}"
+                   class="flex flex-col items-center gap-0.5 text-slate-400 rounded-lg p-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2"
+                   aria-label="Student Dashboard Profile">
+                    <i class="far fa-user-circle text-base" aria-hidden="true"></i>
                     <span class="text-[9px] font-medium">Profile</span>
                 </a>
             @elseif(auth()->user()->role === 'admin')
-                <a href="{{ route('admin.dashboard') }}" class="flex flex-col items-center gap-0.5 text-slate-400">
-                    <i class="far fa-user-circle text-base"></i>
+                <a href="{{ route('admin.dashboard') }}"
+                   class="flex flex-col items-center gap-0.5 text-slate-400 rounded-lg p-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2"
+                   aria-label="Admin Dashboard">
+                    <i class="far fa-user-circle text-base" aria-hidden="true"></i>
                     <span class="text-[9px] font-medium">Admin</span>
                 </a>
             @elseif(auth()->user()->role === 'manager')
-                <a href="{{ route('hostel-manager.dashboard') }}" class="flex flex-col items-center gap-0.5 text-slate-400">
-                    <i class="far fa-user-circle text-base"></i>
+                <a href="{{ route('hostel-manager.dashboard') }}"
+                   class="flex flex-col items-center gap-0.5 text-slate-400 rounded-lg p-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2"
+                   aria-label="Manager Dashboard">
+                    <i class="far fa-user-circle text-base" aria-hidden="true"></i>
                     <span class="text-[9px] font-medium">Manager</span>
                 </a>
             @endif
         @else
-            <a href="{{ route('login') }}" class="flex flex-col items-center gap-0.5 text-slate-400">
-                <i class="far fa-user-circle text-base"></i>
+            <a href="{{ route('login') }}"
+               class="flex flex-col items-center gap-0.5 text-slate-400 rounded-lg p-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2"
+               aria-label="Log in to your account">
+                <i class="far fa-user-circle text-base" aria-hidden="true"></i>
                 <span class="text-[9px] font-medium">Log in</span>
             </a>
         @endauth
@@ -202,8 +220,10 @@
 
                 selectedContainer.innerHTML = selectedHostels.map(h => `
                     <div class="relative min-w-[40px] group">
-                        <img src="${h.image}" class="w-10 h-10 rounded-lg object-cover border-2 border-rose-500">
-                        <button onclick="removeHostel('${h.id}')" class="absolute -top-1.5 -right-1.5 bg-slate-800 text-white rounded-full w-4 h-4 flex items-center justify-center text-[7px] border border-white">
+                        <img src="${h.image}" class="w-10 h-10 rounded-lg object-cover border-2 border-rose-500" alt="${h.name}">
+                        <button onclick="removeHostel('${h.id}')"
+                                aria-label="Remove ${h.name} from comparison"
+                                class="absolute -top-1.5 -right-1.5 bg-slate-800 text-white rounded-full w-4 h-4 flex items-center justify-center text-[7px] border border-white focus:outline-none focus:ring-2 focus:ring-yellow-400">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
@@ -254,6 +274,27 @@
             selectedHostels = [];
             checkboxes.forEach(cb => cb.checked = false);
             updateBar();
+        });
+
+        // Wishlist heart button toggle with visual and interactive feedback
+        document.querySelectorAll('.wishlist-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const icon = this.querySelector('i');
+                const name = this.dataset.name;
+
+                if (icon.classList.contains('far')) {
+                    icon.classList.replace('far', 'fas');
+                    icon.classList.add('text-rose-500');
+                    showSuccessMessage(`${name} added to your wishlist!`);
+                } else {
+                    icon.classList.replace('fas', 'far');
+                    icon.classList.remove('text-rose-500');
+                    showInfoMessage(`${name} removed from your wishlist.`);
+                }
+            });
         });
     });
 </script>

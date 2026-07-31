@@ -123,7 +123,7 @@
                     <h4 class="text-sm font-semibold text-gray-700 mb-4">Current Media Gallery</h4>
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="current-images">
                         @foreach($hostel->images()->orderBy('is_primary', 'desc')->orderBy('order')->get() as $image)
-                            <div class="relative group border rounded-xl overflow-hidden shadow-sm p-2 transition duration-300 {{ $image->is_primary ? 'bg-blue-50 border-blue-300' : 'border-gray-200 bg-white' }}" data-image-id="{{ $image->id }}">
+                            <div class="relative group border rounded-xl overflow-hidden shadow-sm p-2 transition duration-300 focus-within:ring-2 focus-within:ring-indigo-500 {{ $image->is_primary ? 'bg-blue-50 border-blue-300' : 'border-gray-200 bg-white' }}" data-image-id="{{ $image->id }}">
                                 <div class="aspect-video bg-black rounded-lg overflow-hidden flex items-center justify-center relative">
                                     @if($image->media_kind == 'video')
                                         <video class="w-full h-full object-cover" muted preload="metadata">
@@ -152,14 +152,16 @@
                                         @if(!$image->is_primary)
                                             <button type="button"
                                                     onclick="setAsPrimary({{ $image->id }})"
-                                                    class="text-[10px] bg-blue-100 text-blue-700 px-2 py-1 rounded-md font-semibold hover:bg-blue-200 transition-colors">
+                                                    aria-label="Make this image the primary cover image"
+                                                    class="text-[10px] bg-blue-100 text-blue-700 px-2 py-1 rounded-md font-semibold hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-colors">
                                                 Make Primary
                                             </button>
                                         @endif
 
                                         <button type="button"
                                                 onclick="markForRemoval({{ $image->id }})"
-                                                class="text-[10px] bg-red-50 text-red-700 px-2 py-1 rounded-md font-semibold hover:bg-red-100 transition-colors">
+                                                aria-label="Remove this image from the gallery"
+                                                class="text-[10px] bg-red-50 text-red-700 px-2 py-1 rounded-md font-semibold hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 transition-colors">
                                             Remove
                                         </button>
                                     </div>
@@ -183,8 +185,8 @@
                     <div class="space-y-2">
                         <label class="block text-xs font-semibold text-gray-600">New Cover Image (replaces or adds primary)</label>
 
-                        <div class="relative group cursor-pointer border-2 border-dashed border-gray-300 rounded-xl p-6 bg-gray-50 hover:bg-indigo-50/30 hover:border-indigo-500 transition-all duration-300 text-center" id="cover-dropzone">
-                            <input type="file" name="cover_image" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onchange="previewNewCover(this)">
+                        <div class="relative group cursor-pointer border-2 border-dashed border-gray-300 rounded-xl p-6 bg-gray-50 hover:bg-indigo-50/30 hover:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-offset-2 focus-within:outline-none focus-within:border-indigo-500 transition-all duration-300 text-center" id="cover-dropzone">
+                            <input type="file" name="cover_image" accept="image/*" aria-label="Upload new cover image" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 focus:outline-none" onchange="previewNewCover(this)">
 
                             <div class="space-y-2" id="cover-prompt">
                                 <div class="mx-auto w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform duration-300">
@@ -199,7 +201,7 @@
                             <!-- Preview -->
                             <div id="new-cover-preview" class="hidden relative inline-block mx-auto max-w-full">
                                 <img src="" class="max-h-36 rounded-lg shadow-sm border object-cover" alt="Cover preview">
-                                <button type="button" onclick="removeNewCover(event)" class="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center shadow-md transition-colors z-20">
+                                <button type="button" aria-label="Remove new cover image" onclick="removeNewCover(event)" class="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center shadow-md transition-colors z-20 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1">
                                     &times;
                                 </button>
                             </div>
@@ -210,8 +212,8 @@
                     <div class="space-y-2">
                         <label class="block text-xs font-semibold text-gray-600">Additional Gallery Media (Images &amp; Videos, max 5)</label>
 
-                        <div class="relative group cursor-pointer border-2 border-dashed border-gray-300 rounded-xl p-6 bg-gray-50 hover:bg-indigo-50/30 hover:border-indigo-500 transition-all duration-300 text-center" id="gallery-dropzone">
-                            <input type="file" name="gallery_images[]" multiple accept="image/*,video/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onchange="previewNewGallery(this)">
+                        <div class="relative group cursor-pointer border-2 border-dashed border-gray-300 rounded-xl p-6 bg-gray-50 hover:bg-indigo-50/30 hover:border-indigo-500 focus-within:ring-2 focus-within:ring-pink-500 focus-within:ring-offset-2 focus-within:outline-none focus-within:border-pink-500 transition-all duration-300 text-center" id="gallery-dropzone">
+                            <input type="file" name="gallery_images[]" multiple accept="image/*,video/*" aria-label="Upload multiple new gallery files" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 focus:outline-none" onchange="previewNewGallery(this)">
 
                             <div class="space-y-2" id="gallery-prompt">
                                 <div class="mx-auto w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center text-pink-600 group-hover:scale-110 transition-transform duration-300">
@@ -459,7 +461,8 @@
 
                             const removeBtn = document.createElement('button');
                             removeBtn.type = 'button';
-                            removeBtn.className = 'absolute top-1.5 right-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-md transition-colors z-20';
+                            removeBtn.setAttribute('aria-label', `Remove new gallery file ${file.name}`);
+                            removeBtn.className = 'absolute top-1.5 right-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-md transition-colors z-20 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1';
                             removeBtn.innerHTML = '&times;';
                             removeBtn.onclick = function(ev) {
                                 ev.stopPropagation();

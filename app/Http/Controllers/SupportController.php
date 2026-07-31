@@ -68,6 +68,11 @@ class SupportController extends Controller
             'is_admin_reply' => false,
         ]);
 
+        // Secure guest ticket access by storing the UUID in their session
+        if (!Auth::check()) {
+            session()->push('guest_support_ticket_uuids', $ticket->uuid);
+        }
+
         // Generate immediate AI/Automated 24/7 Response
         $this->generateAutomatedResponse($ticket, $validated['message']);
 
@@ -87,9 +92,21 @@ class SupportController extends Controller
      */
     public function getMessages(SupportTicket $ticket)
     {
-        // Simple security: check if ticket belongs to the user (if authenticated), or anyone if guest
-        if ($ticket->user_id && $ticket->user_id !== Auth::id()) {
-            abort(403, 'Unauthorized access to this ticket.');
+        // Security check: restrict ticket access to the owner or an admin
+        if ($ticket->user_id) {
+            $user = Auth::user();
+            if (!$user || ($user->id !== $ticket->user_id && $user->role !== 'admin')) {
+                abort(403, 'Unauthorized access to this ticket.');
+            }
+        } else {
+            // Secure guest ticket access: restrict to admin or creator with valid session
+            $user = Auth::user();
+            if (!$user || $user->role !== 'admin') {
+                $sessionUuids = session()->get('guest_support_ticket_uuids', []);
+                if (!in_array($ticket->uuid, $sessionUuids)) {
+                    abort(403, 'Unauthorized access to this ticket.');
+                }
+            }
         }
 
         return response()->json([
@@ -104,6 +121,23 @@ class SupportController extends Controller
      */
     public function sendMessage(Request $request, SupportTicket $ticket)
     {
+        // Security check: restrict messaging to the owner of the ticket or an admin
+        if ($ticket->user_id) {
+            $user = Auth::user();
+            if (!$user || ($user->id !== $ticket->user_id && $user->role !== 'admin')) {
+                abort(403, 'Unauthorized access to this ticket.');
+            }
+        } else {
+            // Secure guest ticket messaging: restrict to admin or creator with valid session
+            $user = Auth::user();
+            if (!$user || $user->role !== 'admin') {
+                $sessionUuids = session()->get('guest_support_ticket_uuids', []);
+                if (!in_array($ticket->uuid, $sessionUuids)) {
+                    abort(403, 'Unauthorized access to this ticket.');
+                }
+            }
+        }
+
         $validated = $request->validate([
             'message' => 'required|string',
         ]);

@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\SupportTicket;
-use App\Models\SupportMessage;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -166,5 +165,165 @@ class SupportSystemTest extends TestCase
         $closeResponse->assertRedirect();
 
         $this->assertEquals('resolved', $ticket->fresh()->status);
+    }
+
+    /**
+     * Test other students cannot access or message others' support tickets (IDOR protection).
+     */
+    public function test_student_cannot_access_or_message_others_ticket(): void
+    {
+        $studentA = User::create([
+            'name' => 'Student A',
+            'email' => 'student.a@example.com',
+            'password' => Hash::make('password123'),
+            'role' => 'student',
+            'email_verified_at' => now(),
+        ]);
+
+        $studentB = User::create([
+            'name' => 'Student B',
+            'email' => 'student.b@example.com',
+            'password' => Hash::make('password123'),
+            'role' => 'student',
+            'email_verified_at' => now(),
+        ]);
+
+        $ticketA = SupportTicket::create([
+            'user_id' => $studentA->id,
+            'subject' => "Student A's private issue",
+            'category' => 'technical',
+            'status' => 'open',
+        ]);
+
+        // Student B tries to fetch messages of Student A's ticket
+        $getResponse = $this->actingAs($studentB)->get(route('support.ticket.messages', ['ticket' => $ticketA->uuid]));
+        $getResponse->assertStatus(403);
+
+        // Student B tries to send a message to Student A's ticket
+        $sendResponse = $this->actingAs($studentB)->post(route('support.ticket.message.send', ['ticket' => $ticketA->uuid]), [
+            'message' => 'Sneaky injection',
+        ]);
+        $sendResponse->assertStatus(403);
+    }
+
+    /**
+     * Test admin is allowed to fetch messages or send messages to any student support ticket.
+     */
+    public function test_admin_can_fetch_and_send_messages_to_any_ticket(): void
+    {
+        $student = User::create([
+            'name' => 'Student Owner',
+            'email' => 'owner@example.com',
+            'password' => Hash::make('password123'),
+            'role' => 'student',
+            'email_verified_at' => now(),
+        ]);
+
+        $admin = User::create([
+            'name' => 'Admin Helper',
+            'email' => 'admin.helper@example.com',
+            'password' => Hash::make('password123'),
+            'role' => 'admin',
+            'email_verified_at' => now(),
+        ]);
+
+        $ticket = SupportTicket::create([
+            'user_id' => $student->id,
+            'subject' => 'Student problem',
+            'category' => 'technical',
+            'status' => 'open',
+        ]);
+
+        // Admin should be allowed to get messages
+        $getResponse = $this->actingAs($admin)->get(route('support.ticket.messages', ['ticket' => $ticket->uuid]));
+        $getResponse->assertOk();
+
+        // Admin should be allowed to send message
+        $sendResponse = $this->actingAs($admin)->post(route('support.ticket.message.send', ['ticket' => $ticket->uuid]), [
+            'message' => 'Admin response here',
+        ]);
+        // Since we are posting, it redirects back
+        $sendResponse->assertRedirect();
+    }
+
+    /**
+     * Test that guests cannot access or message other guests' support tickets.
+     */
+    public function test_guest_cannot_access_or_message_others_guest_ticket(): void
+    {
+        // Guest A creates a ticket
+        $ticketA = SupportTicket::create([
+            'guest_name' => 'Guest A',
+            'guest_email' => 'guest.a@example.com',
+            'subject' => "Guest A's private issue",
+            'category' => 'technical',
+            'status' => 'open',
+        ]);
+
+        // A clean guest session (Guest B) tries to access Guest A's ticket messages
+        $getResponse = $this->get(route('support.ticket.messages', ['ticket' => $ticketA->uuid]));
+        $getResponse->assertStatus(403);
+
+        // Guest B tries to send a message to Guest A's ticket
+        $sendResponse = $this->post(route('support.ticket.message.send', ['ticket' => $ticketA->uuid]), [
+            'message' => 'Sneaky guest injection',
+        ]);
+        $sendResponse->assertStatus(403);
+    }
+
+    /**
+     * Test that a guest can access and message their own ticket when in session.
+     */
+    public function test_guest_can_access_and_message_own_ticket(): void
+    {
+        $payload = [
+            'guest_name' => 'John Guest',
+            'guest_email' => 'john@example.com',
+            'category' => 'booking',
+            'subject' => 'Guest question',
+            'message' => 'Hello I am a guest',
+        ];
+
+        // This request will create the ticket and put its UUID into Guest's session
+        $response = $this->post(route('support.ticket.store'), $payload);
+        $response->assertRedirect();
+
+        $ticket = SupportTicket::where('guest_email', 'john@example.com')->first();
+        $this->assertNotNull($ticket);
+
+        // Guest can fetch messages for their own ticket because its UUID is in their session
+        $getResponse = $this->get(route('support.ticket.messages', ['ticket' => $ticket->uuid]));
+        $getResponse->assertOk();
+        $getResponse->assertJson(['success' => true]);
+
+        // Guest can reply to their own ticket
+        $sendResponse = $this->post(route('support.ticket.message.send', ['ticket' => $ticket->uuid]), [
+            'message' => 'Follow up from same guest session',
+        ]);
+        $sendResponse->assertRedirect();
+    }
+
+    /**
+     * Test that public support endpoints are rate limited to 10 requests per minute.
+     */
+    public function test_support_endpoints_are_rate_limited(): void
+    {
+        $payload = [
+            'guest_name' => 'Spammer',
+            'guest_email' => 'spam@example.com',
+            'category' => 'general',
+            'subject' => 'Spam Subject',
+            'message' => 'Spam message content',
+        ];
+
+        // Send 10 successful/redirect requests
+        for ($i = 0; $i < 10; $i++) {
+            $response = $this->post(route('support.ticket.store'), $payload);
+            $response->assertStatus(302); // redirects on success
+        }
+
+        // The 11th request must be throttled with HTTP 429
+        $response = $this->post(route('support.ticket.store'), $payload);
+        $response->assertStatus(429);
     }
 }

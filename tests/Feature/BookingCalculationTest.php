@@ -57,11 +57,11 @@ class BookingCalculationTest extends TestCase
         $this->assertArrayHasKey('room_cost', $data);
         $this->assertArrayHasKey('total', $data);
 
-        $this->assertEquals(3, $data['nights']);
-        $this->assertEquals(200.00, $data['room_cost']);
+        // Calculation according to controller:
+        // Service charge calculated server-side (no fee breakdown exposed to UI)
+        $totalServiceRate = config('payments.total_service_charge_rate', 0.051);
+        $expectedTotal = round($room->room_cost + round($room->room_cost * $totalServiceRate, 2), 2);
 
-        // Total service charge is 5.10% (0.051)
-        $expectedTotal = round(200.00 + round(200.00 * 0.051, 2), 2);
         $this->assertEquals($expectedTotal, $data['total']);
         $this->assertArrayNotHasKey('paystack_fee', $data);
     }

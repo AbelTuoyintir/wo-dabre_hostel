@@ -384,7 +384,7 @@
                         <div class="flex flex-wrap gap-2">
                             @foreach($room->hostel->amenities as $amenity)
                                 <span class="inline-flex items-center px-2 py-1 rounded text-xs bg-gray-100 text-gray-800">
-                                    {{ $amenity }}
+                                    {{ $amenity->name }}
                                 </span>
                             @endforeach
                         </div>
