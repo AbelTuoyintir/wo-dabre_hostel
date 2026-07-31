@@ -178,8 +178,8 @@
                     </div>
 
                     <!-- Mobile Menu Button -->
-                    <button class="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition" id="mobileMenuBtn" aria-label="Toggle menu">
-                        <i class="fas fa-bars text-gray-600 text-xl"></i>
+                    <button class="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2" id="mobileMenuBtn" aria-label="Toggle menu">
+                        <i class="fas fa-bars text-gray-600 text-xl" aria-hidden="true"></i>
                     </button>
                 </div>
             </div>
@@ -191,7 +191,7 @@
                 <!-- Desktop Search Bar -->
                 <div class="hidden md:block max-w-4xl mx-auto">
                     <form action="{{ route('hostels.index') }}" method="GET" 
-                          class="flex items-center bg-white rounded-2xl shadow-sm hover:shadow-md border border-gray-200 transition-all overflow-hidden">
+                          class="flex items-center bg-white rounded-2xl shadow-sm hover:shadow-md border border-gray-200 transition-all overflow-hidden focus-within:ring-2 focus-within:ring-blue-500">
                         
                         <!-- Location Input -->
                         <div class="flex-1 px-5 py-3 border-r border-gray-100">
@@ -239,8 +239,9 @@
 
                         <!-- Search Button -->
                         <button type="submit" 
-                                class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 m-1 rounded-xl transition-colors shadow-sm hover:shadow" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">
-                            <i class="fas fa-search mr-2"></i>
+                                class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 m-1 rounded-xl transition-colors shadow-sm hover:shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2" style="font-family: 'Inter', 'Lucida Sans', sans-serif;"
+                                aria-label="Search Hostels">
+                            <i class="fas fa-search mr-2" aria-hidden="true"></i>
                             <span class="font-medium">Search</span>
                         </button>
                     </form>
