@@ -25,5 +25,10 @@ class RouteServiceProvider extends ServiceProvider
         RateLimiter::for('bookings', function (Request $request) {
             return Limit::perMinute(120)->by($request->user()?->id ?: $request->ip());
         });
+
+        // Rate limit for public support/ticket endpoints to prevent DoS and automated spam
+        RateLimiter::for('support', function (Request $request) {
+            return Limit::perMinute(10)->by($request->user()?->id ?: $request->ip());
+        });
     }
 }
