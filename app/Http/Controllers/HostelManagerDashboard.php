@@ -470,48 +470,44 @@ class HostelManagerDashboard extends Controller
             ->with('success', 'Room updated successfully.');
     }
 
-    public function showRoom(Room $room)
+
+    public function showRoom($id)
     {
-        $user = Auth::user();
-
-        // Verify manager owns this room's hostel
-        if (!$user->managedHostels()->where('hostels.id', $room->hostel_id)->exists()) {
-            abort(403);
-        }
-
-        $room->load(['hostel', 'bookings' => function($q) {
-            $q->with('user')
-              ->latest()
-              ->limit(10);
-        }]);
-
-        // Current occupants
+        $room = Room::findOrFail($id);
+        
+        // Get current occupants - bookings don't have a status column
         $currentOccupants = User::whereHas('bookings', function($q) use ($room) {
-                $q->where('room_id', $room->id)
-                  ->where('status', 'confirmed')
-                  ->where('check_in', '<=', now())
-                  ->where('check_out', '>=', now());
-            })->get();
-
-        // Upcoming bookings
+            $q->where('room_id', $room->id)
+            ->where('check_in', '<=', now())
+            ->where('check_out', '>=', now());
+        })->get();
+        
+        // Upcoming bookings - remove status filter since it doesn't exist
         $upcomingBookings = Booking::where('room_id', $room->id)
-            ->where('status', 'confirmed')
             ->where('check_in', '>', now())
             ->with('user')
             ->get();
-
+        
         // Payment history for this room
         $payments = Payment::whereHas('booking', function($q) use ($room) {
-                $q->where('room_id', $room->id);
-            })
-            ->with('booking.user')
-            ->latest()
-            ->limit(10)
-            ->get();
-
+            $q->where('room_id', $room->id);
+        })
+        ->with('booking.user') // Eager load relationships
+        ->orderBy('created_at', 'desc')
+        ->get();
+        
+        // Alternative: If you want to filter payments by status
+        // $payments = Payment::whereHas('booking', function($q) use ($room) {
+        //     $q->where('room_id', $room->id);
+        // })
+        // ->where('status', 'completed') // This will work because payments table HAS status
+        // ->with('booking.user')
+        // ->orderBy('created_at', 'desc')
+        // ->get();
+        
         return view('hostel-manager.rooms.show', compact('room', 'currentOccupants', 'upcomingBookings', 'payments'));
     }
-
+    
     public function exportRooms(Request $request)
     {
         $user = Auth::user();

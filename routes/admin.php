@@ -38,6 +38,8 @@ Route::middleware(['auth', 'admin'])
         Route::get('/rooms/export', [RoomController::class, 'export'])->name('rooms.export');
         Route::patch('/rooms/{room:uuid}/status', [RoomController::class, 'updateStatus'])->name('rooms.status');
         Route::post('/rooms/bulk-update', [RoomController::class, 'bulkUpdate'])->name('rooms.bulk-update');
+        Route::post('/rooms/upload-temp-image', [RoomController::class, 'uploadTempImage'])->name('rooms.upload-temp');
+        Route::delete('/rooms/temp-image/{tempId}', [RoomController::class, 'deleteTempImage'])->name('rooms.delete-temp');
         Route::resource('rooms', RoomController::class);
 
         // Admin Bookings Management

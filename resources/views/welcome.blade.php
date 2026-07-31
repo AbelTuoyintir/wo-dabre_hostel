@@ -52,10 +52,6 @@
                                     </div>
                                 </div>
                                 
-                                <div class="pt-0.5">
-                                    <span class="font-bold text-sm text-slate-800">₵{{ number_format($minPrice, 2) }}</span>
-                                    <span class="text-slate-600 font-light text-[11px]">per year</span>
-                                </div>
                             </div>
                         </a>
 

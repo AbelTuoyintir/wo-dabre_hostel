@@ -291,7 +291,7 @@
                 @foreach($hostel->amenities as $amenity)
                     <div class="amenity-tag bg-gray-50 rounded-xl px-4 py-3 flex items-center space-x-3 hover:bg-blue-50 cursor-default">
                         <i class="fas fa-check-circle text-green-500 text-lg"></i>
-                        <span class="text-gray-700 text-sm font-medium">{{ ucwords(str_replace('_', ' ', $amenity)) }}</span>
+                        <span class="text-gray-700 text-sm font-medium">{{ $amenity->name }}</span>
                     </div>
                 @endforeach
             </div>
