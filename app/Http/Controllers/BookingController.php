@@ -294,14 +294,14 @@ class BookingController extends Controller
         $subaccountCode = $hostelModel?->subaccount_code;
         $transactionCharge = $splitService->getTransactionChargeInPesewas($roomCost);
 
-    \Log::info('Student booking - Cost calculation:', [
-        'user_id' => $user->id,
-        'room_id' => $room->id,
-        'room_cost' => $roomCost,
-        'total_service_charge' => $totalServiceCharge,
-        'final_total' => $finalTotal,
-        'net_amount' => $netAmount
-    ]);
+        \Log::info('Student booking - Cost calculation:', [
+            'user_id' => $user->id,
+            'room_id' => $room->id,
+            'room_cost' => $roomCost,
+            'total_service_charge' => $totalServiceCharge,
+            'final_total' => $finalTotal,
+            'net_amount' => $netAmount,
+        ]);
 
         session(['pending_booking' => [
             'user_id' => $user->id,
