@@ -1,4 +1,5 @@
 <?php
+
 // app/Http/Middleware/HostelAgentMiddleware.php
 
 namespace App\Http\Middleware;
@@ -12,13 +13,11 @@ class AgentMiddleware
     /**
      * Handle an incoming request.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
      * @return mixed
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (!auth()->check()) {
+        if (! auth()->check()) {
             return redirect()->route('login')->with('error', 'Please login first.');
         }
 
@@ -38,7 +37,7 @@ class AgentMiddleware
         }
 
         // Check if agent profile exists
-        if (!$user->agent) {
+        if (! $user->agent) {
             $allowedRoutes = [
                 'agent.complete-profile',
                 'agent.complete-profile.store',
@@ -52,7 +51,7 @@ class AgentMiddleware
                 'logout',
             ];
 
-            if (!in_array($request->route()->getName(), $allowedRoutes, true)) {
+            if (! in_array($request->route()->getName(), $allowedRoutes, true)) {
                 return redirect()->route('agent.complete-profile')
                     ->with('warning', 'Please complete your agent profile first.');
             }
@@ -75,7 +74,7 @@ class AgentMiddleware
                 'logout',
             ];
 
-            if (!in_array($request->route()->getName(), $allowedRoutes, true)) {
+            if (! in_array($request->route()->getName(), $allowedRoutes, true)) {
                 return redirect()->route('agent.pending')
                     ->with('warning', 'Your account is pending approval. Please wait for admin review.');
             }
@@ -93,4 +92,3 @@ class AgentMiddleware
         return $next($request);
     }
 }
-

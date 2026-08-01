@@ -16,7 +16,7 @@ class HostelController extends Controller
      */
     public function index(Request $request)
     {
-        if (!Schema::hasTable('hostels') || !Schema::hasTable('rooms')) {
+        if (! Schema::hasTable('hostels') || ! Schema::hasTable('rooms')) {
             $hostels = new LengthAwarePaginator(collect(), 0, 12);
 
             return view('welcome', [
@@ -34,21 +34,21 @@ class HostelController extends Controller
         $query = Hostel::query()
             ->where('is_approved', true)
             ->where('status', 'active')
-            ->with(['primaryImage', 'images', 'rooms' => function($q) {
+            ->with(['primaryImage', 'images', 'rooms' => function ($q) {
                 $q->where('status', 'available')
-                  ->whereColumn('current_occupancy', '<', 'capacity');
+                    ->whereColumn('current_occupancy', '<', 'capacity');
             }]);
 
         // Filter by location
         if ($request->filled('location') && $request->location != 'all') {
-            $query->where('location', 'like', '%' . $request->location . '%');
+            $query->where('location', 'like', '%'.$request->location.'%');
         }
 
         // Filter by price range (based on room_cost which is yearly rate)
         if ($request->filled('price_range')) {
             $priceRange = $request->price_range;
 
-            $query->whereHas('rooms', function($q) use ($priceRange) {
+            $query->whereHas('rooms', function ($q) use ($priceRange) {
                 if ($priceRange == '0-2000') {
                     $q->where('room_cost', '<', 2000);
                 } elseif ($priceRange == '2000-4000') {
@@ -65,7 +65,7 @@ class HostelController extends Controller
 
         // Filter by gender preference
         if ($request->filled('gender')) {
-            $query->whereHas('rooms', function($q) use ($request) {
+            $query->whereHas('rooms', function ($q) use ($request) {
                 $q->whereIn('gender', [$request->gender, 'any']);
             });
         }
@@ -74,13 +74,13 @@ class HostelController extends Controller
 
         // Filter by room features
         if ($request->filled('furnished')) {
-            $query->whereHas('rooms', function($q) {
+            $query->whereHas('rooms', function ($q) {
                 $q->where('furnished', true);
             });
         }
 
         if ($request->filled('private_bathroom')) {
-            $query->whereHas('rooms', function($q) {
+            $query->whereHas('rooms', function ($q) {
                 $q->where('private_bathroom', true);
             });
         }
@@ -88,24 +88,23 @@ class HostelController extends Controller
         // Search by name, description, or location
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%")
-                  ->orWhere('location', 'like', "%{$search}%")
-                  ->orWhere('address', 'like', "%{$search}%");
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhere('location', 'like', "%{$search}%")
+                    ->orWhere('address', 'like', "%{$search}%");
             });
         }
-
 
         // Sorting options
         switch ($request->sort) {
             case 'price_low':
                 $query->withAvg('rooms', 'room_cost')
-                      ->orderBy('rooms_avg_room_cost');
+                    ->orderBy('rooms_avg_room_cost');
                 break;
             case 'price_high':
                 $query->withAvg('rooms', 'room_cost')
-                      ->orderByDesc('rooms_avg_room_cost');
+                    ->orderByDesc('rooms_avg_room_cost');
                 break;
             case 'rating':
                 $query->orderByDesc('rating');
@@ -115,14 +114,14 @@ class HostelController extends Controller
                 break;
             default:
                 $query->orderByDesc('is_featured')
-                      ->orderByDesc('rating')
-                      ->orderByDesc('created_at');
+                    ->orderByDesc('rating')
+                    ->orderByDesc('created_at');
         }
 
         // Get unique locations for filter dropdown
         // Guard for unit/feature tests that may not have run the full schema
-        $locations = Cache::remember('hostel_locations', 3600, function() {
-            if (!\Illuminate\Support\Facades\Schema::hasTable('hostels')) {
+        $locations = Cache::remember('hostel_locations', 3600, function () {
+            if (! Schema::hasTable('hostels')) {
                 return collect();
             }
 
@@ -140,7 +139,7 @@ class HostelController extends Controller
             $hostels = $query->paginate(12);
 
             // Transform data for frontend
-            $transformedHostels = $hostels->map(function($hostel) {
+            $transformedHostels = $hostels->map(function ($hostel) {
                 return [
                     'id' => $hostel->id,
                     'uuid' => $hostel->uuid,
@@ -154,21 +153,21 @@ class HostelController extends Controller
                         'image_path' => $hostel->primaryImage->image_path ?? $hostel->primaryImage->path,
                     ] : null,
 
-                    'images' => $hostel->images->map(function($image) {
+                    'images' => $hostel->images->map(function ($image) {
                         return ['image_path' => $image->image_path];
                     }),
                     'amenities' => $hostel->amenities,
-                    'rooms' => $hostel->rooms->map(function($room) {
+                    'rooms' => $hostel->rooms->map(function ($room) {
                         return [
                             'id' => $room->id,
                             'number' => $room->number,
                             'room_cost' => $room->room_cost,
                             'capacity' => $room->capacity,
-                            'gender' => $room->gender
+                            'gender' => $room->gender,
                         ];
                     }),
                     'min_price' => $hostel->rooms->min('room_cost'),
-                    'available_rooms_count' => $hostel->rooms->count()
+                    'available_rooms_count' => $hostel->rooms->count(),
                 ];
             });
 
@@ -180,8 +179,8 @@ class HostelController extends Controller
                     'current_page' => $hostels->currentPage(),
                     'last_page' => $hostels->lastPage(),
                     'per_page' => $hostels->perPage(),
-                    'total' => $hostels->total()
-                ]
+                    'total' => $hostels->total(),
+                ],
             ]);
         }
 
@@ -193,7 +192,7 @@ class HostelController extends Controller
 
         // Transform hostels for Blade view
 
-        $transformedHostels = $hostels->map(function($hostel) {
+        $transformedHostels = $hostels->map(function ($hostel) {
             return [
                 'id' => $hostel->id,
                 'uuid' => $hostel->uuid,
@@ -203,29 +202,28 @@ class HostelController extends Controller
                 'description' => $hostel->description,
                 'rating' => $hostel->rating,
                 'is_featured' => $hostel->is_featured,
-                    'primary_image' => $hostel->primaryImage ? [
-                        // Accept both image_path and path column names
-                        'image_path' => $hostel->primaryImage->image_path ?? $hostel->primaryImage->path,
-                    ] : null,
+                'primary_image' => $hostel->primaryImage ? [
+                    // Accept both image_path and path column names
+                    'image_path' => $hostel->primaryImage->image_path ?? $hostel->primaryImage->path,
+                ] : null,
 
-
-                'images' => $hostel->images->map(function($image) {
+                'images' => $hostel->images->map(function ($image) {
                     return ['image_path' => $image->image_path];
                 }),
                 'amenities' => $hostel->amenities,
                 'rooms' => $hostel->rooms,
                 'min_price' => $hostel->rooms->min('room_cost'),
-                'available_rooms_count' => $hostel->rooms->count()
+                'available_rooms_count' => $hostel->rooms->count(),
             ];
         });
 
         // Get statistics
         $stats = [
             'total_hostels' => Hostel::where('is_approved', true)->where('status', 'active')->count(),
-            'total_rooms' => Room::whereHas('hostel', function($q) {
+            'total_rooms' => Room::whereHas('hostel', function ($q) {
                 $q->where('is_approved', true)->where('status', 'active');
             })->where('status', 'available')->count(),
-            'locations_count' => $locations->count()
+            'locations_count' => $locations->count(),
         ];
 
         return view('welcome', compact('hostels', 'locations', 'transformedHostels', 'stats'));
@@ -238,21 +236,21 @@ class HostelController extends Controller
     {
         $hostel = $this->resolveHostelByRouteKey($id)->load([
             'images',
-            'reviews' => function($q) {
+            'reviews' => function ($q) {
                 $q->with('user')
-                  ->latest()
-                  ->limit(10);
+                    ->latest()
+                    ->limit(10);
             },
             'reviews.user',
-            'rooms' => function($q) {
+            'rooms' => function ($q) {
                 $q->withCount('bookings')
-                  ->where('status', 'available')
-                  ->whereColumn('current_occupancy', '<', 'capacity')
-                  ->orderBy('price_per_month');
-            }
+                    ->where('status', 'available')
+                    ->whereColumn('current_occupancy', '<', 'capacity')
+                    ->orderBy('price_per_month');
+            },
         ]);
 
-        if (!$hostel->is_approved || $hostel->status !== 'active') {
+        if (! $hostel->is_approved || $hostel->status !== 'active') {
             abort(404);
         }
 
@@ -287,14 +285,15 @@ class HostelController extends Controller
             ->where('id', '!=', $hostel->id)
             ->where('is_approved', true)
             ->where('status', 'active')
-            ->with(['primaryImage', 'rooms' => function($q) {
+            ->with(['primaryImage', 'rooms' => function ($q) {
                 $q->where('status', 'available')
-                  ->whereColumn('current_occupancy', '<', 'capacity');
+                    ->whereColumn('current_occupancy', '<', 'capacity');
             }])
             ->limit(3)
             ->get()
-            ->map(function($related) {
+            ->map(function ($related) {
                 $related->min_price = $related->rooms()->min('price_per_month');
+
                 return $related;
             });
 
@@ -303,7 +302,7 @@ class HostelController extends Controller
         if (auth()->check()) {
             $userBooking = auth()->user()
                 ->bookings()
-                ->whereHas('room', function($q) use ($hostel) {
+                ->whereHas('room', function ($q) use ($hostel) {
                     $q->where('hostel_id', $hostel->id);
                 })
                 ->whereIn('status', ['pending', 'confirmed'])
@@ -332,18 +331,18 @@ class HostelController extends Controller
 
         $hostels = Hostel::where('is_approved', true)
             ->where('status', 'active')
-            ->where(function($q) use ($request) {
-                $q->where('location', 'like', '%' . $request->location . '%')
-                  ->orWhere('name', 'like', '%' . $request->location . '%')
-                  ->orWhere('address', 'like', '%' . $request->location . '%');
+            ->where(function ($q) use ($request) {
+                $q->where('location', 'like', '%'.$request->location.'%')
+                    ->orWhere('name', 'like', '%'.$request->location.'%')
+                    ->orWhere('address', 'like', '%'.$request->location.'%');
             })
-            ->with(['primaryImage', 'rooms' => function($q) {
+            ->with(['primaryImage', 'rooms' => function ($q) {
                 $q->where('status', 'available')
-                  ->whereColumn('current_occupancy', '<', 'capacity');
+                    ->whereColumn('current_occupancy', '<', 'capacity');
             }])
             ->limit(5)
             ->get()
-            ->map(function($hostel) {
+            ->map(function ($hostel) {
                 return [
                     'id' => $hostel->id,
                     'uuid' => $hostel->uuid,
@@ -353,7 +352,7 @@ class HostelController extends Controller
                     'image' => $hostel->primaryImage?->url ?? $hostel->primaryImage?->path,
                     'min_price' => $hostel->rooms()->min('price_per_month'),
                     'rating' => $hostel->rating,
-                    'url' => route('hostels.guest.show', $hostel->uuid ?? $hostel->id)
+                    'url' => route('hostels.guest.show', $hostel->uuid ?? $hostel->id),
                 ];
             });
 
@@ -365,34 +364,34 @@ class HostelController extends Controller
      */
     public function getAvailableRooms(Request $request, Hostel $hostel)
     {
-        if (!$hostel->is_approved || $hostel->status !== 'active') {
+        if (! $hostel->is_approved || $hostel->status !== 'active') {
             return response()->json(['error' => 'Hostel not available'], 404);
         }
 
         $rooms = $hostel->rooms()
             ->where('status', 'available')
             ->whereColumn('current_occupancy', '<', 'capacity')
-            ->when($request->filled('gender'), function($q) use ($request) {
+            ->when($request->filled('gender'), function ($q) use ($request) {
                 $q->whereIn('gender', [$request->gender, 'any']);
             })
-            ->when($request->filled('min_price'), function($q) use ($request) {
+            ->when($request->filled('min_price'), function ($q) use ($request) {
                 $q->where('price_per_month', '>=', $request->min_price);
             })
-            ->when($request->filled('max_price'), function($q) use ($request) {
+            ->when($request->filled('max_price'), function ($q) use ($request) {
                 $q->where('price_per_month', '<=', $request->max_price);
             })
-            ->when($request->filled('capacity'), function($q) use ($request) {
+            ->when($request->filled('capacity'), function ($q) use ($request) {
                 $q->where('capacity', $request->capacity);
             })
-            ->when($request->filled('furnished'), function($q) use ($request) {
+            ->when($request->filled('furnished'), function ($q) use ($request) {
                 $q->where('furnished', $request->furnished);
             })
-            ->when($request->filled('private_bathroom'), function($q) use ($request) {
+            ->when($request->filled('private_bathroom'), function ($q) use ($request) {
                 $q->where('private_bathroom', $request->private_bathroom);
             })
             ->withCount('bookings')
             ->get()
-            ->map(function($room) {
+            ->map(function ($room) {
                 return [
                     'id' => $room->id,
                     'number' => $room->number,
@@ -405,7 +404,7 @@ class HostelController extends Controller
                     'size' => $room->size_sqm,
                     'floor' => $room->floor,
                     'window_type' => $room->window_type,
-                    'description' => $room->description
+                    'description' => $room->description,
                 ];
             });
 
@@ -417,7 +416,7 @@ class HostelController extends Controller
      */
     public function getLocations(Request $request)
     {
-        if (!Schema::hasTable('hostels')) {
+        if (! Schema::hasTable('hostels')) {
             return response()->json([]);
         }
 
@@ -427,7 +426,7 @@ class HostelController extends Controller
             ->distinct();
 
         if ($request->filled('search')) {
-            $query->where('location', 'like', '%' . $request->search . '%');
+            $query->where('location', 'like', '%'.$request->search.'%');
         }
 
         $locations = $query->orderBy('location')
@@ -438,65 +437,66 @@ class HostelController extends Controller
     }
 
     /**
- * Display the specified hostel for guests
- */
-   public function guestShow($id)
-{
-    $hostel = $this->resolveHostelByRouteKey($id)->load([
-        'images',        // For hostel images
-        'primaryImage',
-        'rooms' => function($q) {
-            $q->where('status', 'available')
-              ->where(function($query) {
-                  $query->whereNull('current_occupancy')
-                        ->orWhereColumn('current_occupancy', '<', 'capacity');
-              })
-              ->with('roomImages'); // Load room images using the new relationship
+     * Display the specified hostel for guests
+     */
+    public function guestShow($id)
+    {
+        $hostel = $this->resolveHostelByRouteKey($id)->load([
+            'images',        // For hostel images
+            'primaryImage',
+            'rooms' => function ($q) {
+                $q->where('status', 'available')
+                    ->where(function ($query) {
+                        $query->whereNull('current_occupancy')
+                            ->orWhereColumn('current_occupancy', '<', 'capacity');
+                    })
+                    ->with('roomImages'); // Load room images using the new relationship
+            },
+        ]);
+
+        if (! $hostel->is_approved || $hostel->status !== 'active') {
+            abort(404);
         }
-    ]);
 
-    if (!$hostel->is_approved || $hostel->status !== 'active') {
-        abort(404);
-    }
+        // Get available rooms
+        $availableRooms = $hostel->rooms;
 
-    // Get available rooms
-    $availableRooms = $hostel->rooms;
+        // Calculate min price
+        $hostel->min_price = $availableRooms->min('room_cost');
 
-    // Calculate min price
-    $hostel->min_price = $availableRooms->min('room_cost');
+        // show the number of available space for each room.
+        // $availableRooms = Room::where()
 
-    //show the number of available space for each room.
-    // $availableRooms = Room::where()
+        // Get similar hostels in same location
+        $similarHostels = Hostel::where('is_approved', true)
+            ->where('status', 'active')
+            ->where('location', $hostel->location)
+            ->where('id', '!=', $hostel->id)
+            ->with(['primaryImage'])
+            ->limit(3)
+            ->get()
+            ->map(function ($similar) {
+                $similar->min_price = $similar->rooms()
+                    ->where('status', 'available')
+                    ->whereColumn('current_occupancy', '<', 'capacity')
+                    ->min('room_cost');
 
-    // Get similar hostels in same location
-    $similarHostels = Hostel::where('is_approved', true)
-        ->where('status', 'active')
-        ->where('location', $hostel->location)
-        ->where('id', '!=', $hostel->id)
-        ->with(['primaryImage'])
-        ->limit(3)
-        ->get()
-        ->map(function($similar) {
-            $similar->min_price = $similar->rooms()
-                ->where('status', 'available')
-                ->whereColumn('current_occupancy', '<', 'capacity')
-                ->min('room_cost');
-            return $similar;
+                return $similar;
+            });
+
+        // Get locations for footer
+        $locations = Cache::remember('hostel_locations', 3600, function () {
+            return Hostel::where('is_approved', true)
+                ->where('status', 'active')
+                ->select('location')
+                ->distinct()
+                ->orderBy('location')
+                ->pluck('location')
+                ->take(5);
         });
 
-    // Get locations for footer
-    $locations = Cache::remember('hostel_locations', 3600, function() {
-        return Hostel::where('is_approved', true)
-            ->where('status', 'active')
-            ->select('location')
-            ->distinct()
-            ->orderBy('location')
-            ->pluck('location')
-            ->take(5);
-    });
-
-    return view('admin.hostels.guestShow', compact('hostel', 'availableRooms', 'similarHostels', 'locations'));
-}
+        return view('admin.hostels.guestShow', compact('hostel', 'availableRooms', 'similarHostels', 'locations'));
+    }
 
     /**
      * Compare selected hostels
@@ -561,20 +561,20 @@ class HostelController extends Controller
      */
     public function rooms(Hostel $hostel, Request $request)
     {
-        if (!$hostel->is_approved || $hostel->status !== 'active') {
+        if (! $hostel->is_approved || $hostel->status !== 'active') {
             abort(404);
         }
 
         $rooms = $hostel->rooms()
             ->where('status', 'available')
             ->whereColumn('current_occupancy', '<', 'capacity')
-            ->when($request->filled('gender'), function($q) use ($request) {
+            ->when($request->filled('gender'), function ($q) use ($request) {
                 $q->whereIn('gender', [$request->gender, 'any']);
             })
-            ->when($request->filled('min_price'), function($q) use ($request) {
+            ->when($request->filled('min_price'), function ($q) use ($request) {
                 $q->where('price_per_month', '>=', $request->min_price);
             })
-            ->when($request->filled('max_price'), function($q) use ($request) {
+            ->when($request->filled('max_price'), function ($q) use ($request) {
                 $q->where('price_per_month', '<=', $request->max_price);
             })
             ->orderBy('price_per_month')
@@ -588,7 +588,7 @@ class HostelController extends Controller
      */
     public function amenities(Hostel $hostel)
     {
-        if (!$hostel->is_approved || $hostel->status !== 'active') {
+        if (! $hostel->is_approved || $hostel->status !== 'active') {
             abort(404);
         }
 
@@ -606,24 +606,24 @@ class HostelController extends Controller
     }
 
     public function seedAmenities()
-{
-    $amenities = [
-        ['name' => 'Water', 'icon' => 'droplet'],
-        ['name' => 'Electricity', 'icon' => 'bolt'],
-        ['name' => 'Kitchenette', 'icon' => 'utensils'],
-        ['name' => 'Parking Area', 'icon' => 'parking'],
-        ['name' => 'Standby Generator', 'icon' => 'generator'],
-        ['name' => 'DSTV', 'icon' => 'tv'],
-        ['name' => 'Internet', 'icon' => 'wifi'],
-    ];
+    {
+        $amenities = [
+            ['name' => 'Water', 'icon' => 'droplet'],
+            ['name' => 'Electricity', 'icon' => 'bolt'],
+            ['name' => 'Kitchenette', 'icon' => 'utensils'],
+            ['name' => 'Parking Area', 'icon' => 'parking'],
+            ['name' => 'Standby Generator', 'icon' => 'generator'],
+            ['name' => 'DSTV', 'icon' => 'tv'],
+            ['name' => 'Internet', 'icon' => 'wifi'],
+        ];
 
-    foreach ($amenities as $amenity) {
-        Amenity::firstOrCreate(
-            ['name' => $amenity['name']],
-            ['icon' => $amenity['icon']]
-        );
+        foreach ($amenities as $amenity) {
+            Amenity::firstOrCreate(
+                ['name' => $amenity['name']],
+                ['icon' => $amenity['icon']]
+            );
+        }
+
+        return redirect()->back()->with('success', 'Amenities seeded successfully!');
     }
-
-    return redirect()->back()->with('success', 'Amenities seeded successfully!');
-}
 }

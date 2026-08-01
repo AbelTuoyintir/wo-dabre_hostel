@@ -2,15 +2,15 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Http\Controllers\BookingController;
+use App\Models\Booking;
 use App\Models\Hostel;
+use App\Models\Payment;
 use App\Models\Room;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
-use App\Models\Booking;
-use App\Models\Payment;
-use App\Http\Controllers\BookingController;
+use Tests\TestCase;
 use Unicodeveloper\Paystack\Facades\Paystack;
 
 class PaymentProcessingTest extends TestCase
@@ -24,7 +24,7 @@ class PaymentProcessingTest extends TestCase
             'name' => 'Test Hostel',
             'location' => 'amamoma',
             'address' => '123 Test Ave',
-            'email' => 'hostel@example.com'
+            'email' => 'hostel@example.com',
         ]);
 
         $room = Room::create([
@@ -74,7 +74,7 @@ class PaymentProcessingTest extends TestCase
 
         Mail::fake();
 
-        $controller = new BookingController();
+        $controller = new BookingController;
 
         // Call the callback handler
         $response = $controller->handlePaymentCallback('paystack');

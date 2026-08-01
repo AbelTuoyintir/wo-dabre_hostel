@@ -14,22 +14,22 @@ return new class extends Migration
         Schema::table('hostels', function (Blueprint $table) {
             // Paystack subaccount details for split payments
             $table->string('subaccount_code')->nullable()->after('manager_id')
-                  ->comment('Paystack subaccount code (e.g., ACCT_xxxxx)');
+                ->comment('Paystack subaccount code (e.g., ACCT_xxxxx)');
 
             $table->string('bank_name')->nullable()->after('subaccount_code')
-                  ->comment('Name of the settlement bank');
+                ->comment('Name of the settlement bank');
 
             $table->string('bank_code')->nullable()->after('bank_name')
-                  ->comment('Paystack bank code for the settlement bank');
+                ->comment('Paystack bank code for the settlement bank');
 
             $table->string('account_name')->nullable()->after('bank_code')
-                  ->comment('Name on the bank account');
+                ->comment('Name on the bank account');
 
             $table->string('account_number')->nullable()->after('account_name')
-                  ->comment('Bank account number for settlements');
+                ->comment('Bank account number for settlements');
 
             $table->string('subaccount_status')->default('pending')->after('account_number')
-                  ->comment('Status: pending, active, suspended');
+                ->comment('Status: pending, active, suspended');
         });
     }
 
@@ -50,4 +50,3 @@ return new class extends Migration
         });
     }
 };
-

@@ -35,5 +35,3 @@ return [
     // Student-specific additional percentage fee (used in student flow)
     'student_fee_percentage' => env('PAYMENTS_STUDENT_FEE_PERCENTAGE', 0.02),
 ];
-
-

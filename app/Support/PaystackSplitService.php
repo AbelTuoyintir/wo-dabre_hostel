@@ -43,7 +43,7 @@ class PaystackSplitService
     protected function headers(): array
     {
         return [
-            'Authorization' => 'Bearer ' . $this->secretKey,
+            'Authorization' => 'Bearer '.$this->secretKey,
             'Content-Type' => 'application/json',
             'Accept' => 'application/json',
         ];
@@ -52,14 +52,13 @@ class PaystackSplitService
     /**
      * Create a Paystack subaccount for a hostel/SRC.
      *
-     * @param Hostel $hostel
-     * @param array  $bankData  Must contain: business_name, bank_code, account_number, account_name
-     * @return array  Response from Paystack API
+     * @param  array  $bankData  Must contain: business_name, bank_code, account_number, account_name
+     * @return array Response from Paystack API
      */
     public function createSubaccount(Hostel $hostel, array $bankData): array
     {
         $payload = [
-            'business_name' => $bankData['business_name'] ?? $hostel->name . ' (SRC)',
+            'business_name' => $bankData['business_name'] ?? $hostel->name.' (SRC)',
             'settlement_bank' => $bankData['bank_code'],
             'account_number' => $bankData['account_number'],
             'primary_contact_email' => $hostel->email ?? '',
@@ -80,11 +79,11 @@ class PaystackSplitService
         ]);
 
         $response = Http::withHeaders($this->headers())
-            ->post($this->baseUrl . '/subaccount', $payload);
+            ->post($this->baseUrl.'/subaccount', $payload);
 
         $result = $response->json();
 
-        if (!$response->successful() || !($result['status'] ?? false)) {
+        if (! $response->successful() || ! ($result['status'] ?? false)) {
             Log::error('PaystackSplitService: Failed to create subaccount', [
                 'hostel_id' => $hostel->id,
                 'response' => $result,
@@ -113,15 +112,13 @@ class PaystackSplitService
     /**
      * Update an existing subaccount for a hostel.
      *
-     * @param Hostel $hostel
-     * @param array  $bankData  Optional fields to update
-     * @return array
+     * @param  array  $bankData  Optional fields to update
      */
     public function updateSubaccount(Hostel $hostel, array $bankData): array
     {
         $subaccountCode = $hostel->subaccount_code;
 
-        if (!$subaccountCode) {
+        if (! $subaccountCode) {
             return [
                 'success' => false,
                 'message' => 'No subaccount code found for this hostel',
@@ -149,11 +146,11 @@ class PaystackSplitService
         ]);
 
         $response = Http::withHeaders($this->headers())
-            ->put($this->baseUrl . '/subaccount/' . $subaccountCode, $payload);
+            ->put($this->baseUrl.'/subaccount/'.$subaccountCode, $payload);
 
         $result = $response->json();
 
-        if (!$response->successful() || !($result['status'] ?? false)) {
+        if (! $response->successful() || ! ($result['status'] ?? false)) {
             Log::error('PaystackSplitService: Failed to update subaccount', [
                 'hostel_id' => $hostel->id,
                 'response' => $result,
@@ -175,18 +172,15 @@ class PaystackSplitService
 
     /**
      * Fetch subaccount details from Paystack.
-     *
-     * @param string $subaccountCode
-     * @return array
      */
     public function fetchSubaccount(string $subaccountCode): array
     {
         $response = Http::withHeaders($this->headers())
-            ->get($this->baseUrl . '/subaccount/' . $subaccountCode);
+            ->get($this->baseUrl.'/subaccount/'.$subaccountCode);
 
         $result = $response->json();
 
-        if (!$response->successful() || !($result['status'] ?? false)) {
+        if (! $response->successful() || ! ($result['status'] ?? false)) {
             return [
                 'success' => false,
                 'message' => $result['message'] ?? 'Failed to fetch subaccount',
@@ -203,22 +197,18 @@ class PaystackSplitService
 
     /**
      * Verify bank account details with Paystack.
-     *
-     * @param string $accountNumber
-     * @param string $bankCode
-     * @return array
      */
     public function verifyBankAccount(string $accountNumber, string $bankCode): array
     {
         $response = Http::withHeaders($this->headers())
-            ->get($this->baseUrl . '/bank/resolve', [
+            ->get($this->baseUrl.'/bank/resolve', [
                 'account_number' => $accountNumber,
                 'bank_code' => $bankCode,
             ]);
 
         $result = $response->json();
 
-        if (!$response->successful() || !($result['status'] ?? false)) {
+        if (! $response->successful() || ! ($result['status'] ?? false)) {
             return [
                 'success' => false,
                 'message' => $result['message'] ?? 'Failed to verify bank account',
@@ -236,13 +226,12 @@ class PaystackSplitService
     /**
      * Get list of supported banks from Paystack.
      *
-     * @param string $country  Country code (e.g., 'ghana')
-     * @return array
+     * @param  string  $country  Country code (e.g., 'ghana')
      */
     public function getBanks(string $country = 'ghana'): array
     {
         $response = Http::withHeaders($this->headers())
-            ->get($this->baseUrl . '/bank', [
+            ->get($this->baseUrl.'/bank', [
                 'country' => $country,
                 'use_cursor' => false,
                 'perPage' => 100,
@@ -250,7 +239,7 @@ class PaystackSplitService
 
         $result = $response->json();
 
-        if (!$response->successful() || !($result['status'] ?? false)) {
+        if (! $response->successful() || ! ($result['status'] ?? false)) {
             Log::error('PaystackSplitService: Failed to fetch banks', [
                 'country' => $country,
                 'response' => $result,
@@ -275,8 +264,7 @@ class PaystackSplitService
      *
      * Total = room_cost × (1 + platform_fee_rate + paystack_buffer_rate + banking_charge_rate)
      *
-     * @param float $roomCost
-     * @return array  ['total' => float, 'platform_fee' => float, 'paystack_buffer' => float, 'banking_charge' => float]
+     * @return array ['total' => float, 'platform_fee' => float, 'paystack_buffer' => float, 'banking_charge' => float]
      */
     public function calculateTotal(float $roomCost): array
     {
@@ -304,13 +292,12 @@ class PaystackSplitService
      * This is the amount the platform retains from the transaction.
      * Paystack will settle the remaining (room_cost + paystack_buffer + banking_charge) to the subaccount.
      *
-     * @param float $roomCost
-     * @return int  Amount in pesewas (GHS × 100)
+     * @return int Amount in pesewas (GHS × 100)
      */
     public function getTransactionChargeInPesewas(float $roomCost): int
     {
         $platformFeeRate = Config::get('payments.platform_fee_rate', 0.028);
+
         return (int) round($roomCost * $platformFeeRate * 100);
     }
 }
-

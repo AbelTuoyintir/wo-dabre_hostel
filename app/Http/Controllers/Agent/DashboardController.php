@@ -1,11 +1,11 @@
 <?php
+
 // app/Http/Controllers/Agent/DashboardController.php
+
 namespace App\Http\Controllers\Agent;
 
 use App\Http\Controllers\Controller;
-use App\Models\HostelAgent;
 use App\Models\Hostel;
-use App\Models\Room;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
@@ -22,7 +22,7 @@ class DashboardController extends Controller
     {
         $agent = Auth::user()->agent;
         $hostelQuery = $this->getAgentHostelQuery($agent);
-        
+
         $stats = [
             'total_hostels' => $agent->total_hostels_added ?? 0,
             'total_rooms' => $agent->total_rooms_added ?? 0,
@@ -33,7 +33,7 @@ class DashboardController extends Controller
             'pending_withdrawals' => $agent->withdrawals()->where('status', 'pending')->sum('amount') ?? 0,
             'recent_commissions' => $agent->commissions()->latest()->take(5)->get(),
             'recent_withdrawals' => $agent->withdrawals()->latest()->take(5)->get(),
-            'chart_data' => $this->getCommissionChartData($agent)
+            'chart_data' => $this->getCommissionChartData($agent),
         ];
 
         return view('agent.dashboard', compact('stats', 'agent'));
@@ -67,28 +67,29 @@ class DashboardController extends Controller
                 ->whereYear('created_at', $month->year)
                 ->whereMonth('created_at', $month->month)
                 ->sum('amount');
-            
+
             $months->push([
                 'month' => $month->format('M'),
-                'commission' => $total
+                'commission' => $total,
             ]);
         }
+
         return $months;
     }
 
     public function commissionHistory(Request $request)
     {
         $agent = Auth::user()->agent;
-        
+
         $commissions = $agent->commissions()
             ->with(['hostel', 'booking'])
-            ->when($request->type, function($query, $type) {
+            ->when($request->type, function ($query, $type) {
                 return $query->where('type', $type);
             })
-            ->when($request->date_from, function($query, $date) {
+            ->when($request->date_from, function ($query, $date) {
                 return $query->whereDate('created_at', '>=', $date);
             })
-            ->when($request->date_to, function($query, $date) {
+            ->when($request->date_to, function ($query, $date) {
                 return $query->whereDate('created_at', '<=', $date);
             })
             ->latest()
@@ -110,7 +111,7 @@ class DashboardController extends Controller
         $agent = Auth::user()->agent;
 
         $withdrawals = $agent->withdrawals()
-            ->when($request->status, function($query, $status) {
+            ->when($request->status, function ($query, $status) {
                 return $query->where('status', $status);
             })
             ->latest()
@@ -130,15 +131,14 @@ class DashboardController extends Controller
         return view('agent.withdrawals.request', compact('agent'));
     }
 
-
     public function requestWithdrawal(Request $request)
     {
         $request->validate([
-            'amount' => 'required|numeric|min:50|max:' . Auth::user()->agent->available_balance,
+            'amount' => 'required|numeric|min:50|max:'.Auth::user()->agent->available_balance,
             'payment_method' => 'required|in:mobile_money,bank_transfer,paypal',
             'account_number' => 'required|string',
             'account_name' => 'required|string',
-            'bank_name' => 'required_if:payment_method,bank_transfer|nullable|string'
+            'bank_name' => 'required_if:payment_method,bank_transfer|nullable|string',
         ]);
 
         $agent = Auth::user()->agent;
@@ -152,7 +152,7 @@ class DashboardController extends Controller
                 $request->bank_name
             );
 
-            return redirect()->route('agent.withdrawals')->with('success', 
+            return redirect()->route('agent.withdrawals')->with('success',
                 'Withdrawal request submitted successfully!'
             );
 

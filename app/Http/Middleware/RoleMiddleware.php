@@ -10,14 +10,14 @@ class RoleMiddleware
 {
     public function handle(Request $request, Closure $next, ...$roles)
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return redirect()->route('login');
         }
 
         $user = Auth::user();
-        
-        if (!in_array($user->role, $roles)) {
-            abort(403, 'Unauthorized. Required role: ' . implode(', ', $roles));
+
+        if (! in_array($user->role, $roles)) {
+            abort(403, 'Unauthorized. Required role: '.implode(', ', $roles));
         }
 
         return $next($request);

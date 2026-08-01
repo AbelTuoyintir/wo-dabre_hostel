@@ -19,7 +19,6 @@ class AgentWithdrawal extends Model
         'status',
         'amount',
 
-
         // Payment details
         'payment_method',
         'account_number',
@@ -45,7 +44,7 @@ class AgentWithdrawal extends Model
         static::creating(function (self $withdrawal) {
             // Compatibility: if tests provide agent_id, copy it into hostel_agent_id.
             // Use "creating" so the insert statement receives hostel_agent_id.
-            if (empty($withdrawal->hostel_agent_id) && !empty($withdrawal->agent_id)) {
+            if (empty($withdrawal->hostel_agent_id) && ! empty($withdrawal->agent_id)) {
                 $withdrawal->hostel_agent_id = $withdrawal->agent_id;
             }
             unset($withdrawal->agent_id);
@@ -53,7 +52,7 @@ class AgentWithdrawal extends Model
         });
 
         static::updating(function (self $withdrawal) {
-            if (empty($withdrawal->hostel_agent_id) && !empty($withdrawal->agent_id)) {
+            if (empty($withdrawal->hostel_agent_id) && ! empty($withdrawal->agent_id)) {
                 $withdrawal->hostel_agent_id = $withdrawal->agent_id;
             }
             unset($withdrawal->agent_id);
@@ -61,11 +60,8 @@ class AgentWithdrawal extends Model
         });
     }
 
-
     public function agent(): BelongsTo
     {
         return $this->belongsTo(HostelAgent::class, 'hostel_agent_id');
     }
 }
-
-

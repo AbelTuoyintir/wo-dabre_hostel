@@ -1,11 +1,11 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\AgentManagementController;
 use App\Http\Controllers\Admin\HostelController;
 use App\Http\Controllers\RoomController;
-use App\Http\Controllers\Admin\AgentManagementController;
 use App\Http\Controllers\SupportController;
+use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'admin'])
     ->prefix('admin')
@@ -68,7 +68,7 @@ Route::middleware(['auth', 'admin'])
         Route::get('/agents/{id}', [AgentManagementController::class, 'show'])->name('agents.show');
         Route::get('/agents/{id}/commissions', [AgentManagementController::class, 'commissions'])->name('agents.commissions');
         Route::get('/agents/{id}/withdrawals', [AgentManagementController::class, 'withdrawals'])->name('agents.withdrawals');
-        
+
         Route::post('/agents/{id}/approve', [AgentManagementController::class, 'approve'])->name('agents.approve');
         Route::post('/agents/{id}/suspend', [AgentManagementController::class, 'suspend'])->name('agents.suspend');
         Route::post('/agents/{id}/activate', [AgentManagementController::class, 'activate'])->name('agents.activate');

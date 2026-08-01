@@ -1,4 +1,5 @@
 <?php
+
 // app/Http/Middleware/StudentMiddleware.php
 
 namespace App\Http\Middleware;
@@ -10,7 +11,7 @@ class StudentMiddleware
 {
     public function handle(Request $request, Closure $next)
     {
-        if (!auth()->check()) {
+        if (! auth()->check()) {
             return redirect()->route('login')->with('error', 'Please login first.');
         }
 
@@ -25,7 +26,7 @@ class StudentMiddleware
             } elseif ($user->role === 'hostel_agent') {
                 return redirect()->route('agent.dashboard');
             }
-            
+
             return redirect()->route('hostels.index')->with('error', 'Student access only.');
         }
 

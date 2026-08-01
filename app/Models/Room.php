@@ -78,15 +78,20 @@ class Room extends Model
      * Status constants (avoid magic strings)
      */
     public const STATUS_FULL = 'full';
+
     public const STATUS_AVAILABLE = 'available';
+
     public const STATUS_UNAVAILABLE = 'unavailable';
+
     public const STATUS_INACTIVE = 'inactive';
 
     /**
      * Gender constants
      */
     public const GENDER_MALE = 'male';
+
     public const GENDER_FEMALE = 'female';
+
     public const GENDER_ANY = 'any';
 
     /**
@@ -94,16 +99,17 @@ class Room extends Model
      */
     public function occupancyRate()
     {
-        if (!$this->capacity || $this->capacity == 0) {
+        if (! $this->capacity || $this->capacity == 0) {
             return 0;
         }
+
         return round(($this->current_occupancy ?? 0) / $this->capacity * 100);
     }
 
     /**
      * Get available spaces in room
      */
-   public function isAvailable()
+    public function isAvailable()
     {
         return $this->status === 'available'
             && $this->current_occupancy < $this->capacity;
@@ -132,10 +138,11 @@ class Room extends Model
     {
         return $this->attributes['room_cost'] ?? null;
     }
+
     /**
- * Get the images for the room
-    */
-      public function roomImages()
+     * Get the images for the room
+     */
+    public function roomImages()
     {
         return $this->hasMany(HostelImage::class)
             ->where('type', 'room')

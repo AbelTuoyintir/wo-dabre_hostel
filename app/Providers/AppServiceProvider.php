@@ -25,6 +25,6 @@ class AppServiceProvider extends ServiceProvider
             require_once $helpers;
         }
 
-        Blade::directive('image', fn($expression) => "<?php echo image_url($expression); ?>");
+        Blade::directive('image', fn ($expression) => "<?php echo image_url($expression); ?>");
     }
 }

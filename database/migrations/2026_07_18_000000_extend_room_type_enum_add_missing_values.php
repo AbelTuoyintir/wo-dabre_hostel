@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (!Schema::hasTable('rooms')) {
+        if (! Schema::hasTable('rooms')) {
             return;
         }
 
@@ -141,4 +141,3 @@ return new class extends Migration
         }
     }
 };
-

@@ -2,13 +2,13 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Http\Controllers\BookingController;
 use App\Models\Hostel;
 use App\Models\Room;
-use App\Http\Controllers\BookingController;
-use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
+use Tests\TestCase;
 
 class BookingCalculationTest extends TestCase
 {
@@ -20,7 +20,7 @@ class BookingCalculationTest extends TestCase
             'name' => 'Test Hostel',
             'location' => 'amamoma',
             'address' => '123 Test Ave',
-            'email' => 'hostel@example.com'
+            'email' => 'hostel@example.com',
         ]);
 
         $room = Room::create([
@@ -44,7 +44,7 @@ class BookingCalculationTest extends TestCase
             'room_cost' => 200.00,
         ]);
 
-        $controller = new BookingController();
+        $controller = new BookingController;
         $response = $controller->calculate($request);
 
         $this->assertTrue($response->getStatusCode() === 200);

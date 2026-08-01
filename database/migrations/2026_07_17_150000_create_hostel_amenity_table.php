@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (!Schema::hasTable('hostel_amenity')) {
+        if (! Schema::hasTable('hostel_amenity')) {
             Schema::create('hostel_amenity', function (Blueprint $table) {
                 $table->id();
 
@@ -21,7 +21,7 @@ return new class extends Migration
                 $table->unique(['hostel_id', 'amenity_id']);
             });
         }
-        
+
     }
 
     public function down(): void

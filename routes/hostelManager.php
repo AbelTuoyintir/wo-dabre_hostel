@@ -1,12 +1,7 @@
 <?php
-use Illuminate\Support\Facades\Route;
+
 use App\Http\Controllers\HostelManagerDashboard;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\RoomController;
-use App\Http\Controllers\BookingController;
-use App\Http\Controllers\PaymentController;
-use App\Http\Controllers\ComplaintController;
-use App\Http\Controllers\ReportController;
+use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'hostel.manager'])->prefix('hostel-manager')->name('hostel-manager.')->group(function () {
     // Dashboard

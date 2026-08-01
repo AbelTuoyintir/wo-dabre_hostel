@@ -4,17 +4,17 @@ namespace App\Models;
 
 use App\Models\Concerns\HasRouteUuid;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Models\HostelAgent;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasRouteUuid;
+    /** @use HasFactory<UserFactory> */
+    use HasFactory, HasRouteUuid, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -56,7 +56,6 @@ class User extends Authenticatable
     {
         return $this->hasOne(HostelAgent::class, 'user_id');
     }
-
 
     public function isHostelAgent()
     {

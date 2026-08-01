@@ -2,23 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
+use App\Mail\PaymentReceiptMail;
 use App\Models\Booking;
-use App\Models\Review;
+use App\Models\Complaint;
 use App\Models\Hostel;
+use App\Models\Payment;
+use App\Models\Review;
 use App\Models\Room;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
-use Carbon\Carbon;
-use App\Models\Payment;
-use App\Models\Complaint;
-use Unicodeveloper\Paystack\Facades\Paystack;
-use App\Mail\PaymentReceiptMail;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Hash;
-
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
+use Unicodeveloper\Paystack\Facades\Paystack;
 
 class StudentController extends Controller
 {
@@ -41,7 +38,7 @@ class StudentController extends Controller
                 ->where('booking_status', 'confirmed')
                 ->where('check_out_date', '>=', now())
                 ->count(),
-            'total_paid' => Payment::whereHas('booking', fn($q) => $q->where('user_id', $user->id))
+            'total_paid' => Payment::whereHas('booking', fn ($q) => $q->where('user_id', $user->id))
                 ->where('status', 'completed')
                 ->sum('amount'),
             'complaints' => Complaint::where('user_id', $user->id)->count(),
@@ -67,20 +64,21 @@ class StudentController extends Controller
         // Get recommended hostels (featured or highly rated)
         $recommendedHostels = Hostel::where('is_approved', true)
             ->where('status', 'active')
-            ->whereHas('rooms', function($q) {
+            ->whereHas('rooms', function ($q) {
                 $q->where('status', 'available')
-                  ->whereColumn('current_occupancy', '<', 'capacity');
+                    ->whereColumn('current_occupancy', '<', 'capacity');
             })
             ->with(['primaryImage'])
             ->orderByDesc('is_featured')
             ->orderByDesc('rating')
             ->limit(4)
             ->get()
-            ->map(function($hostel) {
+            ->map(function ($hostel) {
                 $hostel->min_price = $hostel->rooms()
                     ->where('status', 'available')
                     ->whereColumn('current_occupancy', '<', 'capacity')
                     ->min('price_per_month');
+
                 return $hostel;
             });
 
@@ -90,7 +88,6 @@ class StudentController extends Controller
     /**
      * Show fee payment form
      */
-
     public function showPaymentForm()
     {
         $user = Auth::user();
@@ -112,7 +109,7 @@ class StudentController extends Controller
 
         try {
             // Generate a unique reference
-            $reference = 'FEE-' . $user->id . '-' . time() . '-' . Str::random(4);
+            $reference = 'FEE-'.$user->id.'-'.time().'-'.Str::random(4);
 
             $paymentData = [
                 'user_id' => $user->id,
@@ -135,12 +132,12 @@ class StudentController extends Controller
             return Paystack::getAuthorizationUrl($paymentData)->redirectNow();
 
         } catch (\Exception $e) {
-            \Log::error('Fee payment initialization failed: ' . $e->getMessage());
+            \Log::error('Fee payment initialization failed: '.$e->getMessage());
+
             return redirect()->route('student.payment')
                 ->with('error', 'Unable to initialize payment. Please try again.');
         }
     }
-
 
     /**
      * Handle fee payment callback from Paystack
@@ -159,6 +156,7 @@ class StudentController extends Controller
                 $existingPayment = Payment::where('reference', $paymentDetails['data']['reference'])->first();
                 if ($existingPayment) {
                     \Log::warning('Fee payment already processed', ['reference' => $paymentDetails['data']['reference']]);
+
                     return redirect()->route('student.payment')
                         ->with('info', 'This payment has already been processed.');
                 }
@@ -195,21 +193,22 @@ class StudentController extends Controller
                 // SEND EMAIL RECEIPT TO USER
                 try {
                     Mail::to($user->email)->send(new PaymentReceiptMail($payment, $user));
-                    \Log::info('Payment receipt email sent to ' . $user->email);
+                    \Log::info('Payment receipt email sent to '.$user->email);
                 } catch (\Exception $mailException) {
                     // Log email error but don't stop the process
-                    \Log::error('Failed to send payment receipt email: ' . $mailException->getMessage());
+                    \Log::error('Failed to send payment receipt email: '.$mailException->getMessage());
                 }
 
                 return redirect()->route('student.payment')
-                    ->with('success', 'Payment of ₵' . number_format($paymentDetails['data']['amount'] / 100, 2) . ' was successful! Receipt #' . $payment->id . ' has been sent to your email.');
+                    ->with('success', 'Payment of ₵'.number_format($paymentDetails['data']['amount'] / 100, 2).' was successful! Receipt #'.$payment->id.' has been sent to your email.');
             }
 
             return redirect()->route('student.payment')
                 ->with('error', 'Payment was not successful. Please try again.');
 
         } catch (\Exception $e) {
-            \Log::error('Payment callback failed: ' . $e->getMessage());
+            \Log::error('Payment callback failed: '.$e->getMessage());
+
             return redirect()->route('student.payment')
                 ->with('error', 'Unable to verify payment. Please contact support.');
         }
@@ -262,12 +261,12 @@ class StudentController extends Controller
         $currentStatus = $booking->booking_status ?? $booking->status ?? 'pending';
 
         // Only allow cancellation if booking is still pending or confirmed
-        if (!in_array($currentStatus, ['pending', 'confirmed'])) {
+        if (! in_array($currentStatus, ['pending', 'confirmed'])) {
             return back()->with('error', 'Cannot cancel booking at this stage.');
         }
 
         // Check if booking has a payment
-        if (!$booking->payment || $booking->payment->status !== 'completed') {
+        if (! $booking->payment || $booking->payment->status !== 'completed') {
             return back()->with('error', 'No payment found for this booking.');
         }
 
@@ -287,7 +286,7 @@ class StudentController extends Controller
                 'transaction' => $booking->payment->transaction_id,
                 'amount' => round($refundAmount * 100), // Convert GHS to pesewas
                 'currency' => 'GHS',
-                'reason' => $request->cancellation_reason
+                'reason' => $request->cancellation_reason,
             ]);
 
             // Update booking status
@@ -326,13 +325,13 @@ class StudentController extends Controller
             DB::commit();
 
             return back()->with('success',
-                "Booking cancelled successfully. ₵" . number_format($refundAmount, 2) .
-                " will be refunded to your original payment method within 3-5 business days."
+                'Booking cancelled successfully. ₵'.number_format($refundAmount, 2).
+                ' will be refunded to your original payment method within 3-5 business days.'
             );
 
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error('Booking cancellation failed: ' . $e->getMessage());
+            \Log::error('Booking cancellation failed: '.$e->getMessage());
 
             return back()->with('error', 'Failed to cancel booking. Please contact support.');
         }
@@ -376,7 +375,7 @@ class StudentController extends Controller
 
             return view('student.reviews.create', [
                 'hostel' => $booking->room->hostel,
-                'booking' => $booking
+                'booking' => $booking,
             ]);
         }
 
@@ -391,7 +390,7 @@ class StudentController extends Controller
                 ->where('booking_status', 'checked_out')
                 ->exists();
 
-            if (!$hasCompletedBooking) {
+            if (! $hasCompletedBooking) {
                 return redirect()->route('student.reviews')
                     ->with('error', 'You can only review hostels you have stayed at.');
             }
@@ -408,7 +407,7 @@ class StudentController extends Controller
 
             return view('student.reviews.create', [
                 'hostel' => $hostel,
-                'booking' => null
+                'booking' => null,
             ]);
         }
 
@@ -447,7 +446,7 @@ class StudentController extends Controller
             ->whereIn('booking_status', ['checked_out', 'completed'])
             ->exists();
 
-        if (!$hasCompletedBooking) {
+        if (! $hasCompletedBooking) {
             return back()->with('error', 'You can only review hostels you have stayed at.');
         }
 
@@ -591,15 +590,15 @@ class StudentController extends Controller
     /**
      * Browse available hostels (with price in GHS)
      */
-   public function browseHostels(Request $request)
+    public function browseHostels(Request $request)
     {
         // Paginate approved hostels (with rooms and primary image)
         $hostels = Hostel::approved()
             ->with(['primaryImage', 'rooms'])
-            ->when($request->search, function($query, $search) {
-                return $query->where(function($q) use ($search) {
+            ->when($request->search, function ($query, $search) {
+                return $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('location', 'like', "%{$search}%");
+                        ->orWhere('location', 'like', "%{$search}%");
                 });
             })
             ->paginate(9);
@@ -614,7 +613,7 @@ class StudentController extends Controller
 
             // Get the price of the first available room, or 0 if none
             $firstRoom = $availableRooms->first();
-            
+
             $hostel->price = $firstRoom ? (float) $firstRoom->room_cost : 0;
         }
 
@@ -624,60 +623,59 @@ class StudentController extends Controller
     /**
      * View single hostel details (prices in GHS)
      */
-
-
-public function viewHostel(Hostel $hostel)
-{
-    // Ensure hostel is approved
-    if (!$hostel->is_approved) {
-        abort(404);
-    }
-
-    // Load hostel with images
-    $hostel->load(['images', 'primaryImage']);
-    
-    // Get available rooms - fix the query
-    $availableRooms = $hostel->rooms()
-        ->where('status', 'available')
-        ->where(function($q) {
-            $q->whereColumn('current_occupancy', '<', 'capacity')
-              ->orWhereNull('current_occupancy'); // Handle null values
-        })
-        ->get();
-
-    // Set default occupancy to 0 if null
-    foreach ($availableRooms as $room) {
-        if ($room->current_occupancy === null) {
-            $room->current_occupancy = 0;
+    public function viewHostel(Hostel $hostel)
+    {
+        // Ensure hostel is approved
+        if (! $hostel->is_approved) {
+            abort(404);
         }
+
+        // Load hostel with images
+        $hostel->load(['images', 'primaryImage']);
+
+        // Get available rooms - fix the query
+        $availableRooms = $hostel->rooms()
+            ->where('status', 'available')
+            ->where(function ($q) {
+                $q->whereColumn('current_occupancy', '<', 'capacity')
+                    ->orWhereNull('current_occupancy'); // Handle null values
+            })
+            ->get();
+
+        // Set default occupancy to 0 if null
+        foreach ($availableRooms as $room) {
+            if ($room->current_occupancy === null) {
+                $room->current_occupancy = 0;
+            }
+        }
+
+        // Get average rating
+        $averageRating = $hostel->reviews()->avg('rating') ?? 0;
+        $reviewCount = $hostel->reviews()->count();
+
+        // Get similar hostels
+        $similarHostels = Hostel::where('is_approved', true)
+            ->where('id', '!=', $hostel->id)
+            ->where('location', $hostel->location)
+            ->with(['primaryImage'])
+            ->limit(3)
+            ->get()
+            ->map(function ($h) {
+                $h->min_price = $h->rooms()
+                    ->where('status', 'available')
+                    ->where(function ($q) {
+                        $q->whereColumn('current_occupancy', '<', 'capacity')
+                            ->orWhereNull('current_occupancy');
+                    })
+                    ->min('room_cost') ?? 0;
+
+                return $h;
+            });
+
+        return view('student.hostels.show', compact('hostel', 'availableRooms', 'averageRating', 'reviewCount', 'similarHostels'));
     }
 
-   
-
-    // Get average rating
-    $averageRating = $hostel->reviews()->avg('rating') ?? 0;
-    $reviewCount = $hostel->reviews()->count();
-
-    // Get similar hostels
-    $similarHostels = Hostel::where('is_approved', true)
-        ->where('id', '!=', $hostel->id)
-        ->where('location', $hostel->location)
-        ->with(['primaryImage'])
-        ->limit(3)
-        ->get()
-        ->map(function($h) {
-            $h->min_price = $h->rooms()
-                ->where('status', 'available')
-                ->where(function($q) {
-                    $q->whereColumn('current_occupancy', '<', 'capacity')
-                      ->orWhereNull('current_occupancy');
-                })
-                ->min('room_cost') ?? 0;
-            return $h;
-        });
-
-    return view('student.hostels.show', compact('hostel', 'availableRooms', 'averageRating', 'reviewCount', 'similarHostels'));
-}    /**
+    /**
      * Get user's bookings with filters
      */
     public function myBookings(Request $request)
@@ -706,6 +704,7 @@ public function viewHostel(Hostel $hostel)
         }
 
         $bookings = $query->paginate(10);
+
         return view('student.bookings.index', compact('bookings'));
     }
 
@@ -716,6 +715,7 @@ public function viewHostel(Hostel $hostel)
     {
         abort_if($booking->user_id !== Auth::id(), 403);
         $booking->load(['hostel', 'room', 'payment']);
+
         return view('student.bookings.show', compact('booking'));
     }
 
@@ -735,6 +735,7 @@ public function viewHostel(Hostel $hostel)
         }
 
         $complaints = $query->latest()->paginate(10);
+
         return view('student.complaints.index', compact('complaints'));
     }
 
@@ -753,7 +754,7 @@ public function viewHostel(Hostel $hostel)
 
         // Get hostel_id from booking if provided
         $hostelId = null;
-        if (!empty($validated['booking_id'])) {
+        if (! empty($validated['booking_id'])) {
             $booking = Booking::find($validated['booking_id']);
             if ($booking) {
                 $hostelId = $booking->room->hostel_id;
@@ -761,7 +762,7 @@ public function viewHostel(Hostel $hostel)
         }
 
         // hostel_id is required in the schema, so either get it from booking or fail gracefully
-        if (!$hostelId) {
+        if (! $hostelId) {
             return redirect()->route('student.complaints')
                 ->with('error', 'Please select a valid booking to file a complaint.');
         }
@@ -786,9 +787,9 @@ public function viewHostel(Hostel $hostel)
      */
     public function payments(Request $request)
     {
-        $query = Payment::whereHas('booking', function($q) {
-                $q->where('user_id', Auth::id());
-            })
+        $query = Payment::whereHas('booking', function ($q) {
+            $q->where('user_id', Auth::id());
+        })
             ->orWhere('user_id', Auth::id()) // For fee payments without booking
             ->with(['booking.hostel', 'booking.room'])
             ->latest();
@@ -829,9 +830,10 @@ public function viewHostel(Hostel $hostel)
             $hasAccess = true;
         }
 
-        abort_if(!$hasAccess, 403);
+        abort_if(! $hasAccess, 403);
 
         $payment->load(['booking.hostel', 'booking.room']);
+
         return view('student.payments.receipt', compact('payment'));
     }
 
@@ -844,7 +846,7 @@ public function viewHostel(Hostel $hostel)
 
         $stats = [
             'total_bookings' => Booking::where('user_id', $user->id)->count(),
-            'total_paid' => Payment::whereHas('booking', fn($q) => $q->where('user_id', $user->id))
+            'total_paid' => Payment::whereHas('booking', fn ($q) => $q->where('user_id', $user->id))
                 ->where('status', 'completed')
                 ->sum('amount'),
             'total_reviews' => Review::where('user_id', $user->id)->count(),
@@ -865,7 +867,7 @@ public function viewHostel(Hostel $hostel)
             'name' => 'required|string|max:255',
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:500',
-            'email' => 'required|email|unique:users,email,' . $user->id,
+            'email' => 'required|email|unique:users,email,'.$user->id,
         ]);
 
         $user->update($validated);
@@ -883,7 +885,7 @@ public function viewHostel(Hostel $hostel)
             'new_password' => 'nullable|string|min:8|confirmed',
         ]);
 
-        if (!$request->filled('new_password')) {
+        if (! $request->filled('new_password')) {
             return redirect()->route('student.profile')
                 ->with('error', 'Enter a new password to update your password.');
         }

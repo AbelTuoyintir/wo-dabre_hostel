@@ -1,10 +1,12 @@
 <?php
+
 namespace Database\Seeders;
-use Illuminate\Database\Seeder;
+
+use App\Models\Booking;
 use App\Models\Hostel;
 use App\Models\Room;
 use App\Models\User;
-use App\Models\Booking;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
 class VisualVerificationSeeder extends Seeder
@@ -16,7 +18,7 @@ class VisualVerificationSeeder extends Seeder
             [
                 'name' => 'Test Manager',
                 'password' => bcrypt('password'),
-                'role' => 'hostel_manager'
+                'role' => 'hostel_manager',
             ]
         );
 
@@ -27,7 +29,7 @@ class VisualVerificationSeeder extends Seeder
                 'location' => 'amamoma',
                 'is_approved' => true,
                 'status' => 'active',
-                'rating' => 4.8
+                'rating' => 4.8,
             ]
         );
 
@@ -40,7 +42,7 @@ class VisualVerificationSeeder extends Seeder
                 'room_cost' => 1200,
                 'room_type' => 'shared_2',
                 'uuid' => (string) Str::uuid(),
-                'current_occupancy' => 1
+                'current_occupancy' => 1,
             ]
         );
 
@@ -53,19 +55,19 @@ class VisualVerificationSeeder extends Seeder
                 'name' => 'Occupant One',
                 'password' => bcrypt('password'),
                 'role' => 'student',
-                'preferences' => json_encode(['sleep_schedule' => 'early_bird', 'cleanliness' => 'high'])
+                'preferences' => json_encode(['sleep_schedule' => 'early_bird', 'cleanliness' => 'high']),
             ]
         );
 
         Booking::firstOrCreate(
             ['user_id' => $occupant->id, 'room_id' => $r1->id],
             [
-                'booking_number' => 'BK-' . Str::upper(Str::random(8)),
+                'booking_number' => 'BK-'.Str::upper(Str::random(8)),
                 'hostel_id' => $h1->id,
                 'booking_status' => 'confirmed',
                 'check_in_date' => now()->subDays(5),
                 'check_out_date' => now()->addMonths(6),
-                'total_amount' => 1200
+                'total_amount' => 1200,
             ]
         );
     }
