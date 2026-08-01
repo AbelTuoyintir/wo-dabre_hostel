@@ -1,17 +1,14 @@
 <?php
-
 // app/Console/Commands/ProcessAgentWithdrawals.php
-
 namespace App\Console\Commands;
 
+use Illuminate\Console\Command;
 use App\Models\AgentWithdrawal;
 use App\Services\PaymentService;
-use Illuminate\Console\Command;
 
 class ProcessAgentWithdrawals extends Command
 {
     protected $signature = 'agent:process-withdrawals';
-
     protected $description = 'Process pending agent withdrawal requests';
 
     public function handle(PaymentService $paymentService)
@@ -27,7 +24,7 @@ class ProcessAgentWithdrawals extends Command
                 $withdrawal->update([
                     'status' => 'completed',
                     'processed_at' => now(),
-                    'processed_by' => 1, // System admin
+                    'processed_by' => 1 // System admin
                 ]);
 
                 $this->info("Processed withdrawal #{$withdrawal->id} for ₵{$withdrawal->amount}");

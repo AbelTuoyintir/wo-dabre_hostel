@@ -1,13 +1,13 @@
 <?php
 
+use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Agent\AgentRegisterController;
 use App\Http\Controllers\Agent\AgentRegisterController as AgentRegisterControllerCompat;
-use Illuminate\Support\Facades\Route;
 
 // Backwards-compatible alias to avoid runtime ReflectionException if some
 // routes/controllers still reference the older FQCN.
-if (! class_exists(AgentRegisterControllerCompat::class)) {
-    class_alias(AgentRegisterControllerCompat::class, AgentRegisterControllerCompat::class);
+if (!class_exists(AgentRegisterControllerCompat::class)) {
+    class_alias(AgentRegisterControllerCompat::class, \App\Http\Controllers\Agent\AgentRegisterController::class);
 }
 
 use App\Http\Controllers\Agent\DashboardController;
@@ -20,6 +20,7 @@ use App\Http\Controllers\Agent\SettingsController;
 | Web Routes
 |--------------------------------------------------------------------------
 */
+
 
 // Agent Registration Routes (public - no auth middleware)
 Route::prefix('agent')->name('agent.')->group(function () {

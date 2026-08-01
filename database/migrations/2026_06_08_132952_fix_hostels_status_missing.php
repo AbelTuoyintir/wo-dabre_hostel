@@ -11,12 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (! Schema::hasColumn('hostels', 'status')) {
+        if (!Schema::hasColumn('hostels', 'status')) {
             Schema::table('hostels', function (Blueprint $table) {
                 $table->string('status')->default('active')->after('is_approved');
             });
         }
     }
+
 
     /**
      * Reverse the migrations.

@@ -1,5 +1,4 @@
 <?php
-
 // app/Http/Middleware/StudentMiddleware.php
 
 namespace App\Http\Middleware;
@@ -11,7 +10,7 @@ class StudentMiddleware
 {
     public function handle(Request $request, Closure $next)
     {
-        if (! auth()->check()) {
+        if (!auth()->check()) {
             return redirect()->route('login')->with('error', 'Please login first.');
         }
 

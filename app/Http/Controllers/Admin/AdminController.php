@@ -3,17 +3,17 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Booking;
-use App\Models\Hostel;
-use App\Models\Payment;
 use App\Models\User;
-use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Http\RedirectResponse;
+use App\Models\Hostel;
+use App\Models\Booking;
+use App\Models\Payment;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\View\View;
+use Carbon\Carbon;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -50,8 +50,8 @@ class AdminController extends Controller
             $search = request('search');
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%")
-                    ->orWhere('student_id', 'like', "%{$search}%");
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('student_id', 'like', "%{$search}%");
             });
         }
 
@@ -60,7 +60,6 @@ class AdminController extends Controller
         }
 
         $users = $query->paginate(15);
-
         return view('admin.users', compact('users'));
     }
 
@@ -79,7 +78,7 @@ class AdminController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,'.$user->id,
+            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'student_id' => 'nullable|string|max:255',
             'role' => 'required|in:student,hostel_manager,admin',
             'is_active' => 'nullable|boolean',
@@ -101,10 +100,9 @@ class AdminController extends Controller
      */
     public function toggleUserStatus(User $user): RedirectResponse
     {
-        $user->update(['is_active' => ! $user->is_active]);
+        $user->update(['is_active' => !$user->is_active]);
 
         $status = $user->is_active ? 'activated' : 'deactivated';
-
         return redirect()->back()->with('success', "User {$status} successfully.");
     }
 
@@ -122,7 +120,6 @@ class AdminController extends Controller
         }
 
         $hostels = $query->paginate(15);
-
         return view('admin.hostels.hostel', compact('hostels'));
     }
 
@@ -158,7 +155,7 @@ class AdminController extends Controller
             'contact_phone',
             'contact_email',
             'manager_id',
-            'description',
+            'description'
         ]);
 
         // Set default values
@@ -171,38 +168,38 @@ class AdminController extends Controller
         if ($request->hasFile('cover_image')) {
             // Create directory if not exists
             $coverDir = public_path('hostels/covers');
-            if (! file_exists($coverDir)) {
+            if (!file_exists($coverDir)) {
                 mkdir($coverDir, 0755, true);
             }
 
             $file = $request->file('cover_image');
-            $filename = time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
+            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
             $file->move($coverDir, $filename);
 
             // Store relative path from public
-            $coverPath = 'hostels/covers/'.$filename;
+            $coverPath = 'hostels/covers/' . $filename;
 
             // Save as primary image
             $hostel->images()->create([
                 'image_path' => $coverPath,
                 'type' => 'hostel',
                 'is_primary' => true,
-                'order' => 0,
+                'order' => 0
             ]);
         }
 
         // Handle cover video upload (primary video)
         if ($request->hasFile('cover_video')) {
             $coverVideoDir = public_path('hostels/covers/videos');
-            if (! file_exists($coverVideoDir)) {
+            if (!file_exists($coverVideoDir)) {
                 mkdir($coverVideoDir, 0755, true);
             }
 
             $video = $request->file('cover_video');
-            $filename = time().'_'.uniqid().'.'.$video->getClientOriginalExtension();
+            $filename = time() . '_' . uniqid() . '.' . $video->getClientOriginalExtension();
             $video->move($coverVideoDir, $filename);
 
-            $videoPath = 'hostels/covers/videos/'.$filename;
+            $videoPath = 'hostels/covers/videos/' . $filename;
 
             // Save as primary video
             $hostel->images()->create([
@@ -216,23 +213,23 @@ class AdminController extends Controller
         // Handle gallery images upload
         if ($request->hasFile('gallery_images')) {
             $galleryDir = public_path('hostels/gallery');
-            if (! file_exists($galleryDir)) {
+            if (!file_exists($galleryDir)) {
                 mkdir($galleryDir, 0755, true);
             }
 
             $order = 1; // Start from 1 since cover is at 0
             foreach ($request->file('gallery_images') as $image) {
-                $filename = time().'_'.uniqid().'.'.$image->getClientOriginalExtension();
+                $filename = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
                 $image->move($galleryDir, $filename);
 
-                $path = 'hostels/gallery/'.$filename;
+                $path = 'hostels/gallery/' . $filename;
 
                 // Save as gallery image
                 $hostel->images()->create([
                     'image_path' => $path,
                     'type' => 'hostel',
                     'is_primary' => false,
-                    'order' => $order++,
+                    'order' => $order++
                 ]);
             }
         }
@@ -240,25 +237,26 @@ class AdminController extends Controller
         // Handle gallery videos upload
         if ($request->hasFile('gallery_videos')) {
             $galleryVideoDir = public_path('hostels/gallery/videos');
-            if (! file_exists($galleryVideoDir)) {
+            if (!file_exists($galleryVideoDir)) {
                 mkdir($galleryVideoDir, 0755, true);
             }
 
             $order = 1;
             foreach ($request->file('gallery_videos') as $video) {
-                $filename = time().'_'.uniqid().'.'.$video->getClientOriginalExtension();
+                $filename = time() . '_' . uniqid() . '.' . $video->getClientOriginalExtension();
                 $video->move($galleryVideoDir, $filename);
 
-                $path = 'hostels/gallery/videos/'.$filename;
+                $path = 'hostels/gallery/videos/' . $filename;
 
                 $hostel->images()->create([
                     'image_path' => $path,
                     'type' => 'hostel',
                     'is_primary' => false,
-                    'order' => $order++,
+                    'order' => $order++
                 ]);
             }
         }
+
 
         return redirect()->route('admin.hostels.index')
             ->with('success', 'Hostel created successfully with images.');
@@ -306,7 +304,6 @@ class AdminController extends Controller
     public function assignHostelForm(User $user): View
     {
         $hostels = Hostel::approved()->get();
-
         return view('admin.assign-hostel', compact('user', 'hostels'));
     }
 
@@ -409,7 +406,7 @@ class AdminController extends Controller
         // Top 10 hostels by bookings
         $bookingsByHostel = DB::table('bookings')
             ->join('hostels', 'bookings.hostel_id', '=', 'hostels.id')
-            ->selectRaw('hostels.id, hostels.name, COUNT(bookings.id) as bookings_count')
+->selectRaw('hostels.id, hostels.name, COUNT(bookings.id) as bookings_count')
             ->groupBy('hostels.id', 'hostels.name')
             ->orderBy('bookings_count', 'desc')
             ->limit(10)
@@ -465,11 +462,11 @@ class AdminController extends Controller
 
     private function downloadBookingsCsv(Collection $bookings): StreamedResponse
     {
-        $filename = 'bookings-report-'.now()->format('Y-m-d-His').'.csv';
+        $filename = 'bookings-report-' . now()->format('Y-m-d-His') . '.csv';
 
         return response()->streamDownload(function () use ($bookings) {
             $file = fopen('php://output', 'w');
-            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
 
             fputcsv($file, [
                 'Booking Number',
@@ -517,8 +514,8 @@ class AdminController extends Controller
     {
         $lines = [
             'Bookings Report',
-            'Generated: '.now()->format('Y-m-d H:i:s'),
-            'Total records: '.$bookings->count(),
+            'Generated: ' . now()->format('Y-m-d H:i:s'),
+            'Total records: ' . $bookings->count(),
             str_repeat('=', 95),
         ];
 
@@ -529,20 +526,20 @@ class AdminController extends Controller
             $room = $booking->room?->number ?? $booking->room_number ?? 'N/A';
             $stay = trim(
                 (optional($booking->check_in_date)->format('Y-m-d') ?? 'N/A')
-                .' to '
-                .(optional($booking->check_out_date)->format('Y-m-d') ?? 'N/A')
+                . ' to '
+                . (optional($booking->check_out_date)->format('Y-m-d') ?? 'N/A')
             );
 
             $entryLines = [
-                'Booking: '.($booking->booking_number ?? 'N/A').' | Customer: '.$customer,
-                'Email: '.$email,
-                'Hostel: '.$hostel.' | Room: '.$room,
-                'Stay: '.$stay,
-                'Amount: GHS '.number_format((float) $booking->total_amount, 2)
-                .' | Paid: GHS '.number_format((float) $booking->amount_paid, 2)
-                .' | Balance: GHS '.number_format((float) $booking->balance_due, 2),
-                'Status: '.ucfirst((string) $booking->booking_status)
-                .' | Payment: '.ucfirst((string) $booking->payment_status),
+                'Booking: ' . ($booking->booking_number ?? 'N/A') . ' | Customer: ' . $customer,
+                'Email: ' . $email,
+                'Hostel: ' . $hostel . ' | Room: ' . $room,
+                'Stay: ' . $stay,
+                'Amount: GHS ' . number_format((float) $booking->total_amount, 2)
+                . ' | Paid: GHS ' . number_format((float) $booking->amount_paid, 2)
+                . ' | Balance: GHS ' . number_format((float) $booking->balance_due, 2),
+                'Status: ' . ucfirst((string) $booking->booking_status)
+                . ' | Payment: ' . ucfirst((string) $booking->payment_status),
                 str_repeat('-', 95),
             ];
 
@@ -554,11 +551,11 @@ class AdminController extends Controller
         }
 
         $pdfContent = $this->buildSimplePdf($lines);
-        $filename = 'bookings-report-'.now()->format('Y-m-d-His').'.pdf';
+        $filename = 'bookings-report-' . now()->format('Y-m-d-His') . '.pdf';
 
         return response($pdfContent, 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ]);
     }
 
@@ -577,7 +574,7 @@ class AdminController extends Controller
         foreach ($pages as $pageLines) {
             $pageObjectNumber = $objectNumber++;
             $contentObjectNumber = $objectNumber++;
-            $kids[] = $pageObjectNumber.' 0 R';
+            $kids[] = $pageObjectNumber . ' 0 R';
 
             $streamLines = [
                 'BT',
@@ -587,7 +584,7 @@ class AdminController extends Controller
             ];
 
             foreach ($pageLines as $line) {
-                $streamLines[] = '('.$this->escapePdfText($line).') Tj';
+                $streamLines[] = '(' . $this->escapePdfText($line) . ') Tj';
                 $streamLines[] = 'T*';
             }
 
@@ -595,13 +592,13 @@ class AdminController extends Controller
             $stream = implode("\n", $streamLines);
 
             $objects[$pageObjectNumber] = '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] '
-                .'/Resources << /Font << /F1 3 0 R >> >> /Contents '.$contentObjectNumber.' 0 R >>';
+                . '/Resources << /Font << /F1 3 0 R >> >> /Contents ' . $contentObjectNumber . ' 0 R >>';
 
-            $objects[$contentObjectNumber] = '<< /Length '.strlen($stream)." >>\nstream\n"
-                .$stream."\nendstream";
+            $objects[$contentObjectNumber] = '<< /Length ' . strlen($stream) . " >>\nstream\n"
+                . $stream . "\nendstream";
         }
 
-        $objects[2] = '<< /Type /Pages /Kids ['.implode(' ', $kids).'] /Count '.count($kids).' >>';
+        $objects[2] = '<< /Type /Pages /Kids [' . implode(' ', $kids) . '] /Count ' . count($kids) . ' >>';
         ksort($objects);
 
         $pdf = "%PDF-1.4\n";
@@ -609,21 +606,21 @@ class AdminController extends Controller
 
         foreach ($objects as $number => $object) {
             $offsets[$number] = strlen($pdf);
-            $pdf .= $number." 0 obj\n".$object."\nendobj\n";
+            $pdf .= $number . " 0 obj\n" . $object . "\nendobj\n";
         }
 
         $xrefOffset = strlen($pdf);
         $maxObject = max(array_keys($objects));
 
-        $pdf .= "xref\n0 ".($maxObject + 1)."\n";
+        $pdf .= "xref\n0 " . ($maxObject + 1) . "\n";
         $pdf .= "0000000000 65535 f \n";
 
         for ($i = 1; $i <= $maxObject; $i++) {
             $pdf .= sprintf("%010d 00000 n \n", $offsets[$i] ?? 0);
         }
 
-        $pdf .= "trailer\n<< /Size ".($maxObject + 1)." /Root 1 0 R >>\n";
-        $pdf .= "startxref\n".$xrefOffset."\n%%EOF";
+        $pdf .= "trailer\n<< /Size " . ($maxObject + 1) . " /Root 1 0 R >>\n";
+        $pdf .= "startxref\n" . $xrefOffset . "\n%%EOF";
 
         return $pdf;
     }
@@ -637,8 +634,8 @@ class AdminController extends Controller
         }
 
         return str_replace(
-            ['\\', '(', ')', "\r"],
-            ['\\\\', '\\(', '\\)', ''],
+            ["\\", "(", ")", "\r"],
+            ["\\\\", "\\(", "\\)", ''],
             $encoded
         );
     }

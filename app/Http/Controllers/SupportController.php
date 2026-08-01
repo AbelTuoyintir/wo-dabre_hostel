@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\SupportMessage;
 use App\Models\SupportTicket;
+use App\Models\SupportMessage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -40,7 +40,7 @@ class SupportController extends Controller
         ];
 
         // If guest, require contact info
-        if (! Auth::check()) {
+        if (!Auth::check()) {
             $rules['guest_name'] = 'required|string|max:255';
             $rules['guest_email'] = 'required|email|max:255';
         }
@@ -69,7 +69,7 @@ class SupportController extends Controller
         ]);
 
         // Secure guest ticket access by storing the UUID in their session
-        if (! Auth::check()) {
+        if (!Auth::check()) {
             session()->push('guest_support_ticket_uuids', $ticket->uuid);
         }
 
@@ -95,15 +95,15 @@ class SupportController extends Controller
         // Security check: restrict ticket access to the owner or an admin
         if ($ticket->user_id) {
             $user = Auth::user();
-            if (! $user || ($user->id !== $ticket->user_id && $user->role !== 'admin')) {
+            if (!$user || ($user->id !== $ticket->user_id && $user->role !== 'admin')) {
                 abort(403, 'Unauthorized access to this ticket.');
             }
         } else {
             // Secure guest ticket access: restrict to admin or creator with valid session
             $user = Auth::user();
-            if (! $user || $user->role !== 'admin') {
+            if (!$user || $user->role !== 'admin') {
                 $sessionUuids = session()->get('guest_support_ticket_uuids', []);
-                if (! in_array($ticket->uuid, $sessionUuids)) {
+                if (!in_array($ticket->uuid, $sessionUuids)) {
                     abort(403, 'Unauthorized access to this ticket.');
                 }
             }
@@ -124,15 +124,15 @@ class SupportController extends Controller
         // Security check: restrict messaging to the owner of the ticket or an admin
         if ($ticket->user_id) {
             $user = Auth::user();
-            if (! $user || ($user->id !== $ticket->user_id && $user->role !== 'admin')) {
+            if (!$user || ($user->id !== $ticket->user_id && $user->role !== 'admin')) {
                 abort(403, 'Unauthorized access to this ticket.');
             }
         } else {
             // Secure guest ticket messaging: restrict to admin or creator with valid session
             $user = Auth::user();
-            if (! $user || $user->role !== 'admin') {
+            if (!$user || $user->role !== 'admin') {
                 $sessionUuids = session()->get('guest_support_ticket_uuids', []);
-                if (! in_array($ticket->uuid, $sessionUuids)) {
+                if (!in_array($ticket->uuid, $sessionUuids)) {
                     abort(403, 'Unauthorized access to this ticket.');
                 }
             }
@@ -171,7 +171,6 @@ class SupportController extends Controller
     public function adminIndex()
     {
         $tickets = SupportTicket::with(['user', 'messages'])->latest()->get();
-
         return view('admin.support.index', compact('tickets'));
     }
 
@@ -221,37 +220,37 @@ class SupportController extends Controller
     {
         $lowerMsg = strtolower($userMessage);
 
-        $reply = '';
+        $reply = "";
 
         if (Str::contains($lowerMsg, ['book', 'room', 'hostel', 'reserve'])) {
-            $reply = "👋 Hi! To book a room on Wodabre:\n".
-                     "1. Go to our home page and search by your preferred location or campus area.\n".
-                     "2. Click on a hostel to view details, available rooms, and pricing.\n".
-                     "3. Select a room and click 'Book Now'.\n".
+            $reply = "👋 Hi! To book a room on Wodabre:\n" .
+                     "1. Go to our home page and search by your preferred location or campus area.\n" .
+                     "2. Click on a hostel to view details, available rooms, and pricing.\n" .
+                     "3. Select a room and click 'Book Now'.\n" .
                      "4. Proceed to confirm details and pay securely using Paystack. If you don't have an account, our system will automatically register you upon payment confirmation!";
         } elseif (Str::contains($lowerMsg, ['refund', 'cancel', 'revert', 'delete'])) {
-            $reply = "🔄 Cancellation & Refund Assistant:\n".
-                     "- If you need to cancel a pending booking, click the 'Cancel' button on your booking summary page in the Student Dashboard.\n".
-                     "- Refunds depend on the hostel's specific terms and manager's approval. Approved refunds are credited back to your original payment method (MOMO or Bank card).\n".
+            $reply = "🔄 Cancellation & Refund Assistant:\n" .
+                     "- If you need to cancel a pending booking, click the 'Cancel' button on your booking summary page in the Student Dashboard.\n" .
+                     "- Refunds depend on the hostel's specific terms and manager's approval. Approved refunds are credited back to your original payment method (MOMO or Bank card).\n" .
                      "- If you experience any disputes, please contact us immediately or submit a complaint under the 'Complaints' tab.";
         } elseif (Str::contains($lowerMsg, ['pay', 'payment', 'price', 'cost', 'cedi', 'cedis', 'momo', 'card', 'paystack'])) {
-            $reply = "💳 Payment Information (24/7 Billing Support):\n".
-                     "- All booking fees are processed instantly and securely via Paystack.\n".
-                     "- We accept MTN Mobile Money, Telecel Cash, AT Money, and all major Debit/Credit Cards.\n".
+            $reply = "💳 Payment Information (24/7 Billing Support):\n" .
+                     "- All booking fees are processed instantly and securely via Paystack.\n" .
+                     "- We accept MTN Mobile Money, Telecel Cash, AT Money, and all major Debit/Credit Cards.\n" .
                      "- Once paid, a digital PDF receipt is generated instantly. You can download this receipt anytime under 'My Bookings' or 'Payments' on your student dashboard.";
         } elseif (Str::contains($lowerMsg, ['complaint', 'broken', 'damage', 'repair', 'issue', 'report'])) {
-            $reply = "🛠️ Maintenance & Complaint Assistant:\n".
-                     "- For issues regarding your physical room (e.g., broken fan, plumbing problems, Wi-Fi issues), please file an official complaint on your Student Dashboard.\n".
+            $reply = "🛠️ Maintenance & Complaint Assistant:\n" .
+                     "- For issues regarding your physical room (e.g., broken fan, plumbing problems, Wi-Fi issues), please file an official complaint on your Student Dashboard.\n" .
                      "- Simply navigate to 'Complaints', fill out the form, set a priority level, and submit. The Hostel Manager will be notified instantly and can update you on the progress directly!";
         } elseif (Str::contains($lowerMsg, ['contact', 'phone', 'call', 'email', 'whatsapp', 'emergency'])) {
-            $reply = "📞 Wodabre 24/7 Hotline & Emergency Center:\n".
-                     "- Standard Helpline: +233 55 820 9825 (Call/WhatsApp)\n".
-                     "- UCC Campus Security: +233 33 213 2440\n".
-                     "- Official Email: support@wodabre.com\n".
-                     'We are always here to keep your UCC stay safe and seamless!';
+            $reply = "📞 Wodabre 24/7 Hotline & Emergency Center:\n" .
+                     "- Standard Helpline: +233 55 820 9825 (Call/WhatsApp)\n" .
+                     "- UCC Campus Security: +233 33 213 2440\n" .
+                     "- Official Email: support@wodabre.com\n" .
+                     "We are always here to keep your UCC stay safe and seamless!";
         } else {
-            $reply = "🤖 Hello! I am your 24/7 virtual assistant.\n".
-                     "Thank you for contacting Wodabre support! Your query is extremely important to us. A support representative has been notified and will review your message shortly.\n".
+            $reply = "🤖 Hello! I am your 24/7 virtual assistant.\n" .
+                     "Thank you for contacting Wodabre support! Your query is extremely important to us. A support representative has been notified and will review your message shortly.\n" .
                      "Meanwhile, you can type 'booking', 'payment', 'refund', or 'emergency' to get instant step-by-step help, or browse our FAQ section below.";
         }
 
@@ -273,24 +272,24 @@ class SupportController extends Controller
         return [
             [
                 'question' => 'How do I search and book a hostel?',
-                'answer' => 'Type your preferred UCC neighborhood (e.g., Amamoma, Kwaprow) in the search bar on our home page. Choose a hostel, view the available rooms, select your favorite room, and click "Book Now" to proceed with payment.',
+                'answer' => 'Type your preferred UCC neighborhood (e.g., Amamoma, Kwaprow) in the search bar on our home page. Choose a hostel, view the available rooms, select your favorite room, and click "Book Now" to proceed with payment.'
             ],
             [
                 'question' => 'What payment methods are supported?',
-                'answer' => 'We securely support all major payment networks via Paystack, including Mobile Money (MTN, Telecel, AT) and Debit/Credit cards.',
+                'answer' => 'We securely support all major payment networks via Paystack, including Mobile Money (MTN, Telecel, AT) and Debit/Credit cards.'
             ],
             [
                 'question' => 'Can I cancel my booking?',
-                'answer' => 'Yes, bookings can be cancelled before they are finalized. Log into your dashboard, navigate to "My Bookings", select your booking, and click "Cancel Booking". Refund eligibility is subject to the hostel policies.',
+                'answer' => 'Yes, bookings can be cancelled before they are finalized. Log into your dashboard, navigate to "My Bookings", select your booking, and click "Cancel Booking". Refund eligibility is subject to the hostel policies.'
             ],
             [
                 'question' => 'How do I report a maintenance issue in my hostel?',
-                'answer' => 'Go to your Student Dashboard, select the "Complaints" tab, click "Submit Complaint", fill in the details of the issue (such as electricity or plumbing problems), and select a priority level.',
+                'answer' => 'Go to your Student Dashboard, select the "Complaints" tab, click "Submit Complaint", fill in the details of the issue (such as electricity or plumbing problems), and select a priority level.'
             ],
             [
                 'question' => 'How does roommates matching work?',
-                'answer' => 'Under "Profile Preferences" in your Student Dashboard, you can select your lifestyle choices (e.g., sleeping hours, study habits). Our system uses these preferences to calculate compatibility scores with other students when selecting shared rooms.',
-            ],
+                'answer' => 'Under "Profile Preferences" in your Student Dashboard, you can select your lifestyle choices (e.g., sleeping hours, study habits). Our system uses these preferences to calculate compatibility scores with other students when selecting shared rooms.'
+            ]
         ];
     }
 }

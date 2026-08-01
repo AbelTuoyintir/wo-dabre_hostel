@@ -1,5 +1,4 @@
 <?php
-
 // app/Http/Controllers/Agent/ProfileController.php
 
 namespace App\Http\Controllers\Agent;
@@ -62,9 +61,9 @@ class ProfileController extends Controller
         }
 
         // Generate unique agent code
-        $agentCode = 'AG-'.strtoupper(Str::random(8));
+        $agentCode = 'AG-' . strtoupper(Str::random(8));
         while (HostelAgent::where('agent_code', $agentCode)->exists()) {
-            $agentCode = 'AG-'.strtoupper(Str::random(8));
+            $agentCode = 'AG-' . strtoupper(Str::random(8));
         }
 
         // Create agent profile
@@ -97,7 +96,7 @@ class ProfileController extends Controller
     {
         $agent = Auth::user()->agent;
 
-        if (! $agent) {
+        if (!$agent) {
             return redirect()->route('agent.complete-profile');
         }
 
@@ -111,13 +110,13 @@ class ProfileController extends Controller
     {
         $agent = Auth::user()->agent;
 
-        if (! $agent) {
+        if (!$agent) {
             return redirect()->route('agent.complete-profile')
                 ->with('warning', 'Please complete your agent profile first.');
         }
 
         $request->validate([
-            'phone' => 'required|string|unique:hostel_agents,phone,'.$agent->id,
+            'phone' => 'required|string|unique:hostel_agents,phone,' . $agent->id,
             'address' => 'nullable|string',
             'city' => 'nullable|string',
             'region' => 'nullable|string',
@@ -126,7 +125,7 @@ class ProfileController extends Controller
         ]);
 
         $agent->update($request->only([
-            'phone', 'address', 'city', 'region', 'emergency_contact', 'emergency_phone',
+            'phone', 'address', 'city', 'region', 'emergency_contact', 'emergency_phone'
         ]));
 
         return redirect()->route('agent.profile')

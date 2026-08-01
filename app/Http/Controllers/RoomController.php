@@ -2,16 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Hostel;
-use App\Models\HostelImage;
 use App\Models\Room;
-use Illuminate\Database\Eloquent\Builder;
+use App\Models\Hostel;
 use Illuminate\Http\Request;
-use Illuminate\Http\UploadedFile;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\ValidationException;
+use App\Models\HostelImage;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -54,7 +54,7 @@ class RoomController extends Controller
     /**
      * Store a newly created room
      */
-    public function store(Request $request)
+public function store(Request $request)
     {
         try {
             $validated = $request->validate([
@@ -95,7 +95,7 @@ class RoomController extends Controller
             if ($exists) {
                 \Log::warning('Room creation failed: Room number already exists', [
                     'room_number' => $validated['number'],
-                    'hostel_id' => $validated['hostel_id'],
+                    'hostel_id' => $validated['hostel_id']
                 ]);
 
                 return back()
@@ -116,10 +116,10 @@ class RoomController extends Controller
                     $coverPath = $request->file('cover_image')->store('rooms/covers', 'public');
                 } elseif ($request->filled('temp_cover_path')) {
                     $tempPath = $request->temp_cover_path;
-                    $disk = Storage::disk('public');
+                    $disk = \Illuminate\Support\Facades\Storage::disk('public');
                     if ($disk->exists($tempPath)) {
                         // Move/copy from temp to permanent location
-                        $newFilename = 'rooms/covers/'.basename($tempPath);
+                        $newFilename = 'rooms/covers/' . basename($tempPath);
                         $disk->copy($tempPath, $newFilename);
                         $disk->delete($tempPath);
                         $coverPath = $newFilename;
@@ -132,12 +132,12 @@ class RoomController extends Controller
                         'hostel_id' => $room->hostel_id,
                         'type' => 'room',
                         'is_primary' => true,
-                        'order' => 0,
+                        'order' => 0
                     ]);
 
                     \Log::info('Uploaded cover image for new room', [
                         'room_id' => $room->id,
-                        'image_path' => $coverPath,
+                        'image_path' => $coverPath
                     ]);
                 }
 
@@ -180,7 +180,7 @@ class RoomController extends Controller
                     }
                 }
                 if ($request->filled('temp_gallery_paths')) {
-                    $disk = Storage::disk('public');
+                    $disk = \Illuminate\Support\Facades\Storage::disk('public');
                     foreach ($request->temp_gallery_paths as $tempPath) {
                         if ($disk->exists($tempPath)) {
                             $galleryImages->push($tempPath);
@@ -192,15 +192,13 @@ class RoomController extends Controller
                 $uploadedCount = 0;
 
                 foreach ($galleryImages as $image) {
-                    if ($uploadedCount >= 5) {
-                        break;
-                    } // Limit to 5 images
+                    if ($uploadedCount >= 5) break; // Limit to 5 images
 
-                    if ($image instanceof UploadedFile) {
+                    if ($image instanceof \Illuminate\Http\UploadedFile) {
                         $path = $image->store('rooms/gallery', 'public');
                     } else {
                         // It's a temp path string - move to permanent
-                        $newFilename = 'rooms/gallery/'.basename($image);
+                        $newFilename = 'rooms/gallery/' . basename($image);
                         $disk->copy($image, $newFilename);
                         $disk->delete($image);
                         $path = $newFilename;
@@ -211,7 +209,7 @@ class RoomController extends Controller
                         'hostel_id' => $room->hostel_id,
                         'type' => 'room',
                         'is_primary' => false,
-                        'order' => $order++,
+                        'order' => $order++
                     ]);
 
                     $uploadedCount++;
@@ -220,7 +218,7 @@ class RoomController extends Controller
                 if ($uploadedCount > 0) {
                     \Log::info('Uploaded gallery images for new room', [
                         'room_id' => $room->id,
-                        'uploaded_count' => $uploadedCount,
+                        'uploaded_count' => $uploadedCount
                     ]);
                 }
 
@@ -231,7 +229,7 @@ class RoomController extends Controller
                     'room_id' => $room->id,
                     'room_number' => $room->number,
                     'hostel_id' => $room->hostel_id,
-                    'created_by' => auth()->id(),
+                    'created_by' => auth()->id()
                 ]);
 
                 return redirect()
@@ -256,7 +254,7 @@ class RoomController extends Controller
                     'error_code' => $e->getCode(),
                     'file' => $e->getFile(),
                     'line' => $e->getLine(),
-                    'trace' => $e->getTraceAsString(),
+                    'trace' => $e->getTraceAsString()
                 ]);
 
                 return back()
@@ -264,15 +262,16 @@ class RoomController extends Controller
                     ->with('error', 'Failed to create room due to a database error. Please try again.');
             }
 
-        } catch (ValidationException $e) {
+        } catch (\Illuminate\Validation\ValidationException $e) {
             // Log validation errors
             \Log::warning('Room creation validation failed', [
                 'errors' => $e->errors(),
-                'input' => $request->except(['_token', '_method', 'cover_image', 'gallery_images']),
+                'input' => $request->except(['_token', '_method', 'cover_image', 'gallery_images'])
             ]);
 
             // Re-throw to let Laravel handle validation redirect
             throw $e;
+
         } catch (\Exception $e) {
             // Log any unexpected errors
             \Log::critical('Unexpected error while creating room', [
@@ -281,7 +280,7 @@ class RoomController extends Controller
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString(),
-                'request_data' => $request->except(['_token', '_method', 'cover_image', 'gallery_images']),
+                'request_data' => $request->except(['_token', '_method', 'cover_image', 'gallery_images'])
             ]);
 
             return back()
@@ -290,15 +289,16 @@ class RoomController extends Controller
         }
     }
 
+
     /**
      * Display a specific room
      */
     public function show(Room $room)
     {
-        $room->load(['hostel', 'bookings' => function ($query) {
+        $room->load(['hostel', 'bookings' => function($query) {
             $query->with('user')
-                ->latest()
-                ->limit(10);
+                  ->latest()
+                  ->limit(10);
         }]);
 
         $stats = [
@@ -311,6 +311,7 @@ class RoomController extends Controller
             'available_spaces' => $room->availableSpaces(),
         ];
 
+
         // The room's current booking depends on the relationship implementation.
         // If the relationship/query uses a non-existent `status` column,
         // it will crash the admin rooms show page. We avoid that here
@@ -321,6 +322,8 @@ class RoomController extends Controller
             ->with('user')
             ->latest()
             ->first();
+
+
 
         return view('admin.rooms.show', compact('room', 'stats', 'currentBooking'));
     }
@@ -382,7 +385,7 @@ class RoomController extends Controller
                     \Log::warning('Room update failed: Room number already exists in target hostel', [
                         'room_id' => $room->id,
                         'room_number' => $validated['number'],
-                        'target_hostel_id' => $validated['hostel_id'],
+                        'target_hostel_id' => $validated['hostel_id']
                     ]);
 
                     return back()
@@ -400,7 +403,7 @@ class RoomController extends Controller
                     \Log::warning('Room update failed: Room number already exists in same hostel', [
                         'room_id' => $room->id,
                         'room_number' => $validated['number'],
-                        'hostel_id' => $validated['hostel_id'],
+                        'hostel_id' => $validated['hostel_id']
                     ]);
 
                     return back()
@@ -417,7 +420,7 @@ class RoomController extends Controller
                 $room->update($validated);
 
                 // Handle removed images
-                if (! empty($validated['removed_images'])) {
+                if (!empty($validated['removed_images'])) {
                     $imagesToRemove = HostelImage::whereIn('id', $validated['removed_images'])
                         ->where('room_id', $room->id)
                         ->where('type', 'room')
@@ -432,12 +435,12 @@ class RoomController extends Controller
 
                     \Log::info('Removed images from room', [
                         'room_id' => $room->id,
-                        'removed_count' => count($validated['removed_images']),
+                        'removed_count' => count($validated['removed_images'])
                     ]);
                 }
 
                 // Handle primary image change
-                if (! empty($validated['primary_image_id'])) {
+                if (!empty($validated['primary_image_id'])) {
                     // Remove primary status from all room images
                     HostelImage::where('room_id', $room->id)
                         ->where('type', 'room')
@@ -451,7 +454,7 @@ class RoomController extends Controller
 
                     \Log::info('Changed primary image for room', [
                         'room_id' => $room->id,
-                        'new_primary_image_id' => $validated['primary_image_id'],
+                        'new_primary_image_id' => $validated['primary_image_id']
                     ]);
                 }
 
@@ -468,7 +471,7 @@ class RoomController extends Controller
                         $oldPrimary->delete();
                     }
 
-                    // Store new cover image
+// Store new cover image
                     $path = $request->file('cover_image')->store('rooms/covers', 'public');
 
                     // Create new primary image
@@ -477,12 +480,12 @@ class RoomController extends Controller
                         'hostel_id' => $room->hostel_id,
                         'type' => 'room',
                         'is_primary' => true,
-                        'order' => 0,
+                        'order' => 0
                     ]);
 
                     \Log::info('Uploaded new cover image for room', [
                         'room_id' => $room->id,
-                        'image_path' => $path,
+                        'image_path' => $path
                     ]);
                 }
 
@@ -529,18 +532,16 @@ class RoomController extends Controller
                     $uploadedCount = 0;
 
                     foreach ($request->file('gallery_images') as $image) {
-                        if ($uploadedCount >= 5) {
-                            break;
-                        } // Limit to 5 images
+                        if ($uploadedCount >= 5) break; // Limit to 5 images
 
-                        $path = $image->store('rooms/gallery', 'public');
+$path = $image->store('rooms/gallery', 'public');
 
                         $room->images()->create([
                             'image_path' => $path,
                             'hostel_id' => $room->hostel_id,
                             'type' => 'room',
                             'is_primary' => false,
-                            'order' => $order++,
+                            'order' => $order++
                         ]);
 
                         $uploadedCount++;
@@ -548,7 +549,7 @@ class RoomController extends Controller
 
                     \Log::info('Uploaded gallery images for room', [
                         'room_id' => $room->id,
-                        'uploaded_count' => $uploadedCount,
+                        'uploaded_count' => $uploadedCount
                     ]);
                 }
 
@@ -559,7 +560,7 @@ class RoomController extends Controller
                     'room_id' => $room->id,
                     'room_number' => $room->number,
                     'hostel_id' => $room->hostel_id,
-                    'updated_by' => auth()->id(),
+                    'updated_by' => auth()->id()
                 ]);
 
                 return redirect()
@@ -576,7 +577,7 @@ class RoomController extends Controller
                     'error_code' => $e->getCode(),
                     'file' => $e->getFile(),
                     'line' => $e->getLine(),
-                    'trace' => $e->getTraceAsString(),
+                    'trace' => $e->getTraceAsString()
                 ]);
 
                 return back()
@@ -584,16 +585,17 @@ class RoomController extends Controller
                     ->with('error', 'Failed to update room due to a database error. Please try again.');
             }
 
-        } catch (ValidationException $e) {
+        } catch (\Illuminate\Validation\ValidationException $e) {
             // Log validation errors
             \Log::warning('Room update validation failed', [
                 'room_id' => $room->id,
                 'errors' => $e->errors(),
-                'input' => $request->except(['_token', '_method', 'cover_image', 'gallery_images']),
+                'input' => $request->except(['_token', '_method', 'cover_image', 'gallery_images'])
             ]);
 
             // Re-throw to let Laravel handle validation redirect
             throw $e;
+
         } catch (\Exception $e) {
             // Log any unexpected errors
             \Log::critical('Unexpected error while updating room', [
@@ -603,7 +605,7 @@ class RoomController extends Controller
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString(),
-                'request_data' => $request->except(['_token', '_method', 'cover_image', 'gallery_images']),
+                'request_data' => $request->except(['_token', '_method', 'cover_image', 'gallery_images'])
             ]);
 
             return back()
@@ -626,7 +628,7 @@ class RoomController extends Controller
             $file = $request->file('image');
             $tempId = uniqid('temp_', true);
             $extension = $file->getClientOriginalExtension();
-            $filename = $tempId.'.'.$extension;
+            $filename = $tempId . '.' . $extension;
             $path = $file->storeAs('temp/room-images', $filename, 'public');
 
             return response()->json([
@@ -634,7 +636,7 @@ class RoomController extends Controller
                 'temp_id' => $tempId,
                 'filename' => $filename,
                 'path' => $path,
-                'url' => Storage::disk('public')->url($path),
+                'url' => \Illuminate\Support\Facades\Storage::disk('public')->url($path),
                 'name' => $file->getClientOriginalName(),
                 'size' => $file->getSize(),
                 'type' => $request->type,
@@ -646,7 +648,7 @@ class RoomController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to upload image: '.$e->getMessage(),
+                'message' => 'Failed to upload image: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -658,7 +660,7 @@ class RoomController extends Controller
     {
         try {
             // Find and delete the temp file
-            $disk = Storage::disk('public');
+            $disk = \Illuminate\Support\Facades\Storage::disk('public');
             $files = $disk->files('temp/room-images');
 
             $deleted = false;
@@ -670,7 +672,7 @@ class RoomController extends Controller
                 }
             }
 
-            if (! $deleted) {
+            if (!$deleted) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Temp image not found.',
@@ -689,7 +691,7 @@ class RoomController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to delete temp image: '.$e->getMessage(),
+                'message' => 'Failed to delete temp image: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -723,14 +725,14 @@ class RoomController extends Controller
     public function updateStatus(Request $request, Room $room)
     {
         $request->validate([
-            'status' => 'required|in:available,full,maintenance,inactive',
+            'status' => 'required|in:available,full,maintenance,inactive'
         ]);
 
         $room->update(['status' => $request->status]);
 
         return response()->json([
             'success' => true,
-            'message' => 'Room status updated successfully.',
+            'message' => 'Room status updated successfully.'
         ]);
     }
 
@@ -743,7 +745,7 @@ class RoomController extends Controller
             'room_ids' => 'required|array',
             'room_ids.*' => 'exists:rooms,id',
             'action' => 'required|in:status,gender,hostel,capacity,price',
-            'value' => 'required',
+            'value' => 'required'
         ]);
 
         $rooms = Room::whereIn('id', $request->room_ids)->get();
@@ -751,7 +753,7 @@ class RoomController extends Controller
         if ($rooms->isEmpty()) {
             return response()->json([
                 'success' => false,
-                'message' => 'No rooms selected.',
+                'message' => 'No rooms selected.'
             ], 400);
         }
 
@@ -787,7 +789,7 @@ class RoomController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => count($rooms).' rooms updated successfully.',
+            'message' => count($rooms) . ' rooms updated successfully.'
         ]);
     }
 
@@ -840,9 +842,9 @@ class RoomController extends Controller
 
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
-                $q->where('number', 'like', '%'.$request->search.'%')
+                $q->where('number', 'like', '%' . $request->search . '%')
                     ->orWhereHas('hostel', function ($hq) use ($request) {
-                        $hq->where('name', 'like', '%'.$request->search.'%');
+                        $hq->where('name', 'like', '%' . $request->search . '%');
                     });
             });
         }
@@ -852,11 +854,11 @@ class RoomController extends Controller
 
     private function downloadRoomsCsv(Collection $rooms): StreamedResponse
     {
-        $filename = 'rooms-export-'.now()->format('Y-m-d-His').'.csv';
+        $filename = 'rooms-export-' . now()->format('Y-m-d-His') . '.csv';
 
         return response()->streamDownload(function () use ($rooms) {
             $file = fopen('php://output', 'w');
-            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
 
             fputcsv($file, [
                 'ID',
@@ -904,22 +906,22 @@ class RoomController extends Controller
     {
         $lines = [
             'Rooms Report',
-            'Generated: '.now()->format('Y-m-d H:i:s'),
-            'Total records: '.$rooms->count(),
+            'Generated: ' . now()->format('Y-m-d H:i:s'),
+            'Total records: ' . $rooms->count(),
             str_repeat('=', 95),
         ];
 
         foreach ($rooms as $room) {
             $entryLines = [
-                'Room: '.($room->number ?? 'N/A').' | Hostel: '.($room->hostel?->name ?? 'N/A'),
-                'Status: '.ucfirst((string) $room->status).' | Gender: '.ucfirst((string) $room->gender),
-                'Capacity: '.($room->current_occupancy ?? 0).'/'.($room->capacity ?? 0)
-                .' | Price: '.($room->room_cost !== null ? '$'.number_format((float) $room->room_cost, 2) : 'N/A'),
-                'Floor: '.($room->floor ?? 'N/A').' | Size: '.($room->size_sqm ?? 'N/A').' sqm',
-                'Furnished: '.($room->furnished ? 'Yes' : 'No')
-                .' | Private Bathroom: '.($room->private_bathroom ? 'Yes' : 'No'),
-                'Window Type: '.($room->window_type ?? 'N/A')
-                .' | Created At: '.(optional($room->created_at)->format('Y-m-d H:i:s') ?? 'N/A'),
+                'Room: ' . ($room->number ?? 'N/A') . ' | Hostel: ' . ($room->hostel?->name ?? 'N/A'),
+                'Status: ' . ucfirst((string) $room->status) . ' | Gender: ' . ucfirst((string) $room->gender),
+                'Capacity: ' . ($room->current_occupancy ?? 0) . '/' . ($room->capacity ?? 0)
+                . ' | Price: ' . ($room->room_cost !== null ? '$' . number_format((float) $room->room_cost, 2) : 'N/A'),
+                'Floor: ' . ($room->floor ?? 'N/A') . ' | Size: ' . ($room->size_sqm ?? 'N/A') . ' sqm',
+                'Furnished: ' . ($room->furnished ? 'Yes' : 'No')
+                . ' | Private Bathroom: ' . ($room->private_bathroom ? 'Yes' : 'No'),
+                'Window Type: ' . ($room->window_type ?? 'N/A')
+                . ' | Created At: ' . (optional($room->created_at)->format('Y-m-d H:i:s') ?? 'N/A'),
                 str_repeat('-', 95),
             ];
 
@@ -931,11 +933,11 @@ class RoomController extends Controller
         }
 
         $pdfContent = $this->buildSimplePdf($lines);
-        $filename = 'rooms-export-'.now()->format('Y-m-d-His').'.pdf';
+        $filename = 'rooms-export-' . now()->format('Y-m-d-His') . '.pdf';
 
         return response($pdfContent, 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ]);
     }
 
@@ -954,7 +956,7 @@ class RoomController extends Controller
         foreach ($pages as $pageLines) {
             $pageObjectNumber = $objectNumber++;
             $contentObjectNumber = $objectNumber++;
-            $kids[] = $pageObjectNumber.' 0 R';
+            $kids[] = $pageObjectNumber . ' 0 R';
 
             $streamLines = [
                 'BT',
@@ -964,7 +966,7 @@ class RoomController extends Controller
             ];
 
             foreach ($pageLines as $line) {
-                $streamLines[] = '('.$this->escapePdfText($line).') Tj';
+                $streamLines[] = '(' . $this->escapePdfText($line) . ') Tj';
                 $streamLines[] = 'T*';
             }
 
@@ -972,13 +974,13 @@ class RoomController extends Controller
             $stream = implode("\n", $streamLines);
 
             $objects[$pageObjectNumber] = '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] '
-                .'/Resources << /Font << /F1 3 0 R >> >> /Contents '.$contentObjectNumber.' 0 R >>';
+                . '/Resources << /Font << /F1 3 0 R >> >> /Contents ' . $contentObjectNumber . ' 0 R >>';
 
-            $objects[$contentObjectNumber] = '<< /Length '.strlen($stream)." >>\nstream\n"
-                .$stream."\nendstream";
+            $objects[$contentObjectNumber] = '<< /Length ' . strlen($stream) . " >>\nstream\n"
+                . $stream . "\nendstream";
         }
 
-        $objects[2] = '<< /Type /Pages /Kids ['.implode(' ', $kids).'] /Count '.count($kids).' >>';
+        $objects[2] = '<< /Type /Pages /Kids [' . implode(' ', $kids) . '] /Count ' . count($kids) . ' >>';
         ksort($objects);
 
         $pdf = "%PDF-1.4\n";
@@ -986,21 +988,21 @@ class RoomController extends Controller
 
         foreach ($objects as $number => $object) {
             $offsets[$number] = strlen($pdf);
-            $pdf .= $number." 0 obj\n".$object."\nendobj\n";
+            $pdf .= $number . " 0 obj\n" . $object . "\nendobj\n";
         }
 
         $xrefOffset = strlen($pdf);
         $maxObject = max(array_keys($objects));
 
-        $pdf .= "xref\n0 ".($maxObject + 1)."\n";
+        $pdf .= "xref\n0 " . ($maxObject + 1) . "\n";
         $pdf .= "0000000000 65535 f \n";
 
         for ($i = 1; $i <= $maxObject; $i++) {
             $pdf .= sprintf("%010d 00000 n \n", $offsets[$i] ?? 0);
         }
 
-        $pdf .= "trailer\n<< /Size ".($maxObject + 1)." /Root 1 0 R >>\n";
-        $pdf .= "startxref\n".$xrefOffset."\n%%EOF";
+        $pdf .= "trailer\n<< /Size " . ($maxObject + 1) . " /Root 1 0 R >>\n";
+        $pdf .= "startxref\n" . $xrefOffset . "\n%%EOF";
 
         return $pdf;
     }
@@ -1014,8 +1016,8 @@ class RoomController extends Controller
         }
 
         return str_replace(
-            ['\\', '(', ')', "\r"],
-            ['\\\\', '\\(', '\\)', ''],
+            ["\\", "(", ")", "\r"],
+            ["\\\\", "\\(", "\\)", ''],
             $encoded
         );
     }

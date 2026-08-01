@@ -1,17 +1,15 @@
 <?php
-
 // Create a console command to fix existing records
 // app/Console/Commands/FixLargeUploads.php
 
 namespace App\Console\Commands;
 
-use App\Models\Room;
 use Illuminate\Console\Command;
+use App\Models\Room;
 
 class FixLargeUploads extends Command
 {
     protected $signature = 'fix:large-uploads';
-
     protected $description = 'Handle existing large file uploads';
 
     public function handle()

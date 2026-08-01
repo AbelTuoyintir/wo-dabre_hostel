@@ -20,7 +20,7 @@ class AuthenticationTest extends TestCase
     {
         $user = User::factory()->create([
             'role' => 'student',
-            'is_active' => true,
+            'is_active' => true
         ]);
 
         $response = $this->post('/login', [
@@ -37,7 +37,7 @@ class AuthenticationTest extends TestCase
         $user = User::factory()->create([
             'role' => 'hostel_manager',
             'hostel_id' => 1,
-            'is_active' => true,
+            'is_active' => true
         ]);
 
         $response = $this->post('/login', [
@@ -53,7 +53,7 @@ class AuthenticationTest extends TestCase
     {
         $user = User::factory()->create([
             'role' => 'admin',
-            'is_active' => true,
+            'is_active' => true
         ]);
 
         $response = $this->post('/login', [
@@ -81,7 +81,7 @@ class AuthenticationTest extends TestCase
     {
         $user = User::factory()->create([
             'role' => 'student',
-            'is_active' => false,
+            'is_active' => false
         ]);
 
         $response = $this->post('/login', [

@@ -17,7 +17,7 @@ class HostelImage extends Model
         'media_kind',
         'is_primary',
         'order',
-        'type',
+        'type'
     ];
 
     protected $casts = [
@@ -46,4 +46,5 @@ class HostelImage extends Model
         // Explicitly use the public disk because public files are stored in storage/app/public.
         return Storage::disk('public')->url($this->image_path);
     }
+
 }

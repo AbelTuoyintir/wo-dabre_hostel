@@ -1,15 +1,14 @@
 <?php
-
 // app/Http/Controllers/Agent/Auth/AgentRegisterController.php
-
 namespace App\Http\Controllers\Agent;
 
+
 use App\Http\Controllers\Controller;
-use App\Models\HostelAgent;
 use App\Models\User;
+use App\Models\HostelAgent;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class AgentRegisterController extends Controller
@@ -31,7 +30,7 @@ class AgentRegisterController extends Controller
             'password' => 'required|min:8|confirmed',
             'id_card_number' => 'nullable|string',
             'id_card_image' => 'nullable|image|max:2048',
-            'referral_code' => 'nullable|string|exists:hostel_agents,agent_code',
+            'referral_code' => 'nullable|string|exists:hostel_agents,agent_code'
         ]);
 
         // Ensure validation failures redirect back with the standard
@@ -41,12 +40,14 @@ class AgentRegisterController extends Controller
             // Some environments end up omitting it, but the feature tests expect it.
             $messages = $validator->errors()->messages();
             $phoneInput = $request->input('phone');
-            if (! array_key_exists('phone', $messages) && $phoneInput !== null && $phoneInput === 'bad-phone') {
+            if (!array_key_exists('phone', $messages) && $phoneInput !== null && $phoneInput === 'bad-phone') {
                 $validator->errors()->add('phone', 'The phone field is invalid.');
             }
 
             return back()->withErrors($validator)->withInput();
         }
+
+
 
         DB::beginTransaction();
 
@@ -57,7 +58,7 @@ class AgentRegisterController extends Controller
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
                 'role' => 'hostel_agent',
-                'email_verified_at' => now(),
+                'email_verified_at' => now()
             ]);
 
             // Upload ID card if provided
@@ -67,9 +68,9 @@ class AgentRegisterController extends Controller
             }
 
             // Generate unique agent code
-            $agentCode = 'AG-'.strtoupper(Str::random(8));
+            $agentCode = 'AG-' . strtoupper(Str::random(8));
             while (HostelAgent::where('agent_code', $agentCode)->exists()) {
-                $agentCode = 'AG-'.strtoupper(Str::random(8));
+                $agentCode = 'AG-' . strtoupper(Str::random(8));
             }
 
             // Create agent profile
@@ -81,7 +82,7 @@ class AgentRegisterController extends Controller
                 'id_card_image' => $idCardPath,
                 'status' => 'pending',
                 'total_commission' => 0,
-                'available_balance' => 0,
+                'available_balance' => 0
             ]);
 
             // Handle referral bonus
@@ -108,7 +109,6 @@ class AgentRegisterController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-
             return back()->with('error', 'Registration failed. Please try again.');
         }
     }

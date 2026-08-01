@@ -1,5 +1,4 @@
 <?php
-
 // app/Http/Middleware/AuthenticationMiddleware.php
 
 namespace App\Http\Middleware;

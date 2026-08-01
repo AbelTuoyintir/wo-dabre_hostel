@@ -3,15 +3,14 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Amenity;
-use App\Models\Booking;
 use App\Models\Hostel;
 use App\Models\HostelImage;
 use App\Models\User;
+use App\Models\Booking;
 use App\Support\PaystackSplitService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
 class HostelController extends Controller
 {
@@ -31,12 +30,12 @@ class HostelController extends Controller
         // Filter by search
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function ($q) use ($search) {
+            $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('location', 'like', "%{$search}%")
-                    ->orWhere('address', 'like', "%{$search}%")
-                    ->orWhere('phone', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
+                  ->orWhere('location', 'like', "%{$search}%")
+                  ->orWhere('address', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
@@ -62,7 +61,7 @@ class HostelController extends Controller
 
         // Filter by manager
         if ($request->filled('manager')) {
-            $query->whereHas('manager', function ($q) use ($request) {
+            $query->whereHas('manager', function($q) use ($request) {
                 $q->where('name', 'like', "%{$request->manager}%");
             });
         }
@@ -91,7 +90,7 @@ class HostelController extends Controller
         $managers = User::where('role', 'hostel_manager')->get();
 
         // Get all amenities (for checkbox selection)
-        $amenities = Amenity::orderBy('name')->get();
+        $amenities = \App\Models\Amenity::orderBy('name')->get();
 
         return view('admin.hostels.create', [
             'managers' => $managers,
@@ -99,12 +98,14 @@ class HostelController extends Controller
         ]);
     }
 
+
+
     /**
      * Store a newly created hostel
      */
     public function store(Request $request)
     {
-        $request->validate([
+       $request->validate([
             'name' => 'required|string|max:255',
             'location' => 'required|string',
             'address' => 'required|string',
@@ -119,6 +120,7 @@ class HostelController extends Controller
             'gallery_images' => 'nullable|array|max:5', // Maximum 5 gallery images
         ]);
 
+
         // Prepare data for creation
         $data = $request->only([
             'name',
@@ -127,7 +129,7 @@ class HostelController extends Controller
             'contact_phone',
             'contact_email',
             'manager_id',
-            'description',
+            'description'
         ]);
 
         // Set default values
@@ -140,6 +142,7 @@ class HostelController extends Controller
         $amenities = $request->input('amenities', []);
         $hostel->amenities()->sync($amenities);
 
+
         // Handle cover image upload (primary image)
         if ($request->hasFile('cover_image')) {
             $coverPath = $request->file('cover_image')->store('hostels/covers', 'public');
@@ -149,7 +152,7 @@ class HostelController extends Controller
                 'image_path' => $coverPath,
                 'type' => 'hostel',
                 'is_primary' => true,
-                'order' => 0,
+                'order' => 0
             ]);
         }
 
@@ -166,7 +169,7 @@ class HostelController extends Controller
                     'media_kind' => $mediaKind,
                     'type' => 'hostel',
                     'is_primary' => false,
-                    'order' => $order++,
+                    'order' => $order++
                 ]);
             }
         }
@@ -182,10 +185,10 @@ class HostelController extends Controller
         $hostel->load([
             'manager',
             'images',
-            'rooms' => function ($q) {
+            'rooms' => function($q) {
                 $q->withCount('bookings');
             },
-            'reviews.user',
+            'reviews.user'
         ]);
 
         // Get booking statistics (use actual bookings columns)
@@ -198,6 +201,7 @@ class HostelController extends Controller
             ->where('booking_status', 'pending')
             ->count();
 
+
         return view('admin.hostels.show', compact('hostel', 'activeBookings', 'pendingBookings'));
     }
 
@@ -207,7 +211,7 @@ class HostelController extends Controller
     public function edit(Hostel $hostel)
     {
         $managers = User::where('role', 'hostel_manager')->get();
-        $amenities = Amenity::orderBy('name')->get();
+        $amenities = \App\Models\Amenity::orderBy('name')->get();
 
         $hostel->load([
             'images',
@@ -217,10 +221,11 @@ class HostelController extends Controller
         return view('admin.hostels.edit', compact('hostel', 'managers', 'amenities'));
     }
 
+
     /**
      * Update the specified hostel
      */
-    public function update(Request $request, Hostel $hostel)
+   public function update(Request $request, Hostel $hostel)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -242,6 +247,7 @@ class HostelController extends Controller
             'primary_image_id' => 'nullable|exists:hostel_images,id',
         ]);
 
+
         DB::beginTransaction();
         try {
             // Update hostel basic info
@@ -261,8 +267,9 @@ class HostelController extends Controller
             $amenities = $request->input('amenities', []);
             $hostel->amenities()->sync($amenities);
 
+
             // Handle removed images
-            if (! empty($validated['removed_images'])) {
+            if (!empty($validated['removed_images'])) {
                 $imagesToRemove = HostelImage::whereIn('id', $validated['removed_images'])
                     ->where('hostel_id', $hostel->id)
                     ->get();
@@ -276,7 +283,7 @@ class HostelController extends Controller
             }
 
             // Handle primary image change
-            if (! empty($validated['primary_image_id'])) {
+            if (!empty($validated['primary_image_id'])) {
                 // Remove primary status from all images
                 $hostel->images()->update(['is_primary' => false]);
 
@@ -295,7 +302,7 @@ class HostelController extends Controller
                     'image_path' => $path,
                     'type' => 'hostel',
                     'is_primary' => true,
-                    'order' => 0,
+                    'order' => 0
                 ]);
             }
 
@@ -317,7 +324,7 @@ class HostelController extends Controller
                         'media_kind' => $mediaKind,
                         'type' => 'hostel',
                         'is_primary' => false,
-                        'order' => $order++,
+                        'order' => $order++
                     ]);
                 }
             }
@@ -334,10 +341,9 @@ class HostelController extends Controller
             return redirect()
                 ->back()
                 ->withInput()
-                ->with('error', 'Failed to update hostel. '.$e->getMessage());
+                ->with('error', 'Failed to update hostel. ' . $e->getMessage());
         }
     }
-
     /**
      * Delete the specified hostel
      */
@@ -376,7 +382,7 @@ class HostelController extends Controller
 
             return redirect()
                 ->back()
-                ->with('error', 'Failed to delete hostel. '.$e->getMessage());
+                ->with('error', 'Failed to delete hostel. ' . $e->getMessage());
         }
     }
 
@@ -401,7 +407,7 @@ class HostelController extends Controller
             abort(403);
         }
 
-        DB::transaction(function () use ($hostel, $image) {
+        DB::transaction(function() use ($hostel, $image) {
             $hostel->images()->update(['is_primary' => false]);
             $image->update(['is_primary' => true]);
         });
@@ -479,7 +485,7 @@ class HostelController extends Controller
             $validated['bank_code']
         );
 
-        if (! $response['success']) {
+        if (!$response['success']) {
             return response()->json([
                 'success' => false,
                 'message' => $response['message'] ?? 'Could not verify bank account',
@@ -514,10 +520,10 @@ class HostelController extends Controller
                 'account_name' => $validated['account_name'],
             ]);
 
-            if (! $response['success']) {
+            if (!$response['success']) {
                 return redirect()
                     ->back()
-                    ->with('error', 'Failed to update subaccount: '.($response['message'] ?? 'Unknown error'));
+                    ->with('error', 'Failed to update subaccount: ' . ($response['message'] ?? 'Unknown error'));
             }
 
             // Update local record
@@ -536,21 +542,21 @@ class HostelController extends Controller
 
         // Create new subaccount on Paystack
         $response = $paystackSplit->createSubaccount($hostel, [
-            'business_name' => $hostel->name.' (SRC)',
+            'business_name' => $hostel->name . ' (SRC)',
             'bank_code' => $validated['bank_code'],
             'account_number' => $validated['account_number'],
             'account_name' => $validated['account_name'],
         ]);
 
-        if (! $response['success']) {
+        if (!$response['success']) {
             return redirect()
                 ->back()
-                ->with('error', 'Failed to create subaccount: '.($response['message'] ?? 'Unknown error'));
+                ->with('error', 'Failed to create subaccount: ' . ($response['message'] ?? 'Unknown error'));
         }
 
         $subaccountCode = $response['data']['subaccount_code'] ?? null;
 
-        if (! $subaccountCode) {
+        if (!$subaccountCode) {
             return redirect()
                 ->back()
                 ->with('error', 'Subaccount created but no code returned. Please contact support.');
@@ -576,7 +582,7 @@ class HostelController extends Controller
      */
     public function refreshSubaccount(Hostel $hostel, PaystackSplitService $paystackSplit)
     {
-        if (! $hostel->subaccount_code) {
+        if (!$hostel->subaccount_code) {
             return redirect()
                 ->back()
                 ->with('error', 'No subaccount exists for this hostel.');
@@ -584,10 +590,10 @@ class HostelController extends Controller
 
         $response = $paystackSplit->fetchSubaccount($hostel->subaccount_code);
 
-        if (! $response['success']) {
+        if (!$response['success']) {
             return redirect()
                 ->back()
-                ->with('error', 'Failed to fetch subaccount: '.($response['message'] ?? 'Unknown error'));
+                ->with('error', 'Failed to fetch subaccount: ' . ($response['message'] ?? 'Unknown error'));
         }
 
         $subaccountData = $response['data'];
@@ -603,6 +609,6 @@ class HostelController extends Controller
 
         return redirect()
             ->back()
-            ->with('success', 'Subaccount status refreshed. Status: '.ucfirst($hostel->subaccount_status));
+            ->with('success', 'Subaccount status refreshed. Status: ' . ucfirst($hostel->subaccount_status));
     }
 }

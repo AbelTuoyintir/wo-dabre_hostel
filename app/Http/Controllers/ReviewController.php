@@ -1,11 +1,10 @@
 <?php
-
 // app/Http\Controllers\ReviewController.php
 
 namespace App\Http\Controllers;
 
-use App\Models\Booking;
 use App\Models\Review;
+use App\Models\Booking;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -74,7 +73,7 @@ class ReviewController extends Controller
     public function destroy(Review $review)
     {
         // Check if user owns this review or is admin
-        if ($review->user_id !== Auth::id() && ! Auth::user()->isAdmin()) {
+        if ($review->user_id !== Auth::id() && !Auth::user()->isAdmin()) {
             abort(403, 'Unauthorized action.');
         }
 

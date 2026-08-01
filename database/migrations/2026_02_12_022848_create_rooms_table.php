@@ -10,33 +10,34 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-    {
-        Schema::create('rooms', function (Blueprint $table) {
-            $table->unsignedBigInteger('id')->autoIncrement();
+{
+    Schema::create('rooms', function (Blueprint $table) {
+        $table->unsignedBigInteger('id')->autoIncrement();
 
-            $table->string('number');
+        $table->string('number');
 
-            $table->integer('capacity')->nullable();
-            $table->integer('current_occupancy')->nullable();
+        $table->integer('capacity')->nullable();
+        $table->integer('current_occupancy')->nullable();
 
-            $table->foreignId('hostel_id')
-                ->nullable()
-                ->constrained()
-                ->cascadeOnDelete();
+        $table->foreignId('hostel_id')
+              ->nullable()
+              ->constrained()
+              ->cascadeOnDelete();
 
-            $table->enum('gender', ['male', 'female', 'any'])
-                ->default('any');
+        $table->enum('gender', ['male', 'female', 'any'])
+              ->default('any');
 
-            $table->enum('room_type', ['single_room', 'shared_2', 'shared_4', 'executive']);
+        $table->enum('room_type', ['single_room', 'shared_2', 'shared_4', 'executive']);
 
-            $table->decimal('room_cost', 10, 2)->nullable();
+        $table->decimal('room_cost', 10, 2)->nullable();
 
-            $table->enum('status', ['full', 'available', 'unavailable', 'inactive'])
-                ->default('available');
+        $table->enum('status', ['full', 'available', 'unavailable', 'inactive'])
+              ->default('available');
 
-            $table->timestamps();
-        });
-    }
+        $table->timestamps();
+    });
+}
+
 
     /**
      * Reverse the migrations.

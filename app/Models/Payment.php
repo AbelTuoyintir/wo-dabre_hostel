@@ -162,7 +162,7 @@ class Payment extends Model
     /**
      * Mark payment as completed.
      */
-    public function markAsCompleted(?string $transactionId = null, ?string $paymentMethod = null): bool
+    public function markAsCompleted(string $transactionId = null, string $paymentMethod = null): bool
     {
         $this->status = 'completed';
         $this->paid_at = now();
@@ -184,14 +184,13 @@ class Payment extends Model
     public function markAsFailed(): bool
     {
         $this->status = 'failed';
-
         return $this->save();
     }
 
     /**
      * Process a refund.
      */
-    public function refund(float $amount, ?string $refundReference = null): bool
+    public function refund(float $amount, string $refundReference = null): bool
     {
         $this->status = 'refunded';
         $this->refund_amount = $amount;
@@ -209,7 +208,7 @@ class Payment extends Model
      */
     public function getFormattedAmountAttribute(): string
     {
-        return '₵'.number_format($this->amount, 2);
+        return '₵' . number_format($this->amount, 2);
     }
 
     /**
@@ -217,7 +216,7 @@ class Payment extends Model
      */
     public function getFormattedRefundAmountAttribute(): string
     {
-        return $this->refund_amount ? '₵'.number_format($this->refund_amount, 2) : 'N/A';
+        return $this->refund_amount ? '₵' . number_format($this->refund_amount, 2) : 'N/A';
     }
 
     /**
@@ -225,7 +224,7 @@ class Payment extends Model
      */
     public function getStatusBadgeClassAttribute(): string
     {
-        return match ($this->status) {
+        return match($this->status) {
             'completed' => 'bg-green-100 text-green-800',
             'pending' => 'bg-yellow-100 text-yellow-800',
             'failed' => 'bg-red-100 text-red-800',
@@ -239,7 +238,7 @@ class Payment extends Model
      */
     public function getPaymentMethodDisplayAttribute(): string
     {
-        return match ($this->payment_method) {
+        return match($this->payment_method) {
             'mobile_money' => 'Mobile Money',
             'card' => 'Card Payment',
             'bank_transfer' => 'Bank Transfer',
@@ -253,7 +252,7 @@ class Payment extends Model
      */
     public function getPaymentMethodIconAttribute(): string
     {
-        return match ($this->payment_method) {
+        return match($this->payment_method) {
             'mobile_money' => 'fas fa-mobile-alt',
             'card' => 'fas fa-credit-card',
             'bank_transfer' => 'fas fa-university',

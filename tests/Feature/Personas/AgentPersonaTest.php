@@ -2,11 +2,8 @@
 
 namespace Tests\Feature\Personas;
 
-use App\Models\AgentWithdrawal;
-use App\Models\Booking;
-use App\Models\Hostel;
 use App\Models\HostelAgent;
-use App\Models\Room;
+use App\Models\AgentWithdrawal;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -24,7 +21,7 @@ class AgentPersonaTest extends TestCase
         $payload = [
             'name' => 'Test Agent',
             'email' => 'agent'.uniqid().'@example.com',
-            'phone' => '080'.str_pad((string) random_int(0, 9999999), 7, '0', STR_PAD_LEFT),
+            'phone' => '080'.str_pad((string)random_int(0, 9999999), 7, '0', STR_PAD_LEFT),
             'password' => 'password123',
             'password_confirmation' => 'password123',
             'id_card_number' => 'ID-123',
@@ -490,7 +487,7 @@ class AgentPersonaTest extends TestCase
             'name' => 'Room Agent',
             'email' => 'agent_room'.uniqid().'@example.com',
             'password' => Hash::make('password123'),
-            'phone' => '080'.str_pad((string) random_int(0, 9999999), 7, '0', STR_PAD_LEFT),
+            'phone' => '080'.str_pad((string)random_int(0, 9999999), 7, '0', STR_PAD_LEFT),
             'role' => 'hostel_agent',
             'email_verified_at' => now(),
         ]);
@@ -508,7 +505,7 @@ class AgentPersonaTest extends TestCase
             'approved_at' => now(),
         ]);
 
-        $hostel = Hostel::forceCreate([
+        $hostel = \App\Models\Hostel::forceCreate([
             'name' => 'Agent Hostel One',
             'description' => 'A nice hostel.',
             'location' => 'amamoma',
@@ -558,7 +555,7 @@ class AgentPersonaTest extends TestCase
             'name' => 'Room Agent 2',
             'email' => 'agent_room_dup'.uniqid().'@example.com',
             'password' => Hash::make('password123'),
-            'phone' => '080'.str_pad((string) random_int(0, 9999999), 7, '0', STR_PAD_LEFT),
+            'phone' => '080'.str_pad((string)random_int(0, 9999999), 7, '0', STR_PAD_LEFT),
             'role' => 'hostel_agent',
             'email_verified_at' => now(),
         ]);
@@ -576,7 +573,7 @@ class AgentPersonaTest extends TestCase
             'approved_at' => now(),
         ]);
 
-        $hostel = Hostel::forceCreate([
+        $hostel = \App\Models\Hostel::forceCreate([
             'name' => 'Agent Hostel Two',
             'description' => 'Another nice hostel.',
             'location' => 'amamoma',
@@ -585,7 +582,7 @@ class AgentPersonaTest extends TestCase
             'status' => 'active',
         ]);
 
-        Room::create([
+        \App\Models\Room::create([
             'hostel_id' => $hostel->id,
             'number' => 'B202',
             'room_type' => 'shared_2',
@@ -609,7 +606,7 @@ class AgentPersonaTest extends TestCase
             ->assertRedirect()
             ->assertSessionHas('error');
 
-        $this->assertEquals(1, Room::where('hostel_id', $hostel->id)->where('number', 'B202')->count());
+        $this->assertEquals(1, \App\Models\Room::where('hostel_id', $hostel->id)->where('number', 'B202')->count());
         $this->assertEquals(0.00, (float) $agent->fresh()->available_balance);
     }
 
@@ -622,7 +619,7 @@ class AgentPersonaTest extends TestCase
             'name' => 'Delete Agent',
             'email' => 'agent_del'.uniqid().'@example.com',
             'password' => Hash::make('password123'),
-            'phone' => '080'.str_pad((string) random_int(0, 9999999), 7, '0', STR_PAD_LEFT),
+            'phone' => '080'.str_pad((string)random_int(0, 9999999), 7, '0', STR_PAD_LEFT),
             'role' => 'hostel_agent',
             'email_verified_at' => now(),
         ]);
@@ -640,7 +637,7 @@ class AgentPersonaTest extends TestCase
             'approved_at' => now(),
         ]);
 
-        $hostel = Hostel::forceCreate([
+        $hostel = \App\Models\Hostel::forceCreate([
             'name' => 'Agent Hostel Three',
             'description' => 'A hostel with rooms to delete.',
             'location' => 'amamoma',
@@ -649,7 +646,7 @@ class AgentPersonaTest extends TestCase
             'status' => 'active',
         ]);
 
-        $room = Room::create([
+        $room = \App\Models\Room::create([
             'hostel_id' => $hostel->id,
             'number' => 'C303',
             'room_type' => 'shared_2',
@@ -680,7 +677,7 @@ class AgentPersonaTest extends TestCase
             'name' => 'Delete Active Agent',
             'email' => 'agent_del_act'.uniqid().'@example.com',
             'password' => Hash::make('password123'),
-            'phone' => '080'.str_pad((string) random_int(0, 9999999), 7, '0', STR_PAD_LEFT),
+            'phone' => '080'.str_pad((string)random_int(0, 9999999), 7, '0', STR_PAD_LEFT),
             'role' => 'hostel_agent',
             'email_verified_at' => now(),
         ]);
@@ -698,7 +695,7 @@ class AgentPersonaTest extends TestCase
             'approved_at' => now(),
         ]);
 
-        $hostel = Hostel::forceCreate([
+        $hostel = \App\Models\Hostel::forceCreate([
             'name' => 'Agent Hostel Four',
             'description' => 'A hostel with active booked rooms.',
             'location' => 'amamoma',
@@ -707,7 +704,7 @@ class AgentPersonaTest extends TestCase
             'status' => 'active',
         ]);
 
-        $room = Room::create([
+        $room = \App\Models\Room::create([
             'hostel_id' => $hostel->id,
             'number' => 'D404',
             'room_type' => 'shared_2',
@@ -722,14 +719,14 @@ class AgentPersonaTest extends TestCase
             'name' => 'Student Tester',
             'email' => 'student'.uniqid().'@example.com',
             'password' => Hash::make('password123'),
-            'phone' => '080'.str_pad((string) random_int(0, 9999999), 7, '0', STR_PAD_LEFT),
+            'phone' => '080'.str_pad((string)random_int(0, 9999999), 7, '0', STR_PAD_LEFT),
             'role' => 'student',
             'email_verified_at' => now(),
         ]);
 
         // Create active/confirmed booking
-        Booking::create([
-            'booking_number' => 'BK-'.uniqid(),
+        \App\Models\Booking::create([
+            'booking_number' => 'BK-' . uniqid(),
             'user_id' => $student->id,
             'room_id' => $room->id,
             'hostel_id' => $hostel->id,

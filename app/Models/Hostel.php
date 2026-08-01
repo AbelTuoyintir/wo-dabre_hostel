@@ -3,7 +3,10 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasRouteUuid;
+use App\Models\Review;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Schema;
 
 class Hostel extends Model
 {
@@ -64,14 +67,16 @@ class Hostel extends Model
     public function managers()
     {
         return $this->belongsToMany(User::class, 'hostel_managers')
-            ->withTimestamps();
+                    ->withTimestamps();
     }
+
+
 
     public function amenities()
     {
         // IMPORTANT: Laravel relationship methods must always return a Relation instance.
         // Returning non-relationship values (e.g. collect()) can crash when the attribute is accessed.
-        if (! \Schema::hasTable('hostel_amenity')) {
+        if (!\Schema::hasTable('hostel_amenity')) {
             // Return an empty but valid relationship instance.
             return $this->belongsToMany(Amenity::class, 'hostel_amenity', 'hostel_id', 'amenity_id')
                 ->whereRaw('1 = 0');
@@ -79,6 +84,7 @@ class Hostel extends Model
 
         return $this->belongsToMany(Amenity::class, 'hostel_amenity', 'hostel_id', 'amenity_id');
     }
+
 
     public function images()
     {
@@ -103,7 +109,7 @@ class Hostel extends Model
     public function scopeApproved($query)
     {
         return $query->where('is_approved', true)
-            ->where('status', 'active');
+                     ->where('status', 'active');
     }
 
     public function scopeFeatured($query)
@@ -117,7 +123,7 @@ class Hostel extends Model
             '*, ( 6371 * acos( cos( radians(?) ) * cos( radians( latitude ) ) * cos( radians( longitude ) - radians(?) ) + sin( radians(?) ) * sin( radians( latitude ) ) ) ) AS distance',
             [$lat, $lng, $lat]
         )->having('distance', '<=', $radius)
-            ->orderBy('distance');
+         ->orderBy('distance');
     }
 
     public function getMinPriceAttribute()

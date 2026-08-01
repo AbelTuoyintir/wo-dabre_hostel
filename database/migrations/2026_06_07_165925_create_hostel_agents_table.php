@@ -1,5 +1,4 @@
 <?php
-
 // database/migrations/2025_06_07_000001_create_hostel_agents_table.php
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;

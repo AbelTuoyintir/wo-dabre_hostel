@@ -1,5 +1,4 @@
 <?php
-
 // app/Http/Middleware/CheckAgentApproved.php
 
 namespace App\Http\Middleware;
@@ -13,7 +12,7 @@ class CheckAgentApproved
     {
         $user = auth()->user();
 
-        if (! $user || ! $user->agent) {
+        if (!$user || !$user->agent) {
             return redirect()->route('agent.complete-profile')
                 ->with('error', 'Please complete your agent profile.');
         }

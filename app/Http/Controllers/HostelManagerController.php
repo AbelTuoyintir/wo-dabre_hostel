@@ -2,18 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Hostel;
+use App\Models\Room;
 use App\Models\Booking;
 use App\Models\Complaint;
-use App\Models\Hostel;
-use App\Models\MaintenanceRequest;
-use App\Models\Payment;
-use App\Models\Room;
 use App\Models\User;
-use Carbon\Carbon;
+use App\Models\Payment;
+use App\Models\MaintenanceRequest;
+use App\Models\Inventory;
+use App\Models\Announcement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Carbon\Carbon;
 
 class HostelManagementController extends Controller
 {
@@ -97,44 +99,44 @@ class HostelManagementController extends Controller
 
         // ===== REVENUE ANALYTICS =====
         $revenueStats = [
-            'today' => Payment::whereHas('booking', function ($q) use ($hostelIds) {
-                $q->whereIn('hostel_id', $hostelIds);
-            })
+            'today' => Payment::whereHas('booking', function($q) use ($hostelIds) {
+                    $q->whereIn('hostel_id', $hostelIds);
+                })
                 ->whereDate('created_at', $currentTime->toDateString())
                 ->where('status', 'completed')
                 ->sum('amount'),
 
-            'this_week' => Payment::whereHas('booking', function ($q) use ($hostelIds) {
-                $q->whereIn('hostel_id', $hostelIds);
-            })
+            'this_week' => Payment::whereHas('booking', function($q) use ($hostelIds) {
+                    $q->whereIn('hostel_id', $hostelIds);
+                })
                 ->whereBetween('created_at', [$currentTime->startOfWeek(), $currentTime->copy()->endOfWeek()])
                 ->where('status', 'completed')
                 ->sum('amount'),
 
-            'this_month' => Payment::whereHas('booking', function ($q) use ($hostelIds) {
-                $q->whereIn('hostel_id', $hostelIds);
-            })
+            'this_month' => Payment::whereHas('booking', function($q) use ($hostelIds) {
+                    $q->whereIn('hostel_id', $hostelIds);
+                })
                 ->whereMonth('created_at', $currentTime->month)
                 ->whereYear('created_at', $currentTime->year)
                 ->where('status', 'completed')
                 ->sum('amount'),
 
-            'this_year' => Payment::whereHas('booking', function ($q) use ($hostelIds) {
-                $q->whereIn('hostel_id', $hostelIds);
-            })
+            'this_year' => Payment::whereHas('booking', function($q) use ($hostelIds) {
+                    $q->whereIn('hostel_id', $hostelIds);
+                })
                 ->whereYear('created_at', $currentTime->year)
                 ->where('status', 'completed')
                 ->sum('amount'),
 
-            'total' => Payment::whereHas('booking', function ($q) use ($hostelIds) {
-                $q->whereIn('hostel_id', $hostelIds);
-            })
+            'total' => Payment::whereHas('booking', function($q) use ($hostelIds) {
+                    $q->whereIn('hostel_id', $hostelIds);
+                })
                 ->where('status', 'completed')
                 ->sum('amount'),
 
-            'pending_payments' => Payment::whereHas('booking', function ($q) use ($hostelIds) {
-                $q->whereIn('hostel_id', $hostelIds);
-            })
+            'pending_payments' => Payment::whereHas('booking', function($q) use ($hostelIds) {
+                    $q->whereIn('hostel_id', $hostelIds);
+                })
                 ->where('status', 'pending')
                 ->sum('amount'),
         ];
@@ -177,25 +179,25 @@ class HostelManagementController extends Controller
 
         // ===== OCCUPANT STATISTICS =====
         $occupantStats = [
-            'total_students' => User::whereHas('bookings', function ($q) use ($hostelIds) {
-                $q->whereIn('hostel_id', $hostelIds)
-                    ->whereIn('status', ['confirmed', 'pending']);
-            })->count(),
+            'total_students' => User::whereHas('bookings', function($q) use ($hostelIds) {
+                    $q->whereIn('hostel_id', $hostelIds)
+                      ->whereIn('status', ['confirmed', 'pending']);
+                })->count(),
 
-            'male_students' => User::whereHas('bookings', function ($q) use ($hostelIds) {
-                $q->whereIn('hostel_id', $hostelIds)
-                    ->whereIn('status', ['confirmed', 'pending']);
-            })->where('gender', 'male')->count(),
+            'male_students' => User::whereHas('bookings', function($q) use ($hostelIds) {
+                    $q->whereIn('hostel_id', $hostelIds)
+                      ->whereIn('status', ['confirmed', 'pending']);
+                })->where('gender', 'male')->count(),
 
-            'female_students' => User::whereHas('bookings', function ($q) use ($hostelIds) {
-                $q->whereIn('hostel_id', $hostelIds)
-                    ->whereIn('status', ['confirmed', 'pending']);
-            })->where('gender', 'female')->count(),
+            'female_students' => User::whereHas('bookings', function($q) use ($hostelIds) {
+                    $q->whereIn('hostel_id', $hostelIds)
+                      ->whereIn('status', ['confirmed', 'pending']);
+                })->where('gender', 'female')->count(),
 
-            'new_this_month' => User::whereHas('bookings', function ($q) use ($hostelIds) {
-                $q->whereIn('hostel_id', $hostelIds)
-                    ->whereIn('status', ['confirmed', 'pending']);
-            })->whereMonth('created_at', $currentTime->month)
+            'new_this_month' => User::whereHas('bookings', function($q) use ($hostelIds) {
+                    $q->whereIn('hostel_id', $hostelIds)
+                      ->whereIn('status', ['confirmed', 'pending']);
+                })->whereMonth('created_at', $currentTime->month)
                 ->whereYear('created_at', $currentTime->year)
                 ->count(),
 
@@ -239,9 +241,9 @@ class HostelManagementController extends Controller
         foreach ($managedHostels as $hostel) {
             $revenueByHostel[] = [
                 'hostel' => $hostel->name,
-                'revenue' => Payment::whereHas('booking', function ($q) use ($hostel) {
-                    $q->where('hostel_id', $hostel->id);
-                })
+                'revenue' => Payment::whereHas('booking', function($q) use ($hostel) {
+                        $q->where('hostel_id', $hostel->id);
+                    })
                     ->where('status', 'completed')
                     ->sum('amount'),
             ];
@@ -272,15 +274,15 @@ class HostelManagementController extends Controller
             ->latest()
             ->limit(5)
             ->get()
-            ->map(function ($booking) {
+            ->map(function($booking) {
                 return [
                     'type' => 'booking',
                     'title' => 'New Booking',
-                    'description' => $booking->user->name.' booked room '.$booking->room->number,
+                    'description' => $booking->user->name . ' booked room ' . $booking->room->number,
                     'time' => $booking->created_at->diffForHumans(),
                     'status' => $booking->status,
                     'icon' => 'calendar-check',
-                    'color' => 'blue',
+                    'color' => 'blue'
                 ];
             });
 
@@ -290,35 +292,35 @@ class HostelManagementController extends Controller
             ->latest()
             ->limit(5)
             ->get()
-            ->map(function ($complaint) {
+            ->map(function($complaint) {
                 return [
                     'type' => 'complaint',
                     'title' => 'New Complaint',
-                    'description' => $complaint->title.' - '.$complaint->user->name,
+                    'description' => $complaint->title . ' - ' . $complaint->user->name,
                     'time' => $complaint->created_at->diffForHumans(),
                     'status' => $complaint->status,
                     'icon' => 'exclamation-triangle',
-                    'color' => 'red',
+                    'color' => 'red'
                 ];
             });
 
         // Recent payments
-        $recentPayments = Payment::whereHas('booking', function ($q) use ($hostelIds) {
-            $q->whereIn('hostel_id', $hostelIds);
-        })
+        $recentPayments = Payment::whereHas('booking', function($q) use ($hostelIds) {
+                $q->whereIn('hostel_id', $hostelIds);
+            })
             ->with(['booking.user'])
             ->latest()
             ->limit(5)
             ->get()
-            ->map(function ($payment) {
+            ->map(function($payment) {
                 return [
                     'type' => 'payment',
                     'title' => 'Payment Received',
-                    'description' => $payment->booking->user->name.' paid ₵'.number_format($payment->amount, 2),
+                    'description' => $payment->booking->user->name . ' paid ₵' . number_format($payment->amount, 2),
                     'time' => $payment->created_at->diffForHumans(),
                     'status' => $payment->status,
                     'icon' => 'money-bill',
-                    'color' => 'green',
+                    'color' => 'green'
                 ];
             });
 
@@ -383,7 +385,7 @@ class HostelManagementController extends Controller
         ]);
 
         // Verify manager owns this hostel
-        if (! $user->managedHostels()->where('hostels.id', $request->hostel_id)->exists()) {
+        if (!$user->managedHostels()->where('hostels.id', $request->hostel_id)->exists()) {
             abort(403, 'You do not have permission to add rooms to this hostel.');
         }
 
@@ -425,23 +427,23 @@ class HostelManagementController extends Controller
         $user = Auth::user();
 
         // Verify manager owns this room's hostel
-        if (! $user->managedHostels()->where('hostels.id', $room->hostel_id)->exists()) {
+        if (!$user->managedHostels()->where('hostels.id', $room->hostel_id)->exists()) {
             abort(403);
         }
 
-        $room->load(['hostel', 'bookings' => function ($q) {
+        $room->load(['hostel', 'bookings' => function($q) {
             $q->with('user')
-                ->latest()
-                ->limit(10);
+              ->latest()
+              ->limit(10);
         }]);
 
         // Current occupants
-        $currentOccupants = User::whereHas('bookings', function ($q) use ($room) {
-            $q->where('room_id', $room->id)
-                ->where('status', 'confirmed')
-                ->where('check_in', '<=', now())
-                ->where('check_out', '>=', now());
-        })->get();
+        $currentOccupants = User::whereHas('bookings', function($q) use ($room) {
+                $q->where('room_id', $room->id)
+                  ->where('status', 'confirmed')
+                  ->where('check_in', '<=', now())
+                  ->where('check_out', '>=', now());
+            })->get();
 
         // Upcoming bookings
         $upcomingBookings = Booking::where('room_id', $room->id)
@@ -451,9 +453,9 @@ class HostelManagementController extends Controller
             ->get();
 
         // Payment history for this room
-        $payments = Payment::whereHas('booking', function ($q) use ($room) {
-            $q->where('room_id', $room->id);
-        })
+        $payments = Payment::whereHas('booking', function($q) use ($room) {
+                $q->where('room_id', $room->id);
+            })
             ->with('booking.user')
             ->latest()
             ->limit(10)
@@ -469,7 +471,7 @@ class HostelManagementController extends Controller
     {
         $user = Auth::user();
 
-        if (! $user->managedHostels()->where('hostels.id', $room->hostel_id)->exists()) {
+        if (!$user->managedHostels()->where('hostels.id', $room->hostel_id)->exists()) {
             abort(403);
         }
 
@@ -483,7 +485,7 @@ class HostelManagementController extends Controller
     {
         $user = Auth::user();
 
-        if (! $user->managedHostels()->where('hostels.id', $room->hostel_id)->exists()) {
+        if (!$user->managedHostels()->where('hostels.id', $room->hostel_id)->exists()) {
             abort(403);
         }
 
@@ -543,7 +545,7 @@ class HostelManagementController extends Controller
     {
         $user = Auth::user();
 
-        if (! $user->managedHostels()->where('hostels.id', $room->hostel_id)->exists()) {
+        if (!$user->managedHostels()->where('hostels.id', $room->hostel_id)->exists()) {
             abort(403);
         }
 
@@ -572,12 +574,12 @@ class HostelManagementController extends Controller
     {
         $user = Auth::user();
 
-        if (! $user->managedHostels()->where('hostels.id', $room->hostel_id)->exists()) {
+        if (!$user->managedHostels()->where('hostels.id', $room->hostel_id)->exists()) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
         $request->validate([
-            'status' => 'required|in:available,occupied,maintenance',
+            'status' => 'required|in:available,occupied,maintenance'
         ]);
 
         $room->update(['status' => $request->status]);
@@ -588,7 +590,7 @@ class HostelManagementController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Room status updated successfully',
-            'room' => $room,
+            'room' => $room
         ]);
     }
 
@@ -603,7 +605,7 @@ class HostelManagementController extends Controller
         $rooms = Room::whereIn('hostel_id', $hostelIds)
             ->with('hostel')
             ->get()
-            ->map(function ($room) {
+            ->map(function($room) {
                 return [
                     'id' => $room->id,
                     'number' => $room->number,
@@ -621,7 +623,7 @@ class HostelManagementController extends Controller
         return response()->json([
             'success' => true,
             'data' => $rooms,
-            'timestamp' => now()->toDateTimeString(),
+            'timestamp' => now()->toDateTimeString()
         ]);
     }
 
@@ -660,10 +662,10 @@ class HostelManagementController extends Controller
         }
 
         if ($request->filled('search')) {
-            $query->whereHas('user', function ($q) use ($request) {
-                $q->where('name', 'like', '%'.$request->search.'%')
-                    ->orWhere('email', 'like', '%'.$request->search.'%')
-                    ->orWhere('student_id', 'like', '%'.$request->search.'%');
+            $query->whereHas('user', function($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%')
+                  ->orWhere('email', 'like', '%' . $request->search . '%')
+                  ->orWhere('student_id', 'like', '%' . $request->search . '%');
             });
         }
 
@@ -694,7 +696,7 @@ class HostelManagementController extends Controller
     {
         $user = Auth::user();
 
-        if (! $user->managedHostels()->where('hostels.id', $booking->hostel_id)->exists()) {
+        if (!$user->managedHostels()->where('hostels.id', $booking->hostel_id)->exists()) {
             abort(403);
         }
 
@@ -710,12 +712,12 @@ class HostelManagementController extends Controller
     {
         $user = Auth::user();
 
-        if (! $user->managedHostels()->where('hostels.id', $booking->hostel_id)->exists()) {
+        if (!$user->managedHostels()->where('hostels.id', $booking->hostel_id)->exists()) {
             abort(403);
         }
 
         $request->validate([
-            'status' => 'required|in:pending,confirmed,cancelled,completed',
+            'status' => 'required|in:pending,confirmed,cancelled,completed'
         ]);
 
         $oldStatus = $booking->status;
@@ -749,7 +751,7 @@ class HostelManagementController extends Controller
     {
         $user = Auth::user();
 
-        if (! $user->managedHostels()->where('hostels.id', $booking->hostel_id)->exists()) {
+        if (!$user->managedHostels()->where('hostels.id', $booking->hostel_id)->exists()) {
             abort(403);
         }
 
@@ -781,22 +783,22 @@ class HostelManagementController extends Controller
         $user = Auth::user();
         $hostelIds = $user->managedHostels()->pluck('hostels.id');
 
-        $query = User::whereHas('bookings', function ($q) use ($hostelIds) {
-            $q->whereIn('hostel_id', $hostelIds)
-                ->whereIn('status', ['confirmed', 'pending']);
-        })
-            ->with(['bookings' => function ($q) use ($hostelIds) {
+        $query = User::whereHas('bookings', function($q) use ($hostelIds) {
                 $q->whereIn('hostel_id', $hostelIds)
-                    ->whereIn('status', ['confirmed', 'pending'])
-                    ->with('room', 'hostel');
+                  ->whereIn('status', ['confirmed', 'pending']);
+            })
+            ->with(['bookings' => function($q) use ($hostelIds) {
+                $q->whereIn('hostel_id', $hostelIds)
+                  ->whereIn('status', ['confirmed', 'pending'])
+                  ->with('room', 'hostel');
             }]);
 
         if ($request->filled('search')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('name', 'like', '%'.$request->search.'%')
-                    ->orWhere('email', 'like', '%'.$request->search.'%')
-                    ->orWhere('student_id', 'like', '%'.$request->search.'%')
-                    ->orWhere('phone', 'like', '%'.$request->search.'%');
+            $query->where(function($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%')
+                  ->orWhere('email', 'like', '%' . $request->search . '%')
+                  ->orWhere('student_id', 'like', '%' . $request->search . '%')
+                  ->orWhere('phone', 'like', '%' . $request->search . '%');
             });
         }
 
@@ -805,7 +807,7 @@ class HostelManagementController extends Controller
         }
 
         if ($request->filled('hostel_id')) {
-            $query->whereHas('bookings', function ($q) use ($request) {
+            $query->whereHas('bookings', function($q) use ($request) {
                 $q->where('hostel_id', $request->hostel_id);
             });
         }
@@ -814,20 +816,20 @@ class HostelManagementController extends Controller
 
         // Summary statistics
         $summary = [
-            'total' => User::whereHas('bookings', function ($q) use ($hostelIds) {
+            'total' => User::whereHas('bookings', function($q) use ($hostelIds) {
                 $q->whereIn('hostel_id', $hostelIds)->whereIn('status', ['confirmed', 'pending']);
             })->count(),
-            'male' => User::whereHas('bookings', function ($q) use ($hostelIds) {
+            'male' => User::whereHas('bookings', function($q) use ($hostelIds) {
                 $q->whereIn('hostel_id', $hostelIds)->whereIn('status', ['confirmed', 'pending']);
             })->where('gender', 'male')->count(),
-            'female' => User::whereHas('bookings', function ($q) use ($hostelIds) {
+            'female' => User::whereHas('bookings', function($q) use ($hostelIds) {
                 $q->whereIn('hostel_id', $hostelIds)->whereIn('status', ['confirmed', 'pending']);
             })->where('gender', 'female')->count(),
-            'active' => User::whereHas('bookings', function ($q) use ($hostelIds) {
+            'active' => User::whereHas('bookings', function($q) use ($hostelIds) {
                 $q->whereIn('hostel_id', $hostelIds)
-                    ->where('status', 'confirmed')
-                    ->where('check_in', '<=', now())
-                    ->where('check_out', '>=', now());
+                  ->where('status', 'confirmed')
+                  ->where('check_in', '<=', now())
+                  ->where('check_out', '>=', now());
             })->count(),
         ];
 
@@ -864,10 +866,10 @@ class HostelManagementController extends Controller
             ->first();
 
         // Payment history
-        $payments = Payment::whereHas('booking', function ($q) use ($hostelIds, $student) {
-            $q->whereIn('hostel_id', $hostelIds)
-                ->where('user_id', $student->id);
-        })
+        $payments = Payment::whereHas('booking', function($q) use ($hostelIds, $student) {
+                $q->whereIn('hostel_id', $hostelIds)
+                  ->where('user_id', $student->id);
+            })
             ->with('booking')
             ->latest()
             ->get();
@@ -889,28 +891,28 @@ class HostelManagementController extends Controller
         $user = Auth::user();
         $hostelIds = $user->managedHostels()->pluck('hostels.id');
 
-        $occupants = User::whereHas('bookings', function ($q) use ($hostelIds) {
-            $q->whereIn('hostel_id', $hostelIds)
-                ->whereIn('status', ['confirmed', 'pending']);
-        })
-            ->with(['bookings' => function ($q) use ($hostelIds) {
+        $occupants = User::whereHas('bookings', function($q) use ($hostelIds) {
                 $q->whereIn('hostel_id', $hostelIds)
-                    ->whereIn('status', ['confirmed', 'pending'])
-                    ->with('room', 'hostel');
+                  ->whereIn('status', ['confirmed', 'pending']);
+            })
+            ->with(['bookings' => function($q) use ($hostelIds) {
+                $q->whereIn('hostel_id', $hostelIds)
+                  ->whereIn('status', ['confirmed', 'pending'])
+                  ->with('room', 'hostel');
             }])
             ->get();
 
-        $filename = 'occupants-'.now()->format('Y-m-d').'.csv';
+        $filename = 'occupants-' . now()->format('Y-m-d') . '.csv';
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"$filename\"",
         ];
 
-        $callback = function () use ($occupants) {
+        $callback = function() use ($occupants) {
             $file = fopen('php://output', 'w');
             fputcsv($file, [
                 'Name', 'Student ID', 'Email', 'Phone', 'Gender',
-                'Hostel', 'Room', 'Check In', 'Check Out', 'Status',
+                'Hostel', 'Room', 'Check In', 'Check Out', 'Status'
             ]);
 
             foreach ($occupants as $occupant) {
@@ -925,7 +927,7 @@ class HostelManagementController extends Controller
                         $booking->room->number ?? 'N/A',
                         $booking->check_in->format('Y-m-d'),
                         $booking->check_out->format('Y-m-d'),
-                        $booking->status,
+                        $booking->status
                     ]);
                 }
             }
@@ -966,12 +968,12 @@ class HostelManagementController extends Controller
         }
 
         if ($request->filled('search')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('title', 'like', '%'.$request->search.'%')
-                    ->orWhere('description', 'like', '%'.$request->search.'%')
-                    ->orWhereHas('user', function ($uq) use ($request) {
-                        $uq->where('name', 'like', '%'.$request->search.'%');
-                    });
+            $query->where(function($q) use ($request) {
+                $q->where('title', 'like', '%' . $request->search . '%')
+                  ->orWhere('description', 'like', '%' . $request->search . '%')
+                  ->orWhereHas('user', function($uq) use ($request) {
+                      $uq->where('name', 'like', '%' . $request->search . '%');
+                  });
             });
         }
 
@@ -998,7 +1000,7 @@ class HostelManagementController extends Controller
     {
         $user = Auth::user();
 
-        if (! $user->managedHostels()->where('hostels.id', $complaint->hostel_id)->exists()) {
+        if (!$user->managedHostels()->where('hostels.id', $complaint->hostel_id)->exists()) {
             abort(403);
         }
 
@@ -1014,13 +1016,13 @@ class HostelManagementController extends Controller
     {
         $user = Auth::user();
 
-        if (! $user->managedHostels()->where('hostels.id', $complaint->hostel_id)->exists()) {
+        if (!$user->managedHostels()->where('hostels.id', $complaint->hostel_id)->exists()) {
             abort(403);
         }
 
         $request->validate([
             'status' => 'required|in:pending,in_progress,resolved,rejected',
-            'resolution_notes' => 'nullable|string|max:1000',
+            'resolution_notes' => 'nullable|string|max:1000'
         ]);
 
         $complaint->update([
@@ -1040,7 +1042,7 @@ class HostelManagementController extends Controller
     {
         $user = Auth::user();
 
-        if (! $user->managedHostels()->where('hostels.id', $complaint->hostel_id)->exists()) {
+        if (!$user->managedHostels()->where('hostels.id', $complaint->hostel_id)->exists()) {
             abort(403);
         }
 
@@ -1063,9 +1065,9 @@ class HostelManagementController extends Controller
         $user = Auth::user();
         $hostelIds = $user->managedHostels()->pluck('hostels.id');
 
-        $query = Payment::whereHas('booking', function ($q) use ($hostelIds) {
-            $q->whereIn('hostel_id', $hostelIds);
-        })
+        $query = Payment::whereHas('booking', function($q) use ($hostelIds) {
+                $q->whereIn('hostel_id', $hostelIds);
+            })
             ->with(['booking.user', 'booking.room', 'booking.hostel']);
 
         if ($request->filled('status')) {
@@ -1085,9 +1087,9 @@ class HostelManagementController extends Controller
         }
 
         if ($request->filled('search')) {
-            $query->whereHas('booking.user', function ($q) use ($request) {
-                $q->where('name', 'like', '%'.$request->search.'%')
-                    ->orWhere('email', 'like', '%'.$request->search.'%');
+            $query->whereHas('booking.user', function($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%')
+                  ->orWhere('email', 'like', '%' . $request->search . '%');
             });
         }
 
@@ -1095,18 +1097,18 @@ class HostelManagementController extends Controller
 
         // Summary statistics
         $summary = [
-            'total_amount' => Payment::whereHas('booking', function ($q) use ($hostelIds) {
-                $q->whereIn('hostel_id', $hostelIds);
-            })->where('status', 'completed')->sum('amount'),
-            'pending_amount' => Payment::whereHas('booking', function ($q) use ($hostelIds) {
-                $q->whereIn('hostel_id', $hostelIds);
-            })->where('status', 'pending')->sum('amount'),
-            'completed_count' => Payment::whereHas('booking', function ($q) use ($hostelIds) {
-                $q->whereIn('hostel_id', $hostelIds);
-            })->where('status', 'completed')->count(),
-            'pending_count' => Payment::whereHas('booking', function ($q) use ($hostelIds) {
-                $q->whereIn('hostel_id', $hostelIds);
-            })->where('status', 'pending')->count(),
+            'total_amount' => Payment::whereHas('booking', function($q) use ($hostelIds) {
+                    $q->whereIn('hostel_id', $hostelIds);
+                })->where('status', 'completed')->sum('amount'),
+            'pending_amount' => Payment::whereHas('booking', function($q) use ($hostelIds) {
+                    $q->whereIn('hostel_id', $hostelIds);
+                })->where('status', 'pending')->sum('amount'),
+            'completed_count' => Payment::whereHas('booking', function($q) use ($hostelIds) {
+                    $q->whereIn('hostel_id', $hostelIds);
+                })->where('status', 'completed')->count(),
+            'pending_count' => Payment::whereHas('booking', function($q) use ($hostelIds) {
+                    $q->whereIn('hostel_id', $hostelIds);
+                })->where('status', 'pending')->count(),
         ];
 
         return view('hostel-manager.payments.index', compact('payments', 'summary'));
@@ -1119,7 +1121,7 @@ class HostelManagementController extends Controller
     {
         $user = Auth::user();
 
-        if (! $user->managedHostels()->where('hostels.id', $payment->booking->hostel_id)->exists()) {
+        if (!$user->managedHostels()->where('hostels.id', $payment->booking->hostel_id)->exists()) {
             abort(403);
         }
 
@@ -1135,12 +1137,12 @@ class HostelManagementController extends Controller
     {
         $user = Auth::user();
 
-        if (! $user->managedHostels()->where('hostels.id', $payment->booking->hostel_id)->exists()) {
+        if (!$user->managedHostels()->where('hostels.id', $payment->booking->hostel_id)->exists()) {
             abort(403);
         }
 
         $request->validate([
-            'status' => 'required|in:pending,completed,failed,refunded',
+            'status' => 'required|in:pending,completed,failed,refunded'
         ]);
 
         $payment->update(['status' => $request->status]);
@@ -1197,7 +1199,7 @@ class HostelManagementController extends Controller
     {
         $user = Auth::user();
 
-        if (! $user->managedHostels()->where('hostels.id', $maintenance->hostel_id)->exists()) {
+        if (!$user->managedHostels()->where('hostels.id', $maintenance->hostel_id)->exists()) {
             abort(403);
         }
 
@@ -1285,10 +1287,10 @@ class HostelManagementController extends Controller
 
         // Gender distribution
         $genderDistribution = [
-            'male' => User::whereHas('bookings', function ($q) use ($hostelIds) {
+            'male' => User::whereHas('bookings', function($q) use ($hostelIds) {
                 $q->whereIn('hostel_id', $hostelIds)->where('status', 'confirmed');
             })->where('gender', 'male')->count(),
-            'female' => User::whereHas('bookings', function ($q) use ($hostelIds) {
+            'female' => User::whereHas('bookings', function($q) use ($hostelIds) {
                 $q->whereIn('hostel_id', $hostelIds)->where('status', 'confirmed');
             })->where('gender', 'female')->count(),
         ];
@@ -1315,9 +1317,9 @@ class HostelManagementController extends Controller
         // Monthly revenue
         $monthlyRevenue = [];
         for ($month = 1; $month <= 12; $month++) {
-            $revenue = Payment::whereHas('booking', function ($q) use ($hostelIds) {
-                $q->whereIn('hostel_id', $hostelIds);
-            })
+            $revenue = Payment::whereHas('booking', function($q) use ($hostelIds) {
+                    $q->whereIn('hostel_id', $hostelIds);
+                })
                 ->whereYear('created_at', $year)
                 ->whereMonth('created_at', $month)
                 ->where('status', 'completed')
@@ -1325,7 +1327,7 @@ class HostelManagementController extends Controller
 
             $monthlyRevenue[] = [
                 'month' => date('F', mktime(0, 0, 0, $month, 1)),
-                'revenue' => $revenue,
+                'revenue' => $revenue
             ];
         }
 
@@ -1334,9 +1336,9 @@ class HostelManagementController extends Controller
         foreach ($user->managedHostels as $hostel) {
             $revenueByHostel[] = [
                 'hostel' => $hostel->name,
-                'revenue' => Payment::whereHas('booking', function ($q) use ($hostel) {
-                    $q->where('hostel_id', $hostel->id);
-                })
+                'revenue' => Payment::whereHas('booking', function($q) use ($hostel) {
+                        $q->where('hostel_id', $hostel->id);
+                    })
                     ->whereYear('created_at', $year)
                     ->where('status', 'completed')
                     ->sum('amount'),
@@ -1344,9 +1346,9 @@ class HostelManagementController extends Controller
         }
 
         // Payment methods distribution
-        $paymentMethods = Payment::whereHas('booking', function ($q) use ($hostelIds) {
-            $q->whereIn('hostel_id', $hostelIds);
-        })
+        $paymentMethods = Payment::whereHas('booking', function($q) use ($hostelIds) {
+                $q->whereIn('hostel_id', $hostelIds);
+            })
             ->whereYear('created_at', $year)
             ->where('status', 'completed')
             ->select('payment_method', DB::raw('COUNT(*) as count'), DB::raw('SUM(amount) as total'))
@@ -1372,13 +1374,13 @@ class HostelManagementController extends Controller
         $user = Auth::user();
         $hostelIds = $user->managedHostels()->pluck('hostels.id');
 
-        $filename = $type.'-report-'.now()->format('Y-m-d').'.csv';
+        $filename = $type . '-report-' . now()->format('Y-m-d') . '.csv';
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"$filename\"",
         ];
 
-        $callback = function () use ($type, $hostelIds, $request) {
+        $callback = function() use ($type, $hostelIds, $request) {
             $file = fopen('php://output', 'w');
 
             switch ($type) {
@@ -1403,7 +1405,7 @@ class HostelManagementController extends Controller
                             $date->format('Y-m-d'),
                             $occupied,
                             $total - $occupied,
-                            $rate.'%',
+                            $rate . '%'
                         ]);
                     }
                     break;
@@ -1414,17 +1416,17 @@ class HostelManagementController extends Controller
                     $year = $request->get('year', now()->year);
 
                     for ($month = 1; $month <= 12; $month++) {
-                        $revenue = Payment::whereHas('booking', function ($q) use ($hostelIds) {
-                            $q->whereIn('hostel_id', $hostelIds);
-                        })
+                        $revenue = Payment::whereHas('booking', function($q) use ($hostelIds) {
+                                $q->whereIn('hostel_id', $hostelIds);
+                            })
                             ->whereYear('created_at', $year)
                             ->whereMonth('created_at', $month)
                             ->where('status', 'completed')
                             ->sum('amount');
 
-                        $count = Payment::whereHas('booking', function ($q) use ($hostelIds) {
-                            $q->whereIn('hostel_id', $hostelIds);
-                        })
+                        $count = Payment::whereHas('booking', function($q) use ($hostelIds) {
+                                $q->whereIn('hostel_id', $hostelIds);
+                            })
                             ->whereYear('created_at', $year)
                             ->whereMonth('created_at', $month)
                             ->where('status', 'completed')
@@ -1433,7 +1435,7 @@ class HostelManagementController extends Controller
                         fputcsv($file, [
                             date('F', mktime(0, 0, 0, $month, 1)),
                             $revenue,
-                            $count,
+                            $count
                         ]);
                     }
                     break;
@@ -1471,7 +1473,7 @@ class HostelManagementController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,'.$user->id,
+            'email' => 'required|email|unique:users,email,' . $user->id,
             'phone' => 'nullable|string|max:20',
             'current_password' => 'nullable|required_with:new_password|current_password',
             'new_password' => 'nullable|min:8|confirmed',
@@ -1485,7 +1487,7 @@ class HostelManagementController extends Controller
 
         if ($request->filled('new_password')) {
             $user->update([
-                'password' => Hash::make($request->new_password),
+                'password' => Hash::make($request->new_password)
             ]);
         }
 

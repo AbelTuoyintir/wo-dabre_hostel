@@ -1,5 +1,4 @@
 <?php
-
 // database/migrations/2025_06_07_000002_create_agent_commissions_table.php
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;

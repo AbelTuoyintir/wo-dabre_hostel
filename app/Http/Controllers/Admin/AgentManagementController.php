@@ -1,14 +1,13 @@
 <?php
-
 // app/Http/Controllers/Admin/AgentManagementController.php
 
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\AgentCommission;
-use App\Models\AgentWithdrawal;
 use App\Models\HostelAgent;
 use App\Models\User;
+use App\Models\AgentCommission;
+use App\Models\AgentWithdrawal;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -29,13 +28,13 @@ class AgentManagementController extends Controller
         // Search by name, email, or agent code
         if ($request->has('search') && $request->search) {
             $search = $request->search;
-            $query->where(function ($q) use ($search) {
+            $query->where(function($q) use ($search) {
                 $q->where('agent_code', 'like', "%{$search}%")
-                    ->orWhere('phone', 'like', "%{$search}%")
-                    ->orWhereHas('user', function ($user) use ($search) {
-                        $user->where('name', 'like', "%{$search}%")
-                            ->orWhere('email', 'like', "%{$search}%");
-                    });
+                  ->orWhere('phone', 'like', "%{$search}%")
+                  ->orWhereHas('user', function($user) use ($search) {
+                      $user->where('name', 'like', "%{$search}%")
+                           ->orWhere('email', 'like', "%{$search}%");
+                  });
             });
         }
 
@@ -106,7 +105,7 @@ class AgentManagementController extends Controller
 
         $agent->update([
             'status' => 'active',
-            'approved_at' => now(),
+            'approved_at' => now()
         ]);
 
         // Send approval email (you can implement this)
@@ -115,7 +114,7 @@ class AgentManagementController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Agent application approved successfully',
-            'agent' => $agent,
+            'agent' => $agent
         ]);
     }
 
@@ -138,7 +137,7 @@ class AgentManagementController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Agent suspended successfully',
-            'agent' => $agent,
+            'agent' => $agent
         ]);
     }
 
@@ -154,7 +153,7 @@ class AgentManagementController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Agent activated successfully',
-            'agent' => $agent,
+            'agent' => $agent
         ]);
     }
 
@@ -170,7 +169,7 @@ class AgentManagementController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Agent deactivated successfully',
-            'agent' => $agent,
+            'agent' => $agent
         ]);
     }
 
@@ -192,7 +191,7 @@ class AgentManagementController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Agent deleted successfully',
+            'message' => 'Agent deleted successfully'
         ]);
     }
 
@@ -205,13 +204,13 @@ class AgentManagementController extends Controller
 
         $commissions = $agent->commissions()
             ->with(['hostel', 'booking'])
-            ->when($request->type, function ($query, $type) {
+            ->when($request->type, function($query, $type) {
                 return $query->where('type', $type);
             })
-            ->when($request->date_from, function ($query, $date) {
+            ->when($request->date_from, function($query, $date) {
                 return $query->whereDate('created_at', '>=', $date);
             })
-            ->when($request->date_to, function ($query, $date) {
+            ->when($request->date_to, function($query, $date) {
                 return $query->whereDate('created_at', '<=', $date);
             })
             ->latest()
@@ -228,7 +227,7 @@ class AgentManagementController extends Controller
         if ($request->ajax()) {
             return response()->json([
                 'commissions' => $commissions,
-                'summary' => $summary,
+                'summary' => $summary
             ]);
         }
 
@@ -243,7 +242,7 @@ class AgentManagementController extends Controller
         $agent = HostelAgent::findOrFail($id);
 
         $withdrawals = $agent->withdrawals()
-            ->when($request->status, function ($query, $status) {
+            ->when($request->status, function($query, $status) {
                 return $query->where('status', $status);
             })
             ->latest()
@@ -265,7 +264,7 @@ class AgentManagementController extends Controller
 
         $request->validate([
             'action' => 'required|in:approve,reject',
-            'notes' => 'nullable|string',
+            'notes' => 'nullable|string'
         ]);
 
         if ($request->action === 'approve') {
@@ -273,7 +272,7 @@ class AgentManagementController extends Controller
                 'status' => 'completed',
                 'processed_at' => now(),
                 'processed_by' => auth()->id(),
-                'notes' => $request->notes,
+                'notes' => $request->notes
             ]);
 
             $message = 'Withdrawal approved and processed';
@@ -286,7 +285,7 @@ class AgentManagementController extends Controller
                 'status' => 'rejected',
                 'processed_at' => now(),
                 'processed_by' => auth()->id(),
-                'rejection_reason' => $request->notes,
+                'rejection_reason' => $request->notes
             ]);
 
             $message = 'Withdrawal rejected and amount refunded';
@@ -295,7 +294,7 @@ class AgentManagementController extends Controller
         return response()->json([
             'success' => true,
             'message' => $message,
-            'withdrawal' => $withdrawal,
+            'withdrawal' => $withdrawal
         ]);
     }
 
@@ -307,7 +306,7 @@ class AgentManagementController extends Controller
         $request->validate([
             'amount' => 'required|numeric|min:1',
             'type' => 'required|in:bonus,adjustment,referral',
-            'description' => 'required|string',
+            'description' => 'required|string'
         ]);
 
         $agent = HostelAgent::findOrFail($id);
@@ -321,7 +320,7 @@ class AgentManagementController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Commission added successfully',
-            'commission' => $commission,
+            'commission' => $commission
         ]);
     }
 
@@ -332,21 +331,21 @@ class AgentManagementController extends Controller
     {
         $agents = HostelAgent::with('user')->get();
 
-        $filename = 'agents_export_'.date('Y-m-d_His').'.csv';
+        $filename = 'agents_export_' . date('Y-m-d_His') . '.csv';
 
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=$filename",
         ];
 
-        $callback = function () use ($agents) {
+        $callback = function() use ($agents) {
             $file = fopen('php://output', 'w');
 
             // Add headers
             fputcsv($file, [
                 'ID', 'Agent Code', 'Name', 'Email', 'Phone', 'Status',
                 'Total Commission', 'Available Balance', 'Withdrawn Amount',
-                'Total Hostels', 'Total Rooms', 'Registered Date', 'Approved Date',
+                'Total Hostels', 'Total Rooms', 'Registered Date', 'Approved Date'
             ]);
 
             // Add data
@@ -364,7 +363,7 @@ class AgentManagementController extends Controller
                     $agent->total_hostels_added,
                     $agent->total_rooms_added,
                     $agent->created_at,
-                    $agent->approved_at,
+                    $agent->approved_at
                 ]);
             }
 
@@ -394,7 +393,7 @@ class AgentManagementController extends Controller
                 ->where('status', 'active')
                 ->orderBy('total_commission', 'desc')
                 ->limit(5)
-                ->get(),
+                ->get()
         ];
 
         return response()->json($stats);
@@ -412,10 +411,9 @@ class AgentManagementController extends Controller
                     ->count(),
                 'commission' => AgentCommission::whereYear('created_at', $month->year)
                     ->whereMonth('created_at', $month->month)
-                    ->sum('amount'),
+                    ->sum('amount')
             ]);
         }
-
         return $months;
     }
 }

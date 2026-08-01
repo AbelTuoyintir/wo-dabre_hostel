@@ -1,11 +1,11 @@
 <?php
 
+use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AdminController;
-use App\Http\Controllers\Admin\AgentManagementController;
 use App\Http\Controllers\Admin\HostelController;
 use App\Http\Controllers\RoomController;
+use App\Http\Controllers\Admin\AgentManagementController;
 use App\Http\Controllers\SupportController;
-use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'admin'])
     ->prefix('admin')

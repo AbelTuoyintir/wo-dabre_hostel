@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('complaints', function (Blueprint $table) {
             // Add category column after title if it doesn't exist
-            if (! Schema::hasColumn('complaints', 'category')) {
+            if (!Schema::hasColumn('complaints', 'category')) {
                 $table->string('category')->nullable()->after('title');
             }
         });

@@ -53,11 +53,10 @@ class AuthenticatedSessionController extends Controller
     protected function authenticated(Request $request, $user): RedirectResponse
     {
         // Check if account is active
-        if (! $user->is_active) {
+        if (!$user->is_active) {
             Auth::logout();
-
             return redirect()->route('login')->withErrors([
-                'email' => 'Your account is deactivated.',
+                'email' => 'Your account is deactivated.'
             ]);
         }
 
@@ -67,16 +66,15 @@ class AuthenticatedSessionController extends Controller
                 return redirect()->route('admin.dashboard');
 
             case 'hostel_manager':
-                if (! $user->hostel_id) {
+                if (!$user->hostel_id) {
                     return redirect()->route('hostel-manager.profile')
                         ->with('warning', 'Awaiting hostel assignment from admin.');
                 }
-
                 return redirect()->route('hostel-manager.dashboard');
 
             case 'hostel_agent':
                 // Check if agent profile exists
-                if (! $user->agent) {
+                if (!$user->agent) {
                     return redirect()->route('agent.complete-profile')
                         ->with('warning', 'Please complete your agent profile to continue.');
                 }
@@ -89,9 +87,8 @@ class AuthenticatedSessionController extends Controller
 
                 if ($user->agent->status === 'suspended') {
                     Auth::logout();
-
                     return redirect()->route('login')->withErrors([
-                        'email' => 'Your agent account has been suspended. Please contact support.',
+                        'email' => 'Your agent account has been suspended. Please contact support.'
                     ]);
                 }
 
@@ -109,7 +106,7 @@ class AuthenticatedSessionController extends Controller
 
             default:
                 return redirect(route('hostels.index', absolute: false))->withErrors([
-                    'email' => 'Unknown user role. Contact administrator.',
+                    'email' => 'Unknown user role. Contact administrator.'
                 ]);
         }
     }

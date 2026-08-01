@@ -1,5 +1,4 @@
 <?php
-
 // app/Http/Controllers/Agent/SettingsController.php
 
 namespace App\Http\Controllers\Agent;
@@ -45,13 +44,13 @@ class SettingsController extends Controller
 
         $user = Auth::user();
 
-        if (! Hash::check($request->current_password, $user->password)) {
+        if (!Hash::check($request->current_password, $user->password)) {
             return redirect()->route('agent.settings')
                 ->with('error', 'Current password is incorrect.');
         }
 
         $user->update([
-            'password' => Hash::make($request->password),
+            'password' => Hash::make($request->password)
         ]);
 
         return redirect()->route('agent.settings')

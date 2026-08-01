@@ -28,7 +28,7 @@ return new class extends Migration
     public function up(): void
     {
         foreach ($this->tables as $tableName) {
-            if (! Schema::hasColumn($tableName, 'uuid')) {
+            if (!Schema::hasColumn($tableName, 'uuid')) {
                 Schema::table($tableName, function (Blueprint $table) use ($tableName): void {
                     $table->uuid('uuid')->nullable()->after('id');
                     $table->unique('uuid', "{$tableName}_uuid_unique");

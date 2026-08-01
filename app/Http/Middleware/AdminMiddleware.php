@@ -1,5 +1,4 @@
 <?php
-
 // app/Http/Middleware/AdminMiddleware.php
 
 namespace App\Http\Middleware;
@@ -12,7 +11,7 @@ class AdminMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (! auth()->check()) {
+        if (!auth()->check()) {
             return redirect()->route('login')->with('error', 'Please login first.');
         }
 
@@ -20,7 +19,7 @@ class AdminMiddleware
 
         if ($user->role !== 'admin') {
             // ✅ FIX: Redirect to appropriate dashboard based on role
-            return match ($user->role) {
+            return match($user->role) {
                 'hostel_manager' => redirect()->route('hostel-manager.dashboard')
                     ->with('error', 'Admin access only. You are a Hostel Manager.'),
                 'student' => redirect()->route('student.dashboard')

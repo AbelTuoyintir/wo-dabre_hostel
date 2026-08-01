@@ -1,5 +1,4 @@
 <?php
-
 // database/migrations/2025_06_07_000004_add_agent_profile_fields.php
 
 use Illuminate\Database\Migrations\Migration;

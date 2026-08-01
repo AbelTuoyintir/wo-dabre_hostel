@@ -1,7 +1,5 @@
 <?php
-
 // app/Http/Controllers/Agent/HostelManagementController.php
-
 namespace App\Http\Controllers\Agent;
 
 use App\Http\Controllers\Controller;
@@ -11,6 +9,7 @@ use App\Models\Room;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 
 class HostelManagementController extends Controller
 {
@@ -29,7 +28,6 @@ class HostelManagementController extends Controller
     public function create()
     {
         $amenities = Amenity::all();
-
         return view('agent.hostels.create', compact('amenities'));
     }
 
@@ -43,9 +41,9 @@ class HostelManagementController extends Controller
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
             'agent_fee' => 'nullable|numeric|min:0',
-            'amenities' => 'array',
+'amenities' => 'array',
             'images.*' => 'mimetypes:image/*,video/*|max:102400',
-            'featured_image' => 'required|image|max:5120',
+            'featured_image' => 'required|image|max:5120'
         ]);
 
         $agent = Auth::user()->agent;
@@ -58,7 +56,7 @@ class HostelManagementController extends Controller
             'latitude' => $request->latitude,
             'longitude' => $request->longitude,
             'status' => 'pending',
-            'is_verified' => false,
+            'is_verified' => false
         ];
 
         if (Schema::hasColumn('hostels', 'agent_id')) {
@@ -79,7 +77,7 @@ class HostelManagementController extends Controller
                 'type' => 'hostel',
                 'is_primary' => true,
                 'media_kind' => 'image',
-                'order' => 0,
+                'order' => 0
             ]);
         }
 
@@ -88,14 +86,14 @@ class HostelManagementController extends Controller
             $hostel->amenities()->attach($request->amenities);
         }
 
-        // Upload gallery images/videos
+// Upload gallery images/videos
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $file) {
                 $path = $file->store('hostels/gallery', 'public');
 
                 $mediaKind = str_starts_with($file->getMimeType() ?? '', 'video/') ? 'video' : 'image';
 
-                $hostel->images()->create([
+$hostel->images()->create([
                     'image_path' => $path,
                     'media_kind' => $mediaKind,
                     'is_primary' => false,
@@ -149,13 +147,13 @@ class HostelManagementController extends Controller
             'capacity' => 'required|integer|min:1',
             'price_per_year' => 'required|numeric|min:0',
             'description' => 'nullable|string',
-            'is_available' => 'sometimes|boolean',
+            'is_available' => 'sometimes|boolean'
         ]);
 
         $agent = Auth::user()->agent;
 
         // Ensure the hostel belongs to this agent
-        if (! $this->getAgentHostelQuery($agent)->where('id', $hostel->id)->exists()) {
+        if (!$this->getAgentHostelQuery($agent)->where('id', $hostel->id)->exists()) {
             abort(403, 'Unauthorized.');
         }
 
@@ -178,7 +176,7 @@ class HostelManagementController extends Controller
             'room_cost' => $request->price_per_year,
             'description' => $request->description,
             'status' => $request->has('is_available') ? 'available' : 'unavailable',
-            'gender' => 'any',
+            'gender' => 'any'
         ]);
 
         // Add commission for room addition
@@ -199,7 +197,7 @@ class HostelManagementController extends Controller
         $agent = Auth::user()->agent;
 
         // Ensure the hostel belongs to this agent
-        if (! $this->getAgentHostelQuery($agent)->where('id', $hostel->id)->exists()) {
+        if (!$this->getAgentHostelQuery($agent)->where('id', $hostel->id)->exists()) {
             abort(403, 'Unauthorized.');
         }
 

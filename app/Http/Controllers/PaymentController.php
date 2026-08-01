@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Payment;
+use Illuminate\Http\Request;
+use Unicodeveloper\Paystack\Facades\Paystack;
+use App\Models\User;
 
 class PaymentController extends Controller
 {
