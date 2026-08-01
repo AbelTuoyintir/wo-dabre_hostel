@@ -266,11 +266,11 @@
                         <!-- Price per Month -->
                         <div>
                             <label class="block text-[10px] font-medium text-gray-500 uppercase mb-1">
-                                Price/Month (₵) <span class="text-red-500">*</span>
+                                Room Cost (₵) <span class="text-red-500">*</span>
                             </label>
                             <div class="relative">
                                 <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs">₵</span>
-                                <input type="number" name="price_per_month" value="{{ old('price_per_month') }}" step="0.01" min="0"
+                                <input type="number" name="room_cost" value="{{ old('room_cost') }}" step="0.01" min="0"
                                        class="w-full pl-8 pr-3 py-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 @error('price_per_month') border-red-500 @enderror"
                                        placeholder="0.00" required>
                             </div>

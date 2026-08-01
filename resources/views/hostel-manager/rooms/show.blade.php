@@ -165,11 +165,11 @@
                         <option value="maintenance" {{ $room->status == 'maintenance' ? 'selected' : '' }}>Set Maintenance</option>
                     </select>
                     
-                    <a href="#" class="block w-full text-center bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-1.5 rounded-lg">
+                    <a href="{{ route('hostel-manager.bookings') }}" class="block w-full text-center bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-1.5 rounded-lg">
                         <i class="fas fa-calendar-plus mr-1"></i> Assign Occupant
                     </a>
                     
-                    <a href="#" class="block w-full text-center border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs px-3 py-1.5 rounded-lg">
+                    <a href="{{ route('hostel-manager.occupants') }}" class="block w-full text-center border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs px-3 py-1.5 rounded-lg">
                         <i class="fas fa-clipboard-list mr-1"></i> View History
                     </a>
                 </div>
@@ -206,7 +206,7 @@
 @push('scripts')
 <script>
 function updateRoomStatusQuick(status) {
-    fetch(`/hostel-manager/rooms/{{ $room->id }}/status`, {
+    fetch(`/hostel-manager/rooms/{{ $room->uuid }}/status`, {
         method: 'PATCH',
         headers: {
             'Content-Type': 'application/json',
