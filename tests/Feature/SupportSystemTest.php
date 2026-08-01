@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\SupportTicket;
-use App\Models\SupportMessage;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -302,5 +301,29 @@ class SupportSystemTest extends TestCase
             'message' => 'Follow up from same guest session',
         ]);
         $sendResponse->assertRedirect();
+    }
+
+    /**
+     * Test that public support endpoints are rate limited to 10 requests per minute.
+     */
+    public function test_support_endpoints_are_rate_limited(): void
+    {
+        $payload = [
+            'guest_name' => 'Spammer',
+            'guest_email' => 'spam@example.com',
+            'category' => 'general',
+            'subject' => 'Spam Subject',
+            'message' => 'Spam message content',
+        ];
+
+        // Send 10 successful/redirect requests
+        for ($i = 0; $i < 10; $i++) {
+            $response = $this->post(route('support.ticket.store'), $payload);
+            $response->assertStatus(302); // redirects on success
+        }
+
+        // The 11th request must be throttled with HTTP 429
+        $response = $this->post(route('support.ticket.store'), $payload);
+        $response->assertStatus(429);
     }
 }

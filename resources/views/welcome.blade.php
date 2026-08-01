@@ -122,39 +122,53 @@
     </div>
 
     <!-- MOBILE BOTTOM NAVIGATION (Airbnb style) - More Compact -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-3 py-2 sm:hidden z-50 flex justify-around items-center">
-        <a href="{{ route('hostels.index') }}" class="flex flex-col items-center gap-0.5 {{ !request()->routeIs('hostels.index') || request()->hasAny(['location', 'search', 'price_range']) ? 'text-slate-400' : 'text-rose-500' }}">
-            <i class="fas fa-search text-base"></i>
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-3 py-2 sm:hidden z-50 flex justify-around items-center" aria-label="Mobile Bottom Navigation">
+        <a href="{{ route('hostels.index') }}"
+           class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2 {{ !request()->routeIs('hostels.index') || request()->hasAny(['location', 'search', 'price_range']) ? 'text-slate-400' : 'text-rose-500' }}"
+           aria-label="Explore Hostels">
+            <i class="fas fa-search text-base" aria-hidden="true"></i>
             <span class="text-[9px] font-medium">Explore</span>
         </a>
-        <a href="#" class="flex flex-col items-center gap-0.5 text-slate-400">
-            <i class="far fa-heart text-base"></i>
+        <a href="#"
+           class="flex flex-col items-center gap-0.5 text-slate-400 rounded-lg p-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2"
+           aria-label="Wishlists">
+            <i class="far fa-heart text-base" aria-hidden="true"></i>
             <span class="text-[9px] font-medium">Wishlists</span>
         </a>
-        <a href="#" class="flex flex-col items-center gap-0.5 text-slate-400">
-            <i class="fas fa-university text-base"></i>
+        <a href="#"
+           class="flex flex-col items-center gap-0.5 text-slate-400 rounded-lg p-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2"
+           aria-label="My Bookings">
+            <i class="fas fa-university text-base" aria-hidden="true"></i>
             <span class="text-[9px] font-medium">Bookings</span>
         </a>
         @auth
             @if(auth()->user()->role === 'student')
-                <a href="{{ route('student.dashboard') }}" class="flex flex-col items-center gap-0.5 text-slate-400">
-                    <i class="far fa-user-circle text-base"></i>
+                <a href="{{ route('student.dashboard') }}"
+                   class="flex flex-col items-center gap-0.5 text-slate-400 rounded-lg p-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2"
+                   aria-label="Student Dashboard Profile">
+                    <i class="far fa-user-circle text-base" aria-hidden="true"></i>
                     <span class="text-[9px] font-medium">Profile</span>
                 </a>
             @elseif(auth()->user()->role === 'admin')
-                <a href="{{ route('admin.dashboard') }}" class="flex flex-col items-center gap-0.5 text-slate-400">
-                    <i class="far fa-user-circle text-base"></i>
+                <a href="{{ route('admin.dashboard') }}"
+                   class="flex flex-col items-center gap-0.5 text-slate-400 rounded-lg p-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2"
+                   aria-label="Admin Dashboard">
+                    <i class="far fa-user-circle text-base" aria-hidden="true"></i>
                     <span class="text-[9px] font-medium">Admin</span>
                 </a>
             @elseif(auth()->user()->role === 'manager')
-                <a href="{{ route('hostel-manager.dashboard') }}" class="flex flex-col items-center gap-0.5 text-slate-400">
-                    <i class="far fa-user-circle text-base"></i>
+                <a href="{{ route('hostel-manager.dashboard') }}"
+                   class="flex flex-col items-center gap-0.5 text-slate-400 rounded-lg p-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2"
+                   aria-label="Manager Dashboard">
+                    <i class="far fa-user-circle text-base" aria-hidden="true"></i>
                     <span class="text-[9px] font-medium">Manager</span>
                 </a>
             @endif
         @else
-            <a href="{{ route('login') }}" class="flex flex-col items-center gap-0.5 text-slate-400">
-                <i class="far fa-user-circle text-base"></i>
+            <a href="{{ route('login') }}"
+               class="flex flex-col items-center gap-0.5 text-slate-400 rounded-lg p-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2"
+               aria-label="Log in to your account">
+                <i class="far fa-user-circle text-base" aria-hidden="true"></i>
                 <span class="text-[9px] font-medium">Log in</span>
             </a>
         @endauth
