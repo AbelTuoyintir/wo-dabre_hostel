@@ -593,9 +593,9 @@ class StudentController extends Controller
      */
    public function browseHostels(Request $request)
     {
-        // Paginate approved hostels (with rooms and primary image)
+        // Paginate approved hostels (with rooms, amenities and primary image)
         $hostels = Hostel::approved()
-            ->with(['primaryImage', 'rooms'])
+            ->with(['primaryImage', 'rooms', 'amenities'])
             ->when($request->search, function($query, $search) {
                 return $query->where(function($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")

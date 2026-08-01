@@ -238,13 +238,7 @@
                     </div>
                 </div>
             </div>
-            <div class="flex flex-col items-end">
-                <div class="price-tag px-6 py-3 rounded-2xl">
-                    <span class="text-3xl font-bold text-blue-600">₵{{ number_format((float) ($hostel->min_price ?? 0), 2) }}</span>
-                    <span class="text-sm text-gray-500 ml-1">/ year</span>
-                </div>
-                <p class="text-sm text-gray-500 mt-1">Starting from</p>
-            </div>
+            
         </div>
 
         <!-- Quick Stats -->
@@ -340,9 +334,9 @@
     </div>
     
     @if($availableRooms && $availableRooms->count() > 0)
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 room-grid">
-            @foreach($availableRooms as $room)
-                <div class="room-card bg-white rounded-2xl overflow-hidden">
+        <div id="available-rooms-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 room-grid">
+            @foreach($availableRooms as $index => $room)
+                <div class="room-card bg-white rounded-2xl overflow-hidden {{ $index >= 6 ? 'hidden' : '' }}">
                     <!-- Room Image -->
                     <div class="relative h-56 bg-gray-100">
                         @if($room->images && $room->images->count() > 0)
@@ -443,9 +437,7 @@
                                         <div class="text-2xl font-bold text-blue-600">
                                             ₵{{ number_format($room->room_cost, 2) }}
                                         </div>
-                                        <div class="text-xs text-gray-400">
-                                            ₵{{ number_format($room->room_cost / 12, 2) }}/month
-                                        </div>
+                                        
                                     @else
                                         <div class="text-gray-400 text-sm">Price not set</div>
                                     @endif
@@ -463,8 +455,9 @@
         </div>
 
         <!-- Load More / Pagination -->
-        <div class="mt-8 text-center">
-            <button class="px-8 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition font-medium">
+        <div id="load-more-container" class="mt-8 text-center">
+            <button type="button" id="load-more-rooms-btn"
+                    class="px-8 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition font-medium">
                 <i class="fas fa-sync-alt mr-2"></i>
                 Load More Rooms
             </button>
@@ -603,6 +596,38 @@
         });
 
         images.forEach(img => imageObserver.observe(img));
+
+        // Load More Rooms - reveal next batch of hidden room cards
+        const grid = document.getElementById('available-rooms-grid');
+        const loadMoreBtn = document.getElementById('load-more-rooms-btn');
+        const loadMoreContainer = document.getElementById('load-more-container');
+
+        if (grid && loadMoreBtn) {
+            const rooms = Array.from(grid.querySelectorAll('.room-card'));
+            const batchSize = 6;
+
+            // Hide the button entirely if all rooms already fit on screen
+            if (rooms.length <= batchSize) {
+                if (loadMoreContainer) loadMoreContainer.style.display = 'none';
+            }
+
+            loadMoreBtn.addEventListener('click', function () {
+                let revealed = 0;
+                rooms.forEach(room => {
+                    if (revealed >= batchSize) return;
+                    if (room.classList.contains('hidden')) {
+                        room.classList.remove('hidden');
+                        revealed++;
+                    }
+                });
+
+                // If no more hidden rooms remain, hide the button
+                const remaining = rooms.filter(room => room.classList.contains('hidden')).length;
+                if (remaining === 0 && loadMoreContainer) {
+                    loadMoreContainer.style.display = 'none';
+                }
+            });
+        }
     });
 </script>
 @endsection

@@ -281,9 +281,12 @@ class BookingController extends Controller
     $splitService = app(PaystackSplitService::class);
     $costBreakdown = $splitService->calculateTotal($roomCost);
     $platformFee = $costBreakdown['platform_fee'];
+    $paystackBuffer = $costBreakdown['paystack_buffer'];
+    $bankingCharge = $costBreakdown['banking_charge'];
     $finalTotal = $costBreakdown['total'];
     $agentFee = 0;
     $netAmount = $roomCost;
+    $totalServiceCharge = $platformFee + $paystackBuffer + $bankingCharge;
 
     // Retrieve the hostel's subaccount for split payment
     $hostelModel = Hostel::find($validated['hostel_id']);
@@ -294,6 +297,9 @@ class BookingController extends Controller
         'user_id' => $user->id,
         'room_id' => $room->id,
         'room_cost' => $roomCost,
+        'platform_fee' => $platformFee,
+        'paystack_buffer' => $paystackBuffer,
+        'banking_charge' => $bankingCharge,
         'total_service_charge' => $totalServiceCharge,
         'final_total' => $finalTotal,
         'net_amount' => $netAmount
@@ -874,7 +880,8 @@ class BookingController extends Controller
         $roomCost = (float) ($validated['room_cost'] ?? Room::find($validated['room_id'])->room_cost ?? 0);
 
         // Service charge calculated server-side (no fee breakdown exposed to UI)
-        $totalServiceRate = config('payments.total_service_charge_rate', 0.051);
+        // Uses total_surcharge_rate so the quoted total matches PaystackSplitService::calculateTotal()
+        $totalServiceRate = config('payments.total_surcharge_rate', 0.0512);
         $finalTotal = round($roomCost + round($roomCost * $totalServiceRate, 2), 2);
 
         return response()->json([
