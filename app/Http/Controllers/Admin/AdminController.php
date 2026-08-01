@@ -657,4 +657,3 @@ class AdminController extends Controller
             ->with('success', 'Booking status updated successfully.');
     }
 }
-

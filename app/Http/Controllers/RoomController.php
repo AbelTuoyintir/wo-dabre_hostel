@@ -1022,4 +1022,3 @@ $path = $image->store('rooms/gallery', 'public');
         );
     }
 }
-

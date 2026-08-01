@@ -78,25 +78,25 @@ class AuthenticatedSessionController extends Controller
                     return redirect()->route('agent.complete-profile')
                         ->with('warning', 'Please complete your agent profile to continue.');
                 }
-                
+
                 // Check agent status
                 if ($user->agent->status === 'pending') {
                     return redirect()->route('agent.pending')
                         ->with('warning', 'Your agent application is pending approval. You will be notified once approved.');
                 }
-                
+
                 if ($user->agent->status === 'suspended') {
                     Auth::logout();
                     return redirect()->route('login')->withErrors([
                         'email' => 'Your agent account has been suspended. Please contact support.'
                     ]);
                 }
-                
+
                 // Status is 'active'
                 if ($user->agent->status === 'active') {
                     return redirect()->route('agent.dashboard');
                 }
-                
+
                 // Fallback for any other status
                 return redirect()->route('agent.complete-profile')
                     ->with('warning', 'Please complete your agent profile.');

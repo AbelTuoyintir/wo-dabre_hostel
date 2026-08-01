@@ -313,4 +313,3 @@ class PaystackSplitService
         return (int) round($roomCost * $platformFeeRate * 100);
     }
 }
-

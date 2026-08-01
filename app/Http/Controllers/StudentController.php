@@ -614,7 +614,7 @@ class StudentController extends Controller
 
             // Get the price of the first available room, or 0 if none
             $firstRoom = $availableRooms->first();
-            
+
             $hostel->price = $firstRoom ? (float) $firstRoom->room_cost : 0;
         }
 
@@ -635,7 +635,7 @@ public function viewHostel(Hostel $hostel)
 
     // Load hostel with images
     $hostel->load(['images', 'primaryImage']);
-    
+
     // Get available rooms - fix the query
     $availableRooms = $hostel->rooms()
         ->where('status', 'available')
@@ -652,7 +652,7 @@ public function viewHostel(Hostel $hostel)
         }
     }
 
-   
+
 
     // Get average rating
     $averageRating = $hostel->reviews()->avg('rating') ?? 0;

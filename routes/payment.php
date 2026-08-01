@@ -1,8 +1,7 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\BookingController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -11,39 +10,42 @@ use App\Http\Controllers\BookingController;
 */
 
 Route::prefix('bookings')->name('bookings.')->middleware('throttle:bookings')->group(function () {
-    
+
     // ===== GUEST ROUTES (No authentication required) =====
     // Guest booking form
     // NOTE: Not using {hostel:uuid} / {room:uuid} — the HasRouteUuid trait's resolveRouteBinding()
     // provides a fallback: it tries UUID first, then falls back to numeric ID if not found.
     Route::get('/hostel/{hostel}/room/{room}/book', [BookingController::class, 'createBooking'])
         ->name('create');
-    
+
     // Guest booking store
     Route::post('/booking/public', [BookingController::class, 'store'])
         ->name('store');
-    
+
     // ===== STUDENT ROUTES (Authentication required) =====
     Route::middleware(['auth'])->group(function () {
         // Student booking form
         Route::get('/student/hostel/{hostel}/room/{room}/book', [BookingController::class, 'StudentCreateBooking'])
             ->name('create.student');
-        
+
         // Student booking store
         Route::post('/student', [BookingController::class, 'StudentStore'])
             ->name('store.student');
-        
+
         // AJAX price calculation used on the booking form
         Route::post('/calculate', [BookingController::class, 'calculate'])
             ->name('calculate');
     });
-    
+
     // ===== SHARED ROUTES (Work for both guests and students) =====
     // SINGLE CALLBACK URL - Handles both guest and student payments
     Route::get('/payment/callback/{gateway}', [BookingController::class, 'handlePaymentCallback'])
         ->name('payment.callback');
-    
-    
+
+    // Secure Paystack split transaction webhook
+    Route::post('/payment/webhook/{gateway}', [BookingController::class, 'handleWebhook'])
+        ->name('payment.webhook');
+
     // View booking details (works for both, but will redirect to login if not authenticated)
     Route::get('/{booking:uuid}', [BookingController::class, 'show'])
         ->name('show')

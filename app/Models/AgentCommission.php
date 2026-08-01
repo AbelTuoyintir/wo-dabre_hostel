@@ -35,4 +35,3 @@ class AgentCommission extends Model
         return $this->belongsTo(Booking::class, 'booking_id');
     }
 }
-

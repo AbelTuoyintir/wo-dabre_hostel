@@ -487,7 +487,7 @@ class HostelManagerDashboard extends Controller
             ->whereIn('booking_status', ['pending', 'confirmed'])
             ->with('user')
             ->get();
-        
+
         // Payment history for this room
         $payments = Payment::whereHas('booking', function($q) use ($room) {
             $q->where('room_id', $room->id);

@@ -43,4 +43,3 @@ class StudentPersonaTest extends TestCase
             ->assertOk();
     }
 }
-

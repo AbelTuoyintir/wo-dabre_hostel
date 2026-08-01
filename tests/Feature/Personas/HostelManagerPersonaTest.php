@@ -43,4 +43,3 @@ class HostelManagerPersonaTest extends TestCase
             ->assertOk();
     }
 }
-

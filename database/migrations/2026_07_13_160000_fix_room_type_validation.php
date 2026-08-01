@@ -16,4 +16,3 @@ return new class extends Migration {
         // no-op
     }
 };
-

@@ -17,7 +17,7 @@ class ProfileController extends Controller
     public function showCompleteForm()
     {
         $user = Auth::user();
-        
+
         // If agent already exists, redirect to dashboard or pending
         if ($user->agent) {
             if ($user->agent->status === 'active') {
@@ -26,10 +26,10 @@ class ProfileController extends Controller
                 return redirect()->route('agent.pending');
             }
         }
-        
+
         return view('agent.complete-profile');
     }
-    
+
     /**
      * Complete agent profile
      */
@@ -45,27 +45,27 @@ class ProfileController extends Controller
             'emergency_contact' => 'nullable|string',
             'emergency_phone' => 'nullable|string',
         ]);
-        
+
         $user = Auth::user();
-        
+
         // Check if agent already exists
         if ($user->agent) {
             return redirect()->route('agent.dashboard')
                 ->with('error', 'Profile already completed.');
         }
-        
+
         // Upload ID card if provided
         $idCardPath = null;
         if ($request->hasFile('id_card_image')) {
             $idCardPath = $request->file('id_card_image')->store('agent_ids', 'public');
         }
-        
+
         // Generate unique agent code
         $agentCode = 'AG-' . strtoupper(Str::random(8));
         while (HostelAgent::where('agent_code', $agentCode)->exists()) {
             $agentCode = 'AG-' . strtoupper(Str::random(8));
         }
-        
+
         // Create agent profile
         $agent = HostelAgent::create([
             'user_id' => $user->id,
@@ -84,25 +84,25 @@ class ProfileController extends Controller
             'total_hostels_added' => 0,
             'total_rooms_added' => 0,
         ]);
-        
+
         return redirect()->route('agent.pending')
             ->with('success', 'Profile completed successfully! Your application is pending approval.');
     }
-    
+
     /**
      * Show agent profile
      */
     public function show()
     {
         $agent = Auth::user()->agent;
-        
+
         if (!$agent) {
             return redirect()->route('agent.complete-profile');
         }
-        
+
         return view('agent.profile', compact('agent'));
     }
-    
+
     /**
      * Update agent profile
      */
@@ -123,11 +123,11 @@ class ProfileController extends Controller
             'emergency_contact' => 'nullable|string',
             'emergency_phone' => 'nullable|string',
         ]);
-        
+
         $agent->update($request->only([
             'phone', 'address', 'city', 'region', 'emergency_contact', 'emergency_phone'
         ]));
-        
+
         return redirect()->route('agent.profile')
             ->with('success', 'Profile updated successfully!');
     }

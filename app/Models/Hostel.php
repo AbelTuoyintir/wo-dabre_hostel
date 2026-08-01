@@ -70,7 +70,7 @@ class Hostel extends Model
                     ->withTimestamps();
     }
 
- 
+
 
     public function amenities()
     {

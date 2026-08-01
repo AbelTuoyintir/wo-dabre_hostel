@@ -22,7 +22,7 @@ class DashboardController extends Controller
     {
         $agent = Auth::user()->agent;
         $hostelQuery = $this->getAgentHostelQuery($agent);
-        
+
         $stats = [
             'total_hostels' => $agent->total_hostels_added ?? 0,
             'total_rooms' => $agent->total_rooms_added ?? 0,
@@ -67,7 +67,7 @@ class DashboardController extends Controller
                 ->whereYear('created_at', $month->year)
                 ->whereMonth('created_at', $month->month)
                 ->sum('amount');
-            
+
             $months->push([
                 'month' => $month->format('M'),
                 'commission' => $total
@@ -79,7 +79,7 @@ class DashboardController extends Controller
     public function commissionHistory(Request $request)
     {
         $agent = Auth::user()->agent;
-        
+
         $commissions = $agent->commissions()
             ->with(['hostel', 'booking'])
             ->when($request->type, function($query, $type) {
@@ -152,7 +152,7 @@ class DashboardController extends Controller
                 $request->bank_name
             );
 
-            return redirect()->route('agent.withdrawals')->with('success', 
+            return redirect()->route('agent.withdrawals')->with('success',
                 'Withdrawal request submitted successfully!'
             );
 
