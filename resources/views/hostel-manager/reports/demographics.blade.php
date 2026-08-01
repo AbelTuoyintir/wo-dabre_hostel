@@ -79,53 +79,7 @@
         </div>
     </div>
 
-    <!-- Year of Study -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-        <h3 class="text-xs font-semibold text-gray-700 uppercase mb-4 flex items-center">
-            <i class="fas fa-graduation-cap text-green-500 mr-1.5 text-xs"></i>
-            Year of Study
-        </h3>
-        <div class="h-64">
-            <canvas id="yearChart"></canvas>
-        </div>
-    </div>
-</div>
-
-<!-- Program Distribution -->
-<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-    <div class="px-4 py-3 bg-gray-50 border-b border-gray-100">
-        <h3 class="text-xs font-semibold text-gray-700 uppercase">Program Distribution</h3>
-    </div>
-    <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-100">
-            <thead class="bg-gray-50">
-                <tr>
-                    <th class="px-4 py-2 text-left text-[10px] font-medium text-gray-500 uppercase">Program</th>
-                    <th class="px-4 py-2 text-left text-[10px] font-medium text-gray-500 uppercase">Number of Students</th>
-                    <th class="px-4 py-2 text-left text-[10px] font-medium text-gray-500 uppercase">Percentage</th>
-                    <th class="px-4 py-2 text-left text-[10px] font-medium text-gray-500 uppercase">Distribution</th>
-                </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-100">
-                @php $totalStudents = $maleStudents + $femaleStudents; @endphp
-                @foreach($programs as $program)
-                <tr class="hover:bg-gray-50">
-                    <td class="px-4 py-3 whitespace-nowrap text-xs font-medium text-gray-900">{{ $program->program ?? 'Not Specified' }}</td>
-                    <td class="px-4 py-3 whitespace-nowrap text-xs text-gray-600">{{ $program->total }}</td>
-                    <td class="px-4 py-3 whitespace-nowrap text-xs text-gray-600">
-                        {{ $totalStudents > 0 ? round(($program->total / $totalStudents) * 100, 1) : 0 }}%
-                    </td>
-                    <td class="px-4 py-3 whitespace-nowrap">
-                        <div class="w-32 bg-gray-200 rounded-full h-1.5">
-                            <div class="bg-blue-600 h-1.5 rounded-full"
-                                 style="width: {{ $totalStudents > 0 ? ($program->total / $totalStudents) * 100 : 0 }}%"></div>
-                        </div>
-                    </td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
+<!-- Additional demographics can be added here -->
 </div>
 @endsection
 
@@ -160,46 +114,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Year Chart
-    const yearCtx = document.getElementById('yearChart')?.getContext('2d');
-    if (yearCtx) {
-        const yearData = {!! json_encode($years->pluck('total')->toArray()) !!};
-        const yearLabels = {!! json_encode($years->pluck('year_of_study')->map(function($year) {
-            return 'Year ' . $year;
-        })->toArray()) !!};
-
-        new Chart(yearCtx, {
-            type: 'bar',
-            data: {
-                labels: yearLabels,
-                datasets: [{
-                    label: 'Students',
-                    data: yearData,
-                    backgroundColor: '#10b981',
-                    borderRadius: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            stepSize: 1,
-                            font: { size: 10 }
-                        }
-                    },
-                    x: {
-                        ticks: { font: { size: 10 } }
-                    }
-                }
-            }
-        });
-    }
+    // Year chart placeholder for future implementation
 });
 </script>
 @endpush

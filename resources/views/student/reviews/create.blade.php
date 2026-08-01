@@ -55,13 +55,19 @@
                 <label class="block text-sm font-medium text-gray-700 mb-2">
                     Your Rating <span class="text-red-500">*</span>
                 </label>
-                <div class="flex items-center space-x-2" x-data="{ rating: 0 }">
-                    <div class="flex space-x-1 text-3xl">
+                <div class="flex items-center space-x-2" x-data="{ rating: 0, hoverRating: 0 }">
+                    <div class="flex space-x-1 text-3xl animate-fade-in">
                         <template x-for="star in 5" :key="star">
-                            <i class="cursor-pointer hover:scale-110 transition"
-                               :class="star <= rating ? 'fas fa-star text-yellow-400' : 'far fa-star text-gray-300'"
-                               @click="rating = star"
-                               @mouseover="rating = star"></i>
+                            <button type="button"
+                                    :aria-label="'Rate ' + star + ' star' + (star > 1 ? 's' : '')"
+                                    class="cursor-pointer hover:scale-110 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-lg p-0.5"
+                                    @click="rating = star"
+                                    @mouseover="hoverRating = star"
+                                    @mouseleave="hoverRating = 0"
+                                    @focus="hoverRating = star"
+                                    @blur="hoverRating = 0">
+                                <i :class="star <= (hoverRating || rating) ? 'fas fa-star text-yellow-400' : 'far fa-star text-gray-300'" aria-hidden="true"></i>
+                            </button>
                         </template>
                     </div>
                     <input type="hidden" name="rating" x-model="rating" required>
@@ -88,14 +94,17 @@
 
             <!-- Review Text -->
             <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-2">
+                <label for="review-textarea" class="block text-sm font-medium text-gray-700 mb-2">
                     Your Review <span class="text-red-500">*</span>
                 </label>
-                <textarea name="review" rows="5" 
+                <textarea id="review-textarea" name="review" rows="5"
                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                           placeholder="Tell us about your experience at this hostel. What did you like? What could be improved?"
+                          aria-describedby="char-counter-container"
                           required>{{ old('review') }}</textarea>
-                <p class="text-xs text-gray-500 mt-1">Minimum 20 characters</p>
+                <div id="char-counter-container" class="text-xs text-gray-500 mt-1" aria-live="polite">
+                    Minimum 20 characters
+                </div>
                 @error('review')
                     <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
                 @enderror
@@ -170,26 +179,27 @@
 <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 <script>
 // Character counter for review
-document.querySelector('textarea[name="review"]')?.addEventListener('input', function() {
-    const minLength = 20;
-    const currentLength = this.value.length;
-    const counter = document.createElement('p');
-    
-    if (currentLength < minLength) {
-        this.classList.add('border-red-500');
-        if (!this.nextElementSibling?.classList.contains('char-counter')) {
-            const warning = document.createElement('p');
-            warning.className = 'text-xs text-red-500 mt-1 char-counter';
-            warning.textContent = `${minLength - currentLength} more characters needed`;
-            this.parentNode.insertBefore(warning, this.nextSibling);
-        } else {
-            this.nextElementSibling.textContent = `${minLength - currentLength} more characters needed`;
-        }
-    } else {
-        this.classList.remove('border-red-500');
-        if (this.nextElementSibling?.classList.contains('char-counter')) {
-            this.nextElementSibling.remove();
-        }
+document.addEventListener('DOMContentLoaded', function() {
+    const reviewTextarea = document.getElementById('review-textarea');
+    const charCounter = document.getElementById('char-counter-container');
+
+    if (reviewTextarea && charCounter) {
+        reviewTextarea.addEventListener('input', function() {
+            const minLength = 20;
+            const currentLength = this.value.length;
+
+            if (currentLength < minLength) {
+                this.classList.add('border-red-500');
+                this.classList.remove('border-gray-300');
+                charCounter.className = 'text-xs text-red-500 mt-1 font-semibold';
+                charCounter.textContent = `${minLength - currentLength} more characters needed`;
+            } else {
+                this.classList.remove('border-red-500');
+                this.classList.add('border-gray-300');
+                charCounter.className = 'text-xs text-green-600 mt-1 font-semibold';
+                charCounter.textContent = `Excellent! Minimum length met (${currentLength} characters)`;
+            }
+        });
     }
 });
 </script>
