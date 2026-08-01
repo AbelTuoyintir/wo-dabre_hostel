@@ -67,5 +67,3 @@ class AgentWithdrawal extends Model
         return $this->belongsTo(HostelAgent::class, 'hostel_agent_id');
     }
 }
-
-

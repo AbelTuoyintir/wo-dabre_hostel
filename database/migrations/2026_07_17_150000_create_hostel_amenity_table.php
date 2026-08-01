@@ -21,7 +21,7 @@ return new class extends Migration
                 $table->unique(['hostel_id', 'amenity_id']);
             });
         }
-        
+
     }
 
     public function down(): void

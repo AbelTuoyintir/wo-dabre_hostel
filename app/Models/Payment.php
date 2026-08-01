@@ -166,15 +166,15 @@ class Payment extends Model
     {
         $this->status = 'completed';
         $this->paid_at = now();
-        
+
         if ($transactionId) {
             $this->transaction_id = $transactionId;
         }
-        
+
         if ($paymentMethod) {
             $this->payment_method = $paymentMethod;
         }
-        
+
         return $this->save();
     }
 
@@ -195,11 +195,11 @@ class Payment extends Model
         $this->status = 'refunded';
         $this->refund_amount = $amount;
         $this->refunded_at = now();
-        
+
         if ($refundReference) {
             $this->refund_reference = $refundReference;
         }
-        
+
         return $this->save();
     }
 

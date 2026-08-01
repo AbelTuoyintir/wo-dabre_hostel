@@ -53,5 +53,3 @@ class HostelManagerMiddleware
         return $next($request);
     }
 }
-
-

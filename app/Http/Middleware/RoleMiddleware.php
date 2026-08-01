@@ -15,7 +15,7 @@ class RoleMiddleware
         }
 
         $user = Auth::user();
-        
+
         if (!in_array($user->role, $roles)) {
             abort(403, 'Unauthorized. Required role: ' . implode(', ', $roles));
         }

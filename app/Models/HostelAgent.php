@@ -109,4 +109,3 @@ class HostelAgent extends Model
         return $withdrawal;
     }
 }
-

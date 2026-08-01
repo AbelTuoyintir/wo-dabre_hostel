@@ -93,4 +93,3 @@ class AgentMiddleware
         return $next($request);
     }
 }
-

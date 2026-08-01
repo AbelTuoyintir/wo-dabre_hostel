@@ -750,4 +750,3 @@ class AgentPersonaTest extends TestCase
         $this->assertEquals(1, $agent->fresh()->total_rooms_added);
     }
 }
-

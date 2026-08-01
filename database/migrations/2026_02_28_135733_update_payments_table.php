@@ -13,11 +13,11 @@ return new class extends Migration
             if (!Schema::hasColumn('payments', 'user_id')) {
                 $table->foreignId('user_id')->nullable()->after('id')->constrained();
             }
-            
+
             if (!Schema::hasColumn('payments', 'reference')) {
                 $table->string('reference')->nullable()->unique()->after('booking_id');
             }
-            
+
             if (!Schema::hasColumn('payments', 'currency')) {
                 $table->string('currency')->default('GHS')->after('amount');
             }

@@ -45,4 +45,3 @@ class PaymentController extends Controller
         // Currently handled in StudentController
     }
 }
-

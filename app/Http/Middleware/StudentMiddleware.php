@@ -25,7 +25,7 @@ class StudentMiddleware
             } elseif ($user->role === 'hostel_agent') {
                 return redirect()->route('agent.dashboard');
             }
-            
+
             return redirect()->route('hostels.index')->with('error', 'Student access only.');
         }
 

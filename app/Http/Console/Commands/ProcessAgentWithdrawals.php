@@ -20,13 +20,13 @@ class ProcessAgentWithdrawals extends Command
         foreach ($pendingWithdrawals as $withdrawal) {
             try {
                 $result = $paymentService->processWithdrawal($withdrawal);
-                
+
                 $withdrawal->update([
                     'status' => 'completed',
                     'processed_at' => now(),
                     'processed_by' => 1 // System admin
                 ]);
-                
+
                 $this->info("Processed withdrawal #{$withdrawal->id} for ₵{$withdrawal->amount}");
             } catch (\Exception $e) {
                 $this->error("Failed to process withdrawal #{$withdrawal->id}: {$e->getMessage()}");

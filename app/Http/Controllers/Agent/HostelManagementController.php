@@ -16,7 +16,7 @@ class HostelManagementController extends Controller
     public function index()
     {
         $agent = Auth::user()->agent;
-        
+
         $hostels = $this->getAgentHostelQuery($agent)
             ->withCount('rooms')
             ->latest()

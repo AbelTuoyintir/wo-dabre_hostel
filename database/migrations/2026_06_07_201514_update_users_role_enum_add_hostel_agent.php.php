@@ -12,7 +12,7 @@ class UpdateUsersRoleEnumAddHostelAgent extends Migration
     {
         // For Laravel 8+ with Doctrine DBAL installed
         // First install: composer require doctrine/dbal
-        
+
         Schema::table('users', function (Blueprint $table) {
             $table->enum('role', ['admin', 'hostel_manager', 'hostel_agent', 'student'])
                   ->default('student')
