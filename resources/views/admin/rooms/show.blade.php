@@ -77,7 +77,7 @@
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-600">Price/Month</p>
+                    <p class="text-sm font-medium text-gray-600">Price</p>
                     <p class="text-2xl font-semibold text-gray-900 mt-1">
                         @if($room->room_cost)
                             ${{ number_format($room->room_cost, 2) }}
@@ -93,7 +93,7 @@
                 </div>
             </div>
             <div class="mt-4">
-                <p class="text-xs text-gray-500">per person per month</p>
+                <p class="text-xs text-gray-500">per person per academic year</p>
             </div>
         </div>
 
@@ -277,11 +277,11 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="px-2 py-1 text-xs rounded-full
-                                        @if($booking->status == 'confirmed') bg-green-100 text-green-800
-                                        @elseif($booking->status == 'pending') bg-yellow-100 text-yellow-800
-                                        @elseif($booking->status == 'cancelled') bg-red-100 text-red-800
+                                        @if($booking->booking_status == 'confirmed') bg-green-100 text-green-800
+                                        @elseif($booking->booking_status == 'pending') bg-yellow-100 text-yellow-800
+                                        @elseif($booking->booking_status == 'cancelled') bg-red-100 text-red-800
                                         @else bg-gray-100 text-gray-800 @endif">
-                                        {{ ucfirst($booking->status) }}
+                                        {{ ucfirst($booking->booking_status) }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

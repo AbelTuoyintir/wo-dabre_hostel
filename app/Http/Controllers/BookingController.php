@@ -246,14 +246,15 @@ class BookingController extends Controller
      * Store booking for authenticated students
      */
     public function StudentStore(Request $request)
-    {
-        $rules = [
-            'room_id' => 'required|exists:rooms,id',
-            'hostel_id' => 'required|exists:hostels,id',
-            'check_in_date' => 'required|date',
-            'check_out_date' => 'required|date|after:check_in_date',
-            'room_cost' => 'required|numeric|min:0',
-        ];
+{
+    $rules = [
+        'room_id' => 'required|exists:rooms,id',
+        'hostel_id' => 'required|exists:hostels,id',
+        'check_in_date' => 'required|date',
+        'check_out_date' => 'required|date|after:check_in_date',
+        'room_cost' => 'required|numeric|min:0',
+        'gender' => 'required|in:male,female',
+    ];
 
         $validated = $request->validate($rules);
 
@@ -744,10 +745,15 @@ class BookingController extends Controller
         }
 
         // If room gender is 'any' and this is the first occupant, update room gender
-        if ($room->gender === 'any' && ($room->current_occupancy ?? 0) === 0) {
+        // to the first occupant's gender (only for a real male/female gender).
+        $currentOccupancy = (int) ($room->current_occupancy ?? 0);
+        if ($room->gender === 'any' && $currentOccupancy <= 0 && in_array($user->gender, ['male', 'female'], true)) {
             $room->gender = $user->gender;
             $room->save();
-            \Log::info('Room gender updated to '.$user->gender);
+            \Log::info('Room gender updated to ' . $user->gender, [
+                'room_id' => $room->id,
+                'user_id' => $user->id,
+            ]);
         }
 
         // Calculate amounts for DB storage

@@ -540,7 +540,7 @@
     </div>
 
     <!-- Danger Zone - Only show if no active bookings -->
-    @if($room->bookings()->whereIn('status', ['pending', 'confirmed'])->count() == 0)
+    @if($room->bookings()->whereIn('booking_status', ['pending', 'confirmed'])->count() == 0)
     <div class="mt-6 bg-red-50 rounded-lg border border-red-200 overflow-hidden">
         <div class="px-6 py-4 bg-red-100 border-b border-red-200">
             <h4 class="text-sm font-medium text-red-800 flex items-center">

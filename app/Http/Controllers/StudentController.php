@@ -80,7 +80,7 @@ class StudentController extends Controller
                 $hostel->min_price = $hostel->rooms()
                     ->where('status', 'available')
                     ->whereColumn('current_occupancy', '<', 'capacity')
-                    ->min('price_per_month');
+                    ->min('room_cost') ?? 0;
                 return $hostel;
             });
 

@@ -34,6 +34,7 @@ class Room extends Model
      */
     protected $casts = [
         'capacity' => 'integer',
+        'current_occupancy' => 'integer',
         'room_cost' => 'float',
         'furnished' => 'boolean',
         'private_bathroom' => 'boolean',
