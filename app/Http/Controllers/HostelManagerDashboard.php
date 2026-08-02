@@ -473,6 +473,13 @@ class HostelManagerDashboard extends Controller
 
     public function showRoom(Room $room)
     {
+        $user = Auth::user();
+
+        // Verify manager owns this room's hostel
+        if (!$user->managedHostels()->where('hostels.id', $room->hostel_id)->exists()) {
+            abort(403);
+        }
+
         // Get current occupants
         $currentOccupants = User::whereHas('bookings', function($q) use ($room) {
             $q->where('room_id', $room->id)
