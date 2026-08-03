@@ -457,11 +457,11 @@
                             </form>
                         @endif
 
-                        @if($booking->status == 'confirmed' && $booking->payment_status == 'paid')
-                            <button onclick="downloadInvoice('{{ $booking->id }}')"
-                                    class="action-btn px-4 py-2 border border-gray-300 text-gray-700 text-sm rounded-xl hover:bg-gray-50 transition text-center">
-                                <i class="fas fa-file-pdf mr-1"></i> Invoice
-                            </button>
+                        @if($booking->status == 'confirmed' && $booking->payment_status == 'paid' && $booking->payment)
+                            <a href="{{ route('student.payments.receipt', $booking->payment->uuid) }}"
+                               class="action-btn px-4 py-2 border border-gray-300 text-gray-700 text-sm rounded-xl hover:bg-gray-50 transition text-center flex items-center justify-center gap-1.5">
+                                <i class="fas fa-file-invoice mr-1 text-blue-500"></i> Receipt
+                            </a>
                         @endif
                     </div>
                 </div>
@@ -552,12 +552,6 @@
 <script>
 function confirmCancel() {
     return confirm('⚠️ Are you sure you want to cancel this booking?\n\nThis action cannot be undone and may affect your student housing record.');
-}
-
-function downloadInvoice(bookingId) {
-    // Implement invoice download logic
-    // For now, show a toast notification
-    showToast('Invoice download initiated', 'success');
 }
 
 // Toast notification helper
