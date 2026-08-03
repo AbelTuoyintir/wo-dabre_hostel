@@ -50,19 +50,36 @@ Route::get('/image', function (Request $request) {
         'url' => $request->fullUrl(),
     ];
 
-    if (empty($path) || str_contains($path, '..')) {
-        Log::warning('Image proxy request rejected - invalid path', $meta);
-        abort(404);
+    // Restrict directory traversal patterns (both Unix and Windows style)
+    if (empty($path) || str_contains($path, '..') || str_contains($path, '\\')) {
+        Log::warning('Image proxy request rejected - invalid path structure', $meta);
+        abort(403, 'Path traversal detected.');
     }
 
-    $fullPath = storage_path('app/public/'.ltrim($path, '/'));
-    if (! file_exists($fullPath)) {
-        Log::warning('Image proxy file not found', $meta + ['fullPath' => $fullPath]);
+    $fullPath = storage_path('app/public/' . ltrim($path, '/'));
+    $realPath = realpath($fullPath);
+    $basePath = storage_path('app/public');
+
+    // Security check: ensure file exists, realpath is valid, and resides strictly inside public storage
+    if (!$realPath || !str_starts_with($realPath, $basePath) || !file_exists($fullPath)) {
+        Log::warning('Image proxy file not found or path boundary violation', $meta + ['fullPath' => $fullPath]);
         abort(404);
     }
 
     try {
         $mime = mime_content_type($fullPath) ?: 'application/octet-stream';
+    } catch (Exception $e) {
+        Log::error('Image proxy failed to determine MIME type', $meta + ['exception' => $e->getMessage()]);
+        abort(500);
+    }
+
+    // Limit the media proxy strictly to image and video types for defense-in-depth
+    if (!str_starts_with($mime, 'image/') && !str_starts_with($mime, 'video/')) {
+        Log::warning('Image proxy request rejected - non-media content type attempted', $meta + ['mime' => $mime]);
+        abort(403, 'Access restricted to image and video files only.');
+    }
+
+    try {
         Log::info('Image proxy served', $meta + ['fullPath' => $fullPath, 'mime' => $mime]);
 
         return response()->file($fullPath, ['Content-Type' => $mime]);
