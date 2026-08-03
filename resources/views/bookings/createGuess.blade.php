@@ -186,15 +186,15 @@
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
                                     Full Name <span class="text-red-500">*</span>
                                 </label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <i class="fas fa-user text-gray-400"></i>
+                                        <i class="fas fa-user text-gray-400" aria-hidden="true"></i>
                                     </div>
-                                    <input type="text" name="name" value="{{ old('name') }}"
-                                           class="w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition {{ $errors->has('name') ? 'border-red-400' : 'border-gray-300' }}"
+                                    <input type="text" id="name" name="name" value="{{ old('name') }}"
+                                           class="w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 hover:border-gray-400 transition-all duration-200 {{ $errors->has('name') ? 'border-red-400' : 'border-gray-300' }}"
                                            placeholder="Enter your full name"
                                            required>
                                 </div>
@@ -203,15 +203,15 @@
                                 @enderror
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
                                     Email Address <span class="text-red-500">*</span>
                                 </label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <i class="fas fa-envelope text-gray-400"></i>
+                                        <i class="fas fa-envelope text-gray-400" aria-hidden="true"></i>
                                     </div>
-                                    <input type="email" name="email" value="{{ old('email') }}"
-                                           class="w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition {{ $errors->has('email') ? 'border-red-400' : 'border-gray-300' }}"
+                                    <input type="email" id="email" name="email" value="{{ old('email') }}"
+                                           class="w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 hover:border-gray-400 transition-all duration-200 {{ $errors->has('email') ? 'border-red-400' : 'border-gray-300' }}"
                                            placeholder="your@email.com"
                                            required>
                                 </div>
@@ -220,15 +220,15 @@
                                 @enderror
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">
                                     Phone Number <span class="text-red-500">*</span>
                                 </label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <i class="fas fa-phone text-gray-400"></i>
+                                        <i class="fas fa-phone text-gray-400" aria-hidden="true"></i>
                                     </div>
-                                    <input type="tel" name="phone" value="{{ old('phone') }}"
-                                           class="w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition {{ $errors->has('phone') ? 'border-red-400' : 'border-gray-300' }}"
+                                    <input type="tel" id="phone" name="phone" value="{{ old('phone') }}"
+                                           class="w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 hover:border-gray-400 transition-all duration-200 {{ $errors->has('phone') ? 'border-red-400' : 'border-gray-300' }}"
                                            placeholder="024XXXXXXX"
                                            required>
                                 </div>
@@ -237,20 +237,20 @@
                                 @enderror
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <label for="gender" class="block text-sm font-medium text-gray-700 mb-2">
                                     Gender <span class="text-red-500">*</span>
                                 </label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <i class="fas fa-venus-mars text-gray-400"></i>
+                                        <i class="fas fa-venus-mars text-gray-400" aria-hidden="true"></i>
                                     </div>
-                                    <select name="gender" class="w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition appearance-none {{ $errors->has('gender') ? 'border-red-400' : 'border-gray-300' }}" required>
+                                    <select id="gender" name="gender" class="w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 hover:border-gray-400 transition-all duration-200 appearance-none {{ $errors->has('gender') ? 'border-red-400' : 'border-gray-300' }}" required>
                                         <option value="">Select Gender</option>
                                         <option value="male" {{ old('gender') === 'male' ? 'selected' : '' }}>Male</option>
                                         <option value="female" {{ old('gender') === 'female' ? 'selected' : '' }}>Female</option>
                                     </select>
                                     <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                                        <i class="fas fa-chevron-down text-gray-400"></i>
+                                        <i class="fas fa-chevron-down text-gray-400" aria-hidden="true"></i>
                                     </div>
                                 </div>
                                 @error('gender')
@@ -263,24 +263,24 @@
                     <!-- Stay Dates -->
                     <div class="mb-8">
                         <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                            <i class="fas fa-calendar-alt text-blue-600 mr-2"></i>
+                            <i class="fas fa-calendar-alt text-blue-600 mr-2" aria-hidden="true"></i>
                             Stay Dates
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <label for="check_in_date" class="block text-sm font-medium text-gray-700 mb-2">
                                     Check-in Date <span class="text-red-500">*</span>
                                 </label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <i class="fas fa-calendar-check text-gray-400"></i>
+                                        <i class="fas fa-calendar-check text-gray-400" aria-hidden="true"></i>
                                     </div>
                                     <input type="date"
                                            name="check_in_date"
                                            id="check_in_date"
                                            value="{{ old('check_in_date') }}"
                                            min="{{ date('Y-m-d', strtotime('+1 day')) }}"
-                                           class="w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition {{ $errors->has('check_in_date') ? 'border-red-400' : 'border-gray-300' }}"
+                                           class="w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 hover:border-gray-400 transition-all duration-200 {{ $errors->has('check_in_date') ? 'border-red-400' : 'border-gray-300' }}"
                                            required>
                                 </div>
                                 @error('check_in_date')
@@ -288,18 +288,18 @@
                                 @enderror
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <label for="check_out_date" class="block text-sm font-medium text-gray-700 mb-2">
                                     Check-out Date <span class="text-red-500">*</span>
                                 </label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <i class="fas fa-calendar-times text-gray-400"></i>
+                                        <i class="fas fa-calendar-times text-gray-400" aria-hidden="true"></i>
                                     </div>
                                     <input type="date"
                                            name="check_out_date"
                                            id="check_out_date"
                                            value="{{ old('check_out_date') }}"
-                                           class="w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition {{ $errors->has('check_out_date') ? 'border-red-400' : 'border-gray-300' }}"
+                                           class="w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 hover:border-gray-400 transition-all duration-200 {{ $errors->has('check_out_date') ? 'border-red-400' : 'border-gray-300' }}"
                                            required>
                                 </div>
                                 @error('check_out_date')
@@ -308,7 +308,7 @@
                             </div>
                         </div>
                         <p id="dateError" class="mt-2 hidden text-sm text-red-600 flex items-center">
-                            <i class="fas fa-exclamation-circle mr-1"></i>
+                            <i class="fas fa-exclamation-circle mr-1" aria-hidden="true"></i>
                             <span id="dateErrorMessage"></span>
                         </p>
                     </div>
@@ -316,7 +316,7 @@
                     <!-- Price Summary -->
                     <div id="priceSummary" class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 mb-8 hidden border border-blue-200">
                         <h3 class="font-semibold text-blue-800 mb-4 flex items-center">
-                            <i class="fas fa-calculator mr-2"></i>
+                            <i class="fas fa-calculator mr-2" aria-hidden="true"></i>
                             Payment Summary
                         </h3>
                         <div class="space-y-3">
@@ -329,6 +329,12 @@
                                 <span id="totalAmount" class="text-lg font-bold text-blue-600">₵0.00</span>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Helper message explaining disabled button -->
+                    <div id="bookingHelperText" class="text-xs text-gray-500 mb-6 flex items-start gap-2.5 bg-blue-50/50 border border-blue-100 p-3.5 rounded-xl">
+                        <i class="fas fa-info-circle text-blue-500 mt-0.5" aria-hidden="true"></i>
+                        <span>Please select valid check-in and check-out dates to calculate the total and enable the payment option.</span>
                     </div>
 
                     <!-- Submit Button -->
@@ -388,6 +394,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const dateErrorMessage = document.getElementById('dateErrorMessage');
     const roomCostDisplay = document.getElementById('roomCostDisplay');
     const totalAmount = document.getElementById('totalAmount');
+    const bookingHelperText = document.getElementById('bookingHelperText');
 
     // Early return if elements don't exist
     if (!checkIn || !checkOut || !priceSummary || !submitBtn || !dateError || !dateErrorMessage || !roomCostDisplay || !totalAmount) {
@@ -412,6 +419,9 @@ document.addEventListener('DOMContentLoaded', function() {
         submitBtn.disabled = true;
         roomCostDisplay.textContent = '₵0.00';
         totalAmount.textContent = '₵0.00';
+        if (bookingHelperText) {
+            bookingHelperText.classList.remove('hidden');
+        }
     }
 
     function calculateTotal() {
@@ -420,16 +430,19 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Validate dates
-        if (checkIn.value && checkOut.value) {
-            const checkInDate = new Date(checkIn.value);
-            const checkOutDate = new Date(checkOut.value);
-            
-            if (checkOutDate <= checkInDate) {
-                showDateError('Check-out date must be after check-in date');
-                resetSummary();
-                return;
-            }
+        // Validate dates are filled
+        if (!checkIn.value || !checkOut.value) {
+            resetSummary();
+            return;
+        }
+
+        const checkInDate = new Date(checkIn.value);
+        const checkOutDate = new Date(checkOut.value);
+
+        if (checkOutDate <= checkInDate) {
+            showDateError('Check-out date must be after check-in date');
+            resetSummary();
+            return;
         }
 
         clearDateError();
@@ -440,6 +453,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         priceSummary.classList.remove('hidden');
         submitBtn.disabled = false;
+        if (bookingHelperText) {
+            bookingHelperText.classList.add('hidden');
+        }
     }
 
     // Add event listeners for date validation

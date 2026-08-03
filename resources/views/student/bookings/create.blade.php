@@ -69,13 +69,13 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div>
-                        <label class="text-sm font-medium">Check-in Date <span class="text-red-500">*</span></label>
+                        <label for="check_in_date" class="block text-sm font-medium text-gray-700 mb-1">Check-in Date <span class="text-red-500">*</span></label>
                         <input type="date"
                                id="check_in_date"
                                name="check_in_date"
                                value="{{ old('check_in_date') }}"
                                min="{{ date('Y-m-d', strtotime('+1 day')) }}"
-                               class="w-full border rounded-lg px-4 py-2 {{ $errors->has('check_in_date') ? 'border-red-400' : 'border-gray-300' }}"
+                               class="w-full border rounded-lg px-4 py-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 hover:border-gray-400 {{ $errors->has('check_in_date') ? 'border-red-400' : 'border-gray-300' }}"
                                required>
                         @error('check_in_date')
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
@@ -83,12 +83,12 @@
                     </div>
 
                     <div>
-                        <label class="text-sm font-medium">Check-out Date <span class="text-red-500">*</span></label>
+                        <label for="check_out_date" class="block text-sm font-medium text-gray-700 mb-1">Check-out Date <span class="text-red-500">*</span></label>
                         <input type="date"
                                id="check_out_date"
                                name="check_out_date"
                                value="{{ old('check_out_date') }}"
-                               class="w-full border rounded-lg px-4 py-2 {{ $errors->has('check_out_date') ? 'border-red-400' : 'border-gray-300' }}"
+                               class="w-full border rounded-lg px-4 py-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 hover:border-gray-400 {{ $errors->has('check_out_date') ? 'border-red-400' : 'border-gray-300' }}"
                                required>
                         @error('check_out_date')
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
@@ -121,9 +121,14 @@
                     </div>
                 </div>
 
+                <div id="bookingHelperText" class="text-xs text-gray-500 mb-6 flex items-start gap-2.5 bg-blue-50/50 border border-blue-100 p-3.5 rounded-xl">
+                    <i class="fas fa-info-circle text-blue-500 mt-0.5" aria-hidden="true"></i>
+                    <span>Please select valid check-in and check-out dates to calculate the total and enable the payment option.</span>
+                </div>
+
                 <button id="submitBtn"
                         disabled
-                        class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold disabled:opacity-50">
+                        class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold disabled:opacity-50 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all">
                     Proceed to Payment
                 </button>
             </form>
@@ -140,6 +145,7 @@ const roomCostInput = document.getElementById('roomCost');
 const submitBtn = document.getElementById('submitBtn');
 const priceSummary = document.getElementById('priceSummary');
 const dateError = document.getElementById('dateError');
+const bookingHelperText = document.getElementById('bookingHelperText');
 const roomId = {{ $room->id }};
 const yearlyRate = {{ $room->room_cost }};
 
@@ -159,6 +165,9 @@ function resetSummary() {
     if (!priceSummary || !submitBtn) return;
     priceSummary.classList.add('hidden');
     submitBtn.disabled = true;
+    if (bookingHelperText) {
+        bookingHelperText.classList.remove('hidden');
+    }
 }
 
 function setCheckoutMin() {
@@ -238,6 +247,9 @@ async function calculateTotal() {
 
         priceSummary.classList.remove('hidden');
         submitBtn.disabled = false;
+        if (bookingHelperText) {
+            bookingHelperText.classList.add('hidden');
+        }
     } catch (error) {
         showDateError('Network error while calculating amount. Please try again.');
         resetSummary();
