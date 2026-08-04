@@ -175,17 +175,24 @@ class BookingController extends Controller
             \Log::info('Date calculation', ['nights' => $nights]);
 
             // Charges using Paystack split payment structure
-            // Student pays: room_cost + platform_fee (2.80%) + paystack_buffer (1.97%) + banking_charge (0.35%)
-            $roomCost = $validated['room_cost'];
+            // Under new pre-calculated pricing, room_cost retrieved from database already includes all fees.
+            // Student pays exactly the room_cost (C).
+            $roomCost = (float) $validated['room_cost'];
             $splitService = app(PaystackSplitService::class);
-            $costBreakdown = $splitService->calculateTotal($roomCost);
-            $platformFee = $costBreakdown['platform_fee'];
-            $finalTotal = $costBreakdown['total'];
+
+            // Reconstruct the base price (B) from the pre-calculated room_cost (C)
+            $totalSurchargeRate = config('payments.total_surcharge_rate', 0.0512);
+            $basePrice = $roomCost / (1 + $totalSurchargeRate);
+
+            // Platform Fee is 2.80% of base price
+            $platformFee = round($basePrice * config('payments.platform_fee_rate', 0.028), 2);
+            $finalTotal = $roomCost;
             $agentFee = 0;
-            $netAmount = $roomCost;
+            $netAmount = round($basePrice, 2);
 
             \Log::info('Split payment calculation', [
                 'room_cost' => $roomCost,
+                'base_price' => $basePrice,
                 'platform_fee' => $platformFee,
                 'final_total' => $finalTotal,
                 'net_amount' => $netAmount,
@@ -194,7 +201,7 @@ class BookingController extends Controller
             // Retrieve the hostel's subaccount for split payment
             $hostelModel = Hostel::find($validated['hostel_id']);
             $subaccountCode = $hostelModel?->subaccount_code;
-            $transactionCharge = $splitService->getTransactionChargeInPesewas($roomCost);
+            $transactionCharge = $splitService->getTransactionChargeInPesewas($basePrice);
 
             \Log::info('Final calculation', ['final_total' => $finalTotal, 'net_amount' => $netAmount]);
 
@@ -282,18 +289,27 @@ class BookingController extends Controller
         }
 
         // Calculate fee breakdown
+        // Under new pre-calculated pricing, room_cost retrieved from database already includes all fees.
+        // Student pays exactly the room_cost (C).
         $roomCost = (float) $validated['room_cost'];
         $splitService = app(PaystackSplitService::class);
-        $costBreakdown = $splitService->calculateTotal($roomCost);
-        $platformFee = $costBreakdown['platform_fee'];
-        $finalTotal = $costBreakdown['total'];
+
+        // Reconstruct the base price (B) from the pre-calculated room_cost (C)
+        $totalSurchargeRate = config('payments.total_surcharge_rate', 0.0512);
+        $basePrice = $roomCost / (1 + $totalSurchargeRate);
+
+        // Platform Fee is 2.80% of base price
+        $platformFee = round($basePrice * config('payments.platform_fee_rate', 0.028), 2);
+        $finalTotal = $roomCost;
         $agentFee = 0;
-        $netAmount = $roomCost;
+        $netAmount = round($basePrice, 2);
 
         // Retrieve the hostel's subaccount for split payment
         $hostelModel = Hostel::find($validated['hostel_id']);
         $subaccountCode = $hostelModel?->subaccount_code;
-        $transactionCharge = $splitService->getTransactionChargeInPesewas($roomCost);
+        $transactionCharge = $splitService->getTransactionChargeInPesewas($basePrice);
+
+        $totalServiceCharge = round($roomCost - $basePrice, 2);
 
         \Log::info('Student booking - Cost calculation:', [
             'user_id' => $user->id,
@@ -932,10 +948,9 @@ class BookingController extends Controller
 
         $roomCost = (float) ($validated['room_cost'] ?? Room::find($validated['room_id'])->room_cost ?? 0);
 
-        // Service charge calculated server-side (no fee breakdown exposed to UI)
-        // Uses total_surcharge_rate so the quoted total matches PaystackSplitService::calculateTotal()
-        $totalServiceRate = config('payments.total_surcharge_rate', 0.0512);
-        $finalTotal = round($roomCost + round($roomCost * $totalServiceRate, 2), 2);
+        // Under new pre-calculated pricing logic, room_cost retrieved from database already includes all fees.
+        // Therefore, the final total matches the room_cost exactly.
+        $finalTotal = round($roomCost, 2);
 
         return response()->json([
             'success' => true,
