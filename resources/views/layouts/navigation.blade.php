@@ -11,7 +11,7 @@
     {{-- Logo Area --}}
     <div class="flex items-center h-16 px-6 border-b border-slate-100 shrink-0">
         <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 group">
-            <img  src="{{ asset('wodabre-logo.png') }}" alt="Wo-dabre Logo"class="w-10 h-10 rounded-xl bg-white
+            <img  src="{{ asset('srclogo.png') }}" alt="Wo-dabre Logo"class="w-10 h-10 rounded-xl bg-white
                         flex items-center justify-center shadow-lg shadow-blue-600/20
                         group-hover:shadow-blue-600/30 group-hover:scale-105 transition-all duration-300">
             <div class="flex flex-col">

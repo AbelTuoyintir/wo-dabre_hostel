@@ -122,7 +122,7 @@
                     <!-- Logo -->
                     <a href="/" class="flex items-center gap-2 group">
                         <div class="w-10 h-10 bg-gradient-to-br from-white-600 to-blue-800 rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg transition-all">
-                            <img src="{{ asset('wodabre-logo.png') }}" alt="Wo-dabre Logo" class="w-6 h-6 object-contain">
+                            <img src="{{ asset('srclogo.png') }}" alt="Wo-dabre Logo" class="w-6 h-6 object-contain">
                         </div>
                         <div>
                             <h1 class="logo-text text-xl text-gray-800 tracking-tight">UCC SRC<span class="text-blue-600">hostel Service</span></h1>

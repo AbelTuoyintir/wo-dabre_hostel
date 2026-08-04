@@ -91,15 +91,7 @@
         @endif
     </section>
 
-    {{-- <!-- FLOATING MAP BUTTON - Smaller -->
-    <div id="map-button" class="fixed bottom-20 left-1/2 -translate-x-1/2 z-30 md:bottom-8 transition-all duration-300">
-        <button class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-full flex items-center gap-1.5 shadow-xl hover:scale-105 transition-all text-xs font-bold">
-            <span>Show Map</span>
-            <i class="fas fa-map text-xs"></i>
-        </button>
-    </div> --}}
-
-    <!-- FLOATING COMPARISON BAR - More Compact -->
+<!-- FLOATING COMPARISON BAR - More Compact -->
     <div id="comparison-bar" class="fixed bottom-20 left-0 right-0 z-40 px-3 md:bottom-8 hidden">
         <div class="max-w-3xl mx-auto bg-white rounded-xl shadow-2xl border border-slate-200 p-2 flex items-center justify-between gap-3">
             <div class="flex items-center gap-2 overflow-x-auto no-scrollbar" id="selected-hostels">
@@ -205,7 +197,6 @@
     document.addEventListener('DOMContentLoaded', function() {
         const checkboxes = document.querySelectorAll('.compare-checkbox');
         const comparisonBar = document.getElementById('comparison-bar');
-        const mapButton = document.getElementById('map-button');
         const selectedContainer = document.getElementById('selected-hostels');
         const compareBtn = document.getElementById('compare-btn');
         const compareCount = document.getElementById('compare-count');
@@ -216,7 +207,6 @@
         function updateBar() {
             if (selectedHostels.length > 0) {
                 comparisonBar.classList.remove('hidden');
-                mapButton.classList.add('opacity-0', 'pointer-events-none');
 
                 selectedContainer.innerHTML = selectedHostels.map(h => `
                     <div class="relative min-w-[40px] group">
@@ -233,7 +223,6 @@
                 compareBtn.disabled = selectedHostels.length < 2;
             } else {
                 comparisonBar.classList.add('hidden');
-                mapButton.classList.remove('opacity-0', 'pointer-events-none');
             }
         }
 

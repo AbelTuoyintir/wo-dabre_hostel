@@ -60,8 +60,13 @@ Route::get('/image', function (Request $request) {
     $realPath = realpath($fullPath);
     $basePath = storage_path('app/public');
 
+    // Normalize path separators (Windows realpath returns backslashes, storage_path returns forward slashes)
+    $normalize = fn(string $p): string => str_replace('\\', '/', $p);
+    $realNormalized = $realPath ? $normalize($realPath) : null;
+    $baseNormalized = $normalize($basePath);
+
     // Security check: ensure file exists, realpath is valid, and resides strictly inside public storage
-    if (!$realPath || !str_starts_with($realPath, $basePath) || !file_exists($fullPath)) {
+    if (!$realPath || !$realNormalized || !str_starts_with($realNormalized, $baseNormalized) || !file_exists($fullPath)) {
         Log::warning('Image proxy file not found or path boundary violation', $meta + ['fullPath' => $fullPath]);
         abort(404);
     }
@@ -122,8 +127,13 @@ Route::get('/storage/{path}', function ($path) {
     $realPath = realpath($fullPath);
     $basePath = storage_path('app/public');
 
+    // Normalize path separators (Windows realpath returns backslashes, storage_path returns forward slashes)
+    $normalize = fn(string $p): string => str_replace('\\', '/', $p);
+    $realNormalized = $realPath ? $normalize($realPath) : null;
+    $baseNormalized = $normalize($basePath);
+
     // Security check: ensure the resolved absolute path starts with the public storage folder
-    if (! $realPath || ! str_starts_with($realPath, $basePath)) {
+    if (! $realPath || ! $realNormalized || ! str_starts_with($realNormalized, $baseNormalized)) {
         abort(403, 'Path traversal detected.');
     }
 

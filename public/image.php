@@ -9,7 +9,10 @@ if (empty($path) || str_contains($path, '..')) {
 }
 
 $fullPath = __DIR__ . '/../storage/app/public/' . ltrim($path, '/');
-if (!file_exists($fullPath)) {
+// Normalize path separators for consistent boundary checks on Windows
+$realPath = realpath($fullPath);
+$basePath = realpath(__DIR__ . '/../storage/app/public');
+if (!$realPath || !$basePath || !str_starts_with(str_replace('\\', '/', $realPath), str_replace('\\', '/', $basePath)) || !file_exists($fullPath)) {
     http_response_code(404);
     error_log(sprintf("[image.php] NOT FOUND: path=%s full=%s ip=%s referer=%s", $path, $fullPath, $_SERVER['REMOTE_ADDR'] ?? '-', $_SERVER['HTTP_REFERER'] ?? '-'));
     exit('Not found');
