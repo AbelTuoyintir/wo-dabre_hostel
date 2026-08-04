@@ -87,6 +87,14 @@ class Booking extends Model
     }
 
     /**
+     * Get the review for this booking
+     */
+    public function review(): HasOne
+    {
+        return $this->hasOne(Review::class);
+    }
+
+    /**
      * Check if booking is active
      */
     public function isActive(): bool
