@@ -126,6 +126,28 @@ class Room extends Model
     }
 
     /**
+     * Boot the model.
+     */
+    protected static function booted()
+    {
+        static::saving(function ($room) {
+            if ($room->isDirty('room_cost') && $room->room_cost !== null) {
+                // Prevent double surcharge if the value is resubmitted/unchanged
+                if ($room->exists) {
+                    $originalValue = (float) $room->getOriginal('room_cost');
+                    $newValue = (float) $room->room_cost;
+                    if (abs($newValue - $originalValue) < 0.001) {
+                        return;
+                    }
+                }
+
+                $splitService = app(\App\Support\PaystackSplitService::class);
+                $room->room_cost = $splitService->calculateTotal((float) $room->room_cost)['total'];
+            }
+        });
+    }
+
+    /**
      * Get the room cost attribute
      * This is used by the booking form and controller
      */

@@ -528,12 +528,13 @@ class AgentPersonaTest extends TestCase
             ->assertRedirect(route('agent.hostels.show', $hostel->uuid))
             ->assertSessionHas('success');
 
+        $expectedCost = round(1200.00 * (1 + config('payments.total_surcharge_rate', 0.0512)), 2);
         $this->assertDatabaseHas('rooms', [
             'hostel_id' => $hostel->id,
             'number' => 'A101',
             'room_type' => 'single_room',
             'capacity' => 2,
-            'room_cost' => 1200.00,
+            'room_cost' => $expectedCost,
             'status' => 'available',
         ]);
 

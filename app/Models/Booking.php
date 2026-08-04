@@ -141,4 +141,12 @@ class Booking extends Model
     {
         return $this->check_out_date;
     }
+
+    /**
+     * Backward compatibility accessor for status
+     */
+    public function getStatusAttribute()
+    {
+        return $this->booking_status;
+    }
 }

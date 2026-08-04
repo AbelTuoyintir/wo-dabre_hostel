@@ -41,7 +41,7 @@ class BookingCalculationTest extends TestCase
             'check_in_date' => $checkIn,
             'check_out_date' => $checkOut,
             'room_id' => $room->id,
-            'room_cost' => 200.00,
+            'room_cost' => $room->room_cost,
         ]);
 
         $controller = new BookingController();
