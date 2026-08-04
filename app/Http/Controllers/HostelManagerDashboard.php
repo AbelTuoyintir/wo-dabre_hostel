@@ -473,6 +473,13 @@ class HostelManagerDashboard extends Controller
 
     public function showRoom(Room $room)
     {
+        $user = Auth::user();
+
+        // Verify manager owns this room's hostel to prevent IDOR vulnerabilities
+        if (!$user->managedHostels()->where('hostels.id', $room->hostel_id)->exists()) {
+            abort(403, 'Unauthorized access to this room.');
+        }
+
         // Get current occupants
         $currentOccupants = User::whereHas('bookings', function($q) use ($room) {
             $q->where('room_id', $room->id)
