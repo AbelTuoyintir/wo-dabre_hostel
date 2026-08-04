@@ -97,6 +97,14 @@ class User extends Authenticatable
         return $this->hasMany(Complaint::class);
     }
 
+    /**
+     * Get the reviews written by this user
+     */
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
+    }
+
     public function isAdmin()
     {
         return $this->role === 'admin';
