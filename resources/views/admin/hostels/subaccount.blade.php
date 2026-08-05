@@ -120,7 +120,7 @@
                 <div>
                     <p class="font-semibold">How Split Payments Work</p>
                     <ul class="mt-1 space-y-1 list-disc pl-5">
-                        <li>Students will pay <strong>room cost + 5.12% surcharge</strong> (platform fee + processing fee)</li>
+                        <li>Students will pay the displayed room cost directly (which already has the 5.12% surcharge pre-calculated and built-in)</li>
                         <li>The <strong>2.80% platform fee</strong> is retained by the platform</li>
                         <li>The <strong>full room cost</strong> plus buffers are settled to this bank account</li>
                         <li>Paystack deducts its ~1.95% processing fee during settlement</li>
