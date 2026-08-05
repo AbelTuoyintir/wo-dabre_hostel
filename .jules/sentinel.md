@@ -1,3 +1,8 @@
+## 2026-08-05 - Missing Global HTTP Security Headers (Defense in Depth)
+**Vulnerability:** The application was missing standard HTTP security headers (such as `X-Frame-Options`, `X-Content-Type-Options`, `X-XSS-Protection`, `Referrer-Policy`, and `Content-Security-Policy`), leaving web responses vulnerable to clickjacking, MIME-type sniffing, and cross-site data leakage.
+**Learning:** Default framework configurations often omit strict security headers, leaving clickjacking and data leakage vectors unmitigated out-of-the-box. A central global middleware is the cleanest mechanism to consistently apply secure default transport headers across all web routes.
+**Prevention:** Register a global or group-based HTTP middleware that appends essential security headers (including HSTS when in production) to all outgoing HTTP responses, and enforce presence with dedicated integration tests.
+
 ## 2026-07-27 - Null Key Webhook Signature Bypass
 **Vulnerability:** Webhook signature verification in `BookingController::verifyPaystackSignature` referenced `config('paystack.secret')` which does not exist in the configuration file (`config/paystack.php`). Since the key was missing, it resolved to `null`, allowing an attacker to bypass signature verification entirely by computing signatures against an empty key.
 **Learning:** Referencing non-existent configuration namespaces can result in silent failures where security-critical keys resolve to null or fallback defaults. Furthermore, standard PHP loose comparisons (like `===`) don't prevent timing attacks, and lack of strict null/empty checks can expose cryptographic bypass vectors.
