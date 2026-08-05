@@ -21,6 +21,8 @@ class Room extends Model
         'status',
         'room_type',
         'room_cost',
+        'price_per_month',
+        'price_per_semester',
         'floor',
         'size_sqm',
         'window_type',
@@ -155,6 +157,39 @@ class Room extends Model
     {
         return $this->attributes['room_cost'] ?? null;
     }
+
+    /**
+     * Get price per month (alias of room_cost)
+     */
+    public function getPricePerMonthAttribute()
+    {
+        return $this->room_cost;
+    }
+
+    /**
+     * Set price per month (alias of room_cost)
+     */
+    public function setPricePerMonthAttribute($value)
+    {
+        $this->attributes['room_cost'] = $value;
+    }
+
+    /**
+     * Get price per semester (alias of room_cost)
+     */
+    public function getPricePerSemesterAttribute()
+    {
+        return $this->room_cost;
+    }
+
+    /**
+     * Set price per semester (alias of room_cost)
+     */
+    public function setPricePerSemesterAttribute($value)
+    {
+        $this->attributes['room_cost'] = $value;
+    }
+
     /**
  * Get the images for the room
     */
