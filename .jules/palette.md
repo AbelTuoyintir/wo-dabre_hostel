@@ -21,3 +21,7 @@ Critical UX/accessibility learnings and reusable patterns for the UCC Hostel Boo
 ## 2026-03-05 - [Dynamic Aria-Label and Chat Input Focus Retention]
 **Learning:** Heart icon buttons and dynamic action controls should synchronize their `aria-label` and `title` attributes on click to prevent screen-readers and visual hover users from receiving stale labels (like "Add..." when the item is already added). In messaging views, always programmatically refocus the text input after form submission so keyboard focus is not lost and users can type consecutively.
 **Action:** Always update the attributes (`aria-label`, `title`) dynamically in event handlers, and use Alpine.js `$nextTick` with `$refs` to restore input focus on submit.
+
+## 2026-08-06 - [Symmetrical Floating Actions & Collision Prevention]
+**Learning:** Having multiple overlapping floating action widgets in the same screen quadrant (e.g. both a global support button and page-level Quick Actions at bottom-right) creates visual collisions, severe z-index overlapping, and click targeting confusion. Offsetting or positioning secondary floating actions in the opposite quadrant (e.g., bottom-left) creates screen symmetry, solves collision bugs, and maintains clear mobile responsive layouts.
+**Action:** When a global widget occupies the bottom-right, position any context-specific floating widgets at the bottom-left, keeping them accessible, clearly labeled, and optimized with smooth Alpine.js toggles.
