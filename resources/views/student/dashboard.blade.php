@@ -318,45 +318,60 @@
     @endif
 </div>
 
-<!-- Quick Actions -->
-<div class="fixed bottom-6 right-6">
-    <button onclick="showQuickActions()" data-no-loader="true"
-            class="bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition no-loader">
-        <i class="fas fa-plus text-xl"></i>
+<!-- Quick Actions (Fully Keyboard & Screen-Reader Accessible) -->
+<div x-data="{ isOpen: false }"
+     @keydown.escape.window="isOpen = false"
+     @click.outside="isOpen = false"
+     class="fixed bottom-6 left-6 z-40 md:bottom-8 md:left-8">
+
+    <!-- Floating Quick Actions Toggle Button -->
+    <button @click="isOpen = !isOpen"
+            :aria-expanded="isOpen"
+            aria-haspopup="true"
+            aria-label="Toggle Quick Actions Menu"
+            title="Toggle Quick Actions Menu"
+            data-no-loader="true"
+            class="bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 transition-all duration-300 no-loader transform active:scale-95 flex items-center justify-center w-12 h-12">
+        <i class="fas text-lg transition-transform duration-300"
+           :class="isOpen ? 'fa-times rotate-90' : 'fa-plus'"></i>
     </button>
 
-    <!-- Quick Actions Menu (Hidden by default) -->
-    <div id="quickActionsMenu" class="hidden absolute bottom-16 right-0 bg-white rounded-lg shadow-xl p-2 w-48 no-loader">
-        <a href="{{ route('student.hostels.browse') }}" data-no-loader="true"
-           class="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">
-            <i class="fas fa-building mr-2"></i>Browse Hostels
-        </a>
-        <a href="{{ route('student.complaints') }}" data-no-loader="true"
-           class="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">
-            <i class="fas fa-exclamation-triangle mr-2"></i>Submit Complaint
-        </a>
-        <a href="{{ route('student.profile') }}" data-no-loader="true"
-           class="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">
-            <i class="fas fa-user mr-2"></i>Update Profile
-        </a>
+    <!-- Quick Actions Menu -->
+    <div id="quickActionsMenu"
+         x-show="isOpen"
+         x-transition:enter="transition ease-out duration-200 transform"
+         x-transition:enter-start="opacity-0 translate-y-4 scale-95"
+         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+         x-transition:leave="transition ease-in duration-150 transform"
+         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+         x-transition:leave-end="opacity-0 translate-y-4 scale-95"
+         class="absolute bottom-14 left-0 bg-white rounded-xl shadow-2xl p-2 w-52 border border-slate-100 divide-y divide-slate-100 no-loader z-50"
+         style="display: none;">
+
+        <div class="py-1">
+            <a href="{{ route('student.hostels.browse') }}"
+               data-no-loader="true"
+               class="flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1">
+                <i class="fas fa-building text-slate-400 w-5 text-center"></i>
+                <span class="font-medium">Browse Hostels</span>
+            </a>
+        </div>
+        <div class="py-1">
+            <a href="{{ route('student.complaints') }}"
+               data-no-loader="true"
+               class="flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1">
+                <i class="fas fa-exclamation-triangle text-slate-400 w-5 text-center"></i>
+                <span class="font-medium">Submit Complaint</span>
+            </a>
+        </div>
+        <div class="py-1">
+            <a href="{{ route('student.profile') }}"
+               data-no-loader="true"
+               class="flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1">
+                <i class="fas fa-user text-slate-400 w-5 text-center"></i>
+                <span class="font-medium">Update Profile</span>
+            </a>
+        </div>
     </div>
 </div>
-@push('scripts')
-<script>
-function showQuickActions() {
-    const menu = document.getElementById('quickActionsMenu');
-    menu.classList.toggle('hidden');
-}
-
-// Close menu when clicking outside
-document.addEventListener('click', function(event) {
-    const menu = document.getElementById('quickActionsMenu');
-    const button = event.target.closest('button');
-
-    if (!button || !button.classList.contains('bg-blue-600')) {
-        menu.classList.add('hidden');
-    }
-});
-</script>
-@endpush
 @endsection
