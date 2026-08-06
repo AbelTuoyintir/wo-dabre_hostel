@@ -143,6 +143,10 @@ class Room extends Model
                     }
                 }
 
+                // Important Business Logic: Pre-calculate the total room cost inclusive of all platform fees,
+                // platform profits, and Paystack surcharges so that the consolidated amount is stored as room_cost.
+                // This prevents customers from thinking the platform is stealing from them, while still keeping the
+                // subaccount payment splitting structure completely functional behind the scenes.
                 $splitService = app(\App\Support\PaystackSplitService::class);
                 $room->room_cost = $splitService->calculateTotal((float) $room->room_cost)['total'];
             }
