@@ -56,7 +56,7 @@
                         </a>
 
                         <!-- Overlay controls positioned outside the link tag to keep HTML semantics clean and valid -->
-                        <button class="wishlist-btn absolute top-2 right-2 text-white text-base drop-shadow-md z-10 hover:scale-110 transition-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2 rounded-full p-1"
+                        <button class="wishlist-btn absolute top-2 right-2 bg-white/90 text-slate-600 hover:text-rose-500 shadow-sm border border-slate-200/50 text-xs z-10 hover:scale-110 transition-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2 rounded-full w-7 h-7 flex items-center justify-center"
                                 aria-label="Add {{ $hostel['name'] }} to wishlist"
                                 title="Add {{ $hostel['name'] }} to wishlist"
                                 data-name="{{ $hostel['name'] }}">
@@ -66,7 +66,8 @@
                         <label class="absolute top-2 left-2 z-10 cursor-pointer focus-within:ring-2 focus-within:ring-rose-500 focus-within:ring-offset-2 rounded-full outline-none" title="Compare {{ $hostel['name'] }}" onclick="event.stopPropagation()">
                             <input type="checkbox" class="compare-checkbox sr-only" data-id="{{ $hostel['uuid'] ?? $hostel['id'] }}" data-name="{{ $hostel['name'] }}" data-image="{{ $imageUrl }}" aria-label="Compare {{ $hostel['name'] }}">
                             <div class="bg-white/90 p-1.5 rounded-full shadow-sm border border-slate-200 hover:bg-white transition-colors flex items-center justify-center w-6 h-6 group-has-[:checked]:bg-rose-500 group-has-[:checked]:border-rose-500">
-                                <i class="fas fa-plus text-[8px] text-slate-600 group-has-[:checked]:text-white group-has-[:checked]:fa-check"></i>
+                                <i class="fas fa-plus text-[8px] text-slate-600 group-has-[:checked]:hidden" aria-hidden="true"></i>
+                                <i class="fas fa-check text-[8px] text-white hidden group-has-[:checked]:inline-block" aria-hidden="true"></i>
                             </div>
                         </label>
                     </div>
