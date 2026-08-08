@@ -451,6 +451,19 @@ class StudentController extends Controller
             return back()->with('error', 'You can only review hostels you have stayed at.');
         }
 
+        // Security check: restrict booking_id to a completed booking owned by the authenticated user and matching the hostel_id
+        if (!empty($validated['booking_id'])) {
+            $booking = Booking::where('id', $validated['booking_id'])
+                ->where('user_id', Auth::id())
+                ->where('hostel_id', $validated['hostel_id'])
+                ->whereIn('booking_status', ['checked_out', 'completed'])
+                ->first();
+
+            if (!$booking) {
+                return back()->with('error', 'Invalid booking association.');
+            }
+        }
+
         DB::transaction(function () use ($validated) {
             // Create the review
             $review = Review::create([
