@@ -319,44 +319,40 @@
 </div>
 
 <!-- Quick Actions -->
-<div class="fixed bottom-6 right-6">
-    <button onclick="showQuickActions()" data-no-loader="true"
-            class="bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition no-loader">
-        <i class="fas fa-plus text-xl"></i>
+<div class="fixed bottom-6 left-6 z-40 md:bottom-8 md:left-8" x-data="{ open: false }">
+    <button @click="open = !open"
+            @keydown.escape.window="open = false"
+            aria-haspopup="true"
+            :aria-expanded="open"
+            aria-label="Toggle quick actions menu"
+            data-no-loader="true"
+            class="bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-300 no-loader flex items-center justify-center w-12 h-12">
+        <i class="fas fa-plus text-lg transition-transform duration-300" :class="{ 'rotate-45': open }"></i>
     </button>
 
-    <!-- Quick Actions Menu (Hidden by default) -->
-    <div id="quickActionsMenu" class="hidden absolute bottom-16 right-0 bg-white rounded-lg shadow-xl p-2 w-48 no-loader">
+    <!-- Quick Actions Menu -->
+    <div x-show="open"
+         @click.outside="open = false"
+         x-transition:enter="transition ease-out duration-100"
+         x-transition:enter-start="transform opacity-0 scale-95"
+         x-transition:enter-end="transform opacity-100 scale-100"
+         x-transition:leave="transition ease-in duration-75"
+         x-transition:leave-start="transform opacity-100 scale-100"
+         x-transition:leave-end="transform opacity-0 scale-95"
+         class="absolute bottom-14 left-0 bg-white rounded-lg shadow-xl p-2 w-48 no-loader border border-gray-100"
+         style="display: none;">
         <a href="{{ route('student.hostels.browse') }}" data-no-loader="true"
-           class="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">
+           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
             <i class="fas fa-building mr-2"></i>Browse Hostels
         </a>
         <a href="{{ route('student.complaints') }}" data-no-loader="true"
-           class="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">
+           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
             <i class="fas fa-exclamation-triangle mr-2"></i>Submit Complaint
         </a>
         <a href="{{ route('student.profile') }}" data-no-loader="true"
-           class="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">
+           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
             <i class="fas fa-user mr-2"></i>Update Profile
         </a>
     </div>
 </div>
-@push('scripts')
-<script>
-function showQuickActions() {
-    const menu = document.getElementById('quickActionsMenu');
-    menu.classList.toggle('hidden');
-}
-
-// Close menu when clicking outside
-document.addEventListener('click', function(event) {
-    const menu = document.getElementById('quickActionsMenu');
-    const button = event.target.closest('button');
-
-    if (!button || !button.classList.contains('bg-blue-600')) {
-        menu.classList.add('hidden');
-    }
-});
-</script>
-@endpush
 @endsection
