@@ -177,7 +177,8 @@ class BookingController extends Controller
             // Charges using Paystack split payment structure
             // Under new pre-calculated pricing, room_cost retrieved from database already includes all fees.
             // Student pays exactly the room_cost (C).
-            $roomCost = (float) $validated['room_cost'];
+            // Retrieving directly from Room model in database to prevent client-side manipulation.
+            $roomCost = (float) $room->room_cost;
             $splitService = app(PaystackSplitService::class);
 
             // Reconstruct the base price (B) from the pre-calculated room_cost (C)
@@ -291,7 +292,8 @@ class BookingController extends Controller
         // Calculate fee breakdown
         // Under new pre-calculated pricing, room_cost retrieved from database already includes all fees.
         // Student pays exactly the room_cost (C).
-        $roomCost = (float) $validated['room_cost'];
+        // Retrieving directly from Room model in database to prevent client-side manipulation.
+        $roomCost = (float) $room->room_cost;
         $splitService = app(PaystackSplitService::class);
 
         // Reconstruct the base price (B) from the pre-calculated room_cost (C)
