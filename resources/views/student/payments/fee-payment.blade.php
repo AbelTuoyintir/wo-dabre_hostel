@@ -55,7 +55,13 @@
                 <span class="text-2xl font-bold text-blue-600">₵{{ number_format($feeAmountInGHS, 2) }}</span>
             </div>
 
+            @php
+                $platformRate = config('payments.platform_fee_rate', 0.028);
+                $bankingRate = config('payments.banking_charge_rate', 0.0035);
+                $paystackRate = config('payments.paystack_buffer_rate', 0.0197);
+                $totalServiceRate = config('payments.total_surcharge_rate', 0.0512);
 
+                $paystackFee = round($feeAmountInGHS * $paystackRate, 2);
                 $platformFee = round($feeAmountInGHS * $platformRate, 2);
                 $bankingFee = round($feeAmountInGHS * $bankingRate, 2);
                 $totalServiceCharge = round($feeAmountInGHS * $totalServiceRate, 2);
