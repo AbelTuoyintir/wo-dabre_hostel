@@ -23,7 +23,7 @@
 
                     <div class="group relative flex flex-col gap-2">
                         <!-- Main Card Link -->
-                        <a href="{{ route('hostels.guest.show', $hostel['uuid'] ?? $hostel['id']) }}" class="block">
+                        <a href="{{ route('hostels.guest.show', $hostel['uuid'] ?? $hostel['id']) }}" class="block focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2 rounded-lg">
                             <!-- Image Container - Smaller -->
                             <div class="relative aspect-square overflow-hidden rounded-lg bg-slate-100">
                                 <img src="{{ $imageUrl }}" alt="{{ $hostel['name'] }}"
