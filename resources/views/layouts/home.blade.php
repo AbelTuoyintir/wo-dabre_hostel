@@ -268,7 +268,7 @@
             <div class="flex items-center gap-6 overflow-x-auto no-scrollbar py-3">
                 <!-- All Campuses -->
                 <a href="{{ route('hostels.index', array_merge(request()->except('location'), ['location' => 'all'])) }}"
-                   class="flex items-center gap-2 px-2 py-1 border-b-2 {{ !request('location') || request('location') == 'all' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} transition-all whitespace-nowrap" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">
+                   class="flex items-center gap-2 px-2 py-1 border-b-2 {{ !request('location') || request('location') == 'all' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} transition-all whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 rounded" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">
                     <i class="fas fa-th-large text-sm"></i>
                     <span class="text-sm font-medium">All</span>
                 </a>
@@ -277,7 +277,7 @@
                 @if(isset($locations))
                     @foreach($locations as $location)
                         <a href="{{ route('hostels.index', array_merge(request()->except('location'), ['location' => $location])) }}"
-                           class="flex items-center gap-2 px-2 py-1 border-b-2 {{ request('location') == $location ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} transition-all whitespace-nowrap" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">
+                           class="flex items-center gap-2 px-2 py-1 border-b-2 {{ request('location') == $location ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} transition-all whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 rounded" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">
                             <i class="fas fa-map-pin text-sm"></i>
                             <span class="text-sm font-medium">{{ $location }}</span>
                         </a>
@@ -286,7 +286,7 @@
 
                 <!-- Filter Button -->
                 <div class="ml-auto">
-                    <button class="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 rounded-full px-4 py-1.5 text-sm font-medium text-gray-700 transition" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">
+                    <button class="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 rounded-full px-4 py-1.5 text-sm font-medium text-gray-700 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">
                         <i class="fas fa-sliders-h text-xs"></i>
                         <span>Filters</span>
                     </button>
