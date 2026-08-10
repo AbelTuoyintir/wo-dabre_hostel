@@ -21,3 +21,7 @@ Critical UX/accessibility learnings and reusable patterns for the UCC Hostel Boo
 ## 2026-03-05 - [Dynamic Aria-Label and Chat Input Focus Retention]
 **Learning:** Heart icon buttons and dynamic action controls should synchronize their `aria-label` and `title` attributes on click to prevent screen-readers and visual hover users from receiving stale labels (like "Add..." when the item is already added). In messaging views, always programmatically refocus the text input after form submission so keyboard focus is not lost and users can type consecutively.
 **Action:** Always update the attributes (`aria-label`, `title`) dynamically in event handlers, and use Alpine.js `$nextTick` with `$refs` to restore input focus on submit.
+
+## 2026-08-10 - [Linking Visual Form Labels and Trigger Buttons]
+**Learning:** Visual-only form labels in search bars lack screen-reader association unless explicitly linked using `for` and `id` attributes. Additionally, layout control buttons must specify explicit `type="button"` attributes to avoid accidental form submissions or unexpected behaviors.
+**Action:** Always link visual labels to inputs and dropdowns, add descriptive `aria-label` tags to icon-only and mobile controls, and verify focusing using focus-visible rings.
