@@ -178,7 +178,7 @@
                     </div>
 
                     <!-- Mobile Menu Button -->
-                    <button class="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2" id="mobileMenuBtn" aria-label="Toggle menu">
+                    <button type="button" class="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2" id="mobileMenuBtn" aria-label="Toggle menu">
                         <i class="fas fa-bars text-gray-600 text-xl" aria-hidden="true"></i>
                     </button>
                 </div>
@@ -195,20 +195,20 @@
                         
                         <!-- Location Input -->
                         <div class="flex-1 px-5 py-3 border-r border-gray-100">
-                            <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider" style="font-family: 'Inter', 'Lucida Sans', sans-serif; letter-spacing: 0.05em;">
+                            <label for="desktop-search-location" class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider cursor-pointer" style="font-family: 'Inter', 'Lucida Sans', sans-serif; letter-spacing: 0.05em;">
                                 Location
                             </label>
-                            <input type="text" name="search" value="{{ request('search') }}" 
+                            <input type="text" name="search" id="desktop-search-location" value="{{ request('search') }}"
                                    placeholder="Search by area, landmark..." 
                                    class="w-full text-sm text-gray-700 placeholder:text-gray-400 bg-transparent border-none focus:ring-0 p-0 outline-none" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">
                         </div>
 
                         <!-- Campus Select -->
                         <div class="flex-1 px-5 py-3 border-r border-gray-100">
-                            <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider" style="font-family: 'Inter', 'Lucida Sans', sans-serif; letter-spacing: 0.05em;">
+                            <label for="desktop-search-campus" class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider cursor-pointer" style="font-family: 'Inter', 'Lucida Sans', sans-serif; letter-spacing: 0.05em;">
                                 Campus
                             </label>
-                            <select name="location" 
+                            <select name="location" id="desktop-search-campus"
                                     class="w-full text-sm text-gray-700 bg-transparent border-none focus:ring-0 p-0 outline-none appearance-none cursor-pointer" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">
                                 <option value="all">All Campuses</option>
                                 @if(isset($locations))
@@ -223,10 +223,10 @@
 
                         <!-- Price Select -->
                         <div class="flex-1 px-5 py-3">
-                            <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider" style="font-family: 'Inter', 'Lucida Sans', sans-serif; letter-spacing: 0.05em;">
+                            <label for="desktop-search-budget" class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider cursor-pointer" style="font-family: 'Inter', 'Lucida Sans', sans-serif; letter-spacing: 0.05em;">
                                 Budget
                             </label>
-                            <select name="price_range" 
+                            <select name="price_range" id="desktop-search-budget"
                                     class="w-full text-sm text-gray-700 bg-transparent border-none focus:ring-0 p-0 outline-none appearance-none cursor-pointer" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">
                                 <option value="">Any price</option>
                                 <option value="0-2000" {{ request('price_range') == '0-2000' ? 'selected' : '' }}>Under ₵2,000</option>
@@ -250,12 +250,12 @@
                 <!-- Mobile Search -->
                 <div class="md:hidden">
                     <form action="{{ route('hostels.index') }}" method="GET" 
-                          class="flex items-center bg-white rounded-xl shadow-sm border border-gray-200 p-2">
+                          class="flex items-center bg-white rounded-xl shadow-sm border border-gray-200 p-2 focus-within:ring-2 focus-within:ring-blue-500">
                         <i class="fas fa-search text-blue-500 mx-3"></i>
-                        <input type="text" name="search" value="{{ request('search') }}" 
-                               placeholder="Where to?" 
+                        <input type="text" name="search" id="mobile-search-input" value="{{ request('search') }}"
+                               placeholder="Where to?" aria-label="Search hostels"
                                class="flex-1 text-sm text-gray-700 placeholder:text-gray-400 bg-transparent border-none focus:ring-0 p-2 outline-none" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">
-                        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">
+                        <button type="submit" aria-label="Submit search query" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">
                             Go
                         </button>
                     </form>
@@ -286,7 +286,7 @@
 
                 <!-- Filter Button -->
                 <div class="ml-auto">
-                    <button class="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 rounded-full px-4 py-1.5 text-sm font-medium text-gray-700 transition" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">
+                    <button type="button" aria-haspopup="true" aria-label="Filter listings" class="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 rounded-full px-4 py-1.5 text-sm font-medium text-gray-700 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">
                         <i class="fas fa-sliders-h text-xs"></i>
                         <span>Filters</span>
                     </button>
@@ -306,7 +306,7 @@
                     </div>
                      <h1 class="logo-text text-xl text-gray-800 tracking-tight">Wo<span class="text-blue-600">dabre</span></h1>
                 </div>
-                <button id="closeMobileMenu" class="p-2 hover:bg-gray-100 rounded-lg transition" aria-label="Close menu">
+                <button type="button" id="closeMobileMenu" class="p-2 hover:bg-gray-100 rounded-lg transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2" aria-label="Close menu">
                     <i class="fas fa-times text-gray-600"></i>
                 </button>
             </div>
