@@ -133,6 +133,9 @@ class Room extends Model
     protected static function booted()
     {
         static::saving(function ($room) {
+            // Fee-Inclusive Pre-Calculated room_cost:
+            // Calculate and store fee, platform profits, paystack buffer, and banking charges
+            // directly inside room_cost in the database to prevent customer friction on frontend.
             if ($room->isDirty('room_cost') && $room->room_cost !== null) {
                 // Prevent double surcharge if the value is resubmitted/unchanged
                 if ($room->exists) {
@@ -144,7 +147,8 @@ class Room extends Model
                 }
 
                 $splitService = app(\App\Support\PaystackSplitService::class);
-                $room->room_cost = $splitService->calculateTotal((float) $room->room_cost)['total'];
+                $calculatedData = $splitService->calculateTotal((float) $room->room_cost);
+                $room->room_cost = (float) $calculatedData['total'];
             }
         });
     }
