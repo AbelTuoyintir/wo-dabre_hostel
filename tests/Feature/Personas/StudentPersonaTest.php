@@ -106,4 +106,151 @@ class StudentPersonaTest extends TestCase
         $response->assertSee('Receipt');
         $response->assertSee(route('student.payments.receipt', $payment->uuid));
     }
+
+    public function test_student_cannot_file_complaint_on_another_users_booking(): void
+    {
+        $student1 = User::create([
+            'name' => 'Student One',
+            'email' => 's1_'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '08011122233',
+            'role' => 'student',
+            'gender' => 'male',
+            'email_verified_at' => now(),
+        ]);
+
+        $student2 = User::create([
+            'name' => 'Student Two',
+            'email' => 's2_'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '08011122234',
+            'role' => 'student',
+            'gender' => 'male',
+            'email_verified_at' => now(),
+        ]);
+
+        $hostel = Hostel::create([
+            'name' => 'Test Hostel Alpha',
+            'location' => 'amamoma',
+            'address' => '123 Test Ave',
+            'email' => 'hostelalpha@example.com'
+        ]);
+
+        $room = Room::create([
+            'number' => '202',
+            'capacity' => 2,
+            'hostel_id' => $hostel->id,
+            'gender' => 'any',
+            'status' => 'available',
+            'room_type' => 'single_room',
+            'room_cost' => 300.00,
+            'current_occupancy' => 0,
+        ]);
+
+        // Booking belongs to student2
+        $booking = Booking::create([
+            'user_id' => $student2->id,
+            'hostel_id' => $hostel->id,
+            'room_id' => $room->id,
+            'check_in_date' => Carbon::now()->addDays(1)->toDateString(),
+            'check_out_date' => Carbon::now()->addDays(5)->toDateString(),
+            'total_amount' => 300.00,
+            'booking_status' => 'confirmed',
+            'payment_status' => 'paid',
+            'booking_number' => 'BKREF' . uniqid(),
+        ]);
+
+        // student1 attempts to file a complaint referencing student2's booking ID (IDOR attempt)
+        $response = $this->actingAs($student1)
+            ->post(route('student.complaints.store'), [
+                'subject' => 'Leaky faucet issue',
+                'category' => 'maintenance',
+                'priority' => 'medium',
+                'booking_id' => $booking->id,
+                'description' => 'The faucet is leaking in the bathroom. Please help!',
+            ]);
+
+        // Should return a 403 Forbidden status because of IDOR protection
+        $response->assertStatus(403);
+    }
+
+    public function test_student_cannot_submit_review_on_another_users_booking(): void
+    {
+        $student1 = User::create([
+            'name' => 'Student One',
+            'email' => 's1_'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '08011122233',
+            'role' => 'student',
+            'gender' => 'male',
+            'email_verified_at' => now(),
+        ]);
+
+        $student2 = User::create([
+            'name' => 'Student Two',
+            'email' => 's2_'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '08011122234',
+            'role' => 'student',
+            'gender' => 'male',
+            'email_verified_at' => now(),
+        ]);
+
+        $hostel = Hostel::create([
+            'name' => 'Test Hostel Alpha',
+            'location' => 'amamoma',
+            'address' => '123 Test Ave',
+            'email' => 'hostelalpha@example.com'
+        ]);
+
+        $room = Room::create([
+            'number' => '202',
+            'capacity' => 2,
+            'hostel_id' => $hostel->id,
+            'gender' => 'any',
+            'status' => 'available',
+            'room_type' => 'single_room',
+            'room_cost' => 300.00,
+            'current_occupancy' => 0,
+        ]);
+
+        // Booking belongs to student2 and is completed
+        $booking = Booking::create([
+            'user_id' => $student2->id,
+            'hostel_id' => $hostel->id,
+            'room_id' => $room->id,
+            'check_in_date' => Carbon::now()->subDays(10)->toDateString(),
+            'check_out_date' => Carbon::now()->subDays(5)->toDateString(),
+            'total_amount' => 300.00,
+            'booking_status' => 'checked_out',
+            'payment_status' => 'paid',
+            'booking_number' => 'BKREF' . uniqid(),
+        ]);
+
+        // student1 stayed at this hostel (valid completed booking for student1)
+        Booking::create([
+            'user_id' => $student1->id,
+            'hostel_id' => $hostel->id,
+            'room_id' => $room->id,
+            'check_in_date' => Carbon::now()->subDays(10)->toDateString(),
+            'check_out_date' => Carbon::now()->subDays(5)->toDateString(),
+            'total_amount' => 300.00,
+            'booking_status' => 'checked_out',
+            'payment_status' => 'paid',
+            'booking_number' => 'BKREF' . uniqid(),
+        ]);
+
+        // student1 attempts to post a review on the hostel but references student2's booking ID
+        $response = $this->actingAs($student1)
+            ->post(route('student.reviews.store'), [
+                'hostel_id' => $hostel->id,
+                'booking_id' => $booking->id,
+                'rating' => 5,
+                'title' => 'Great place',
+                'review' => 'I thoroughly enjoyed my stay at this hostel.',
+            ]);
+
+        // Should return a 403 Forbidden status because of IDOR protection
+        $response->assertStatus(403);
+    }
 }

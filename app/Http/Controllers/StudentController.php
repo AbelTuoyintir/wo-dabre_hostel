@@ -451,6 +451,19 @@ class StudentController extends Controller
             return back()->with('error', 'You can only review hostels you have stayed at.');
         }
 
+        // Verify specific booking if provided to prevent IDOR vulnerabilities
+        if (!empty($validated['booking_id'])) {
+            $validBooking = Booking::where('id', $validated['booking_id'])
+                ->where('user_id', Auth::id())
+                ->where('hostel_id', $validated['hostel_id'])
+                ->whereIn('booking_status', ['checked_out', 'completed'])
+                ->exists();
+
+            if (!$validBooking) {
+                abort(403, 'Unauthorized action.');
+            }
+        }
+
         DB::transaction(function () use ($validated) {
             // Create the review
             $review = Review::create([
@@ -754,10 +767,15 @@ public function viewHostel(Hostel $hostel)
         // Get hostel_id from booking if provided
         $hostelId = null;
         if (!empty($validated['booking_id'])) {
-            $booking = Booking::find($validated['booking_id']);
-            if ($booking) {
-                $hostelId = $booking->room->hostel_id;
+            $booking = Booking::where('id', $validated['booking_id'])
+                ->where('user_id', Auth::id())
+                ->first();
+
+            if (!$booking) {
+                abort(403, 'Unauthorized action.');
             }
+
+            $hostelId = $booking->room->hostel_id ?? $booking->hostel_id;
         }
 
         // hostel_id is required in the schema, so either get it from booking or fail gracefully
