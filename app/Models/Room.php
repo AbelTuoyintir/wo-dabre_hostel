@@ -191,9 +191,9 @@ class Room extends Model
     }
 
     /**
- * Get the images for the room
-    */
-      public function roomImages()
+     * Get the images for the room
+     */
+    public function roomImages()
     {
         return $this->hasMany(HostelImage::class)
             ->where('type', 'room')
