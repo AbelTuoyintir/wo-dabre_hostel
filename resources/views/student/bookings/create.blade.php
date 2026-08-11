@@ -58,7 +58,7 @@
             </div>
 
             <form method="POST"
-                  action="{{ Auth::check() ? route('c') : route('bookings.store') }}"
+                  action="{{ Auth::check() ? route('student.bookings.store') : route('bookings.store') }}"
                   id="bookingForm"
                   novalidate>
 

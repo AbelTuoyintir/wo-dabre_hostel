@@ -253,15 +253,15 @@ class BookingController extends Controller
      * Store booking for authenticated students
      */
     public function StudentStore(Request $request)
-{
-    $rules = [
-        'room_id' => 'required|exists:rooms,id',
-        'hostel_id' => 'required|exists:hostels,id',
-        'check_in_date' => 'required|date',
-        'check_out_date' => 'required|date|after:check_in_date',
-        'room_cost' => 'required|numeric|min:0',
-        'gender' => 'required|in:male,female',
-    ];
+    {
+        $rules = [
+            'room_id' => 'required|exists:rooms,id',
+            'hostel_id' => 'required|exists:hostels,id',
+            'check_in_date' => 'required|date',
+            'check_out_date' => 'required|date|after:check_in_date',
+            'room_cost' => 'required|numeric|min:0',
+            'gender' => 'required|in:male,female',
+        ];
 
         $validated = $request->validate($rules);
 
@@ -648,8 +648,7 @@ class BookingController extends Controller
 
             $tempPassword = $guestData['temp_password'];
             if ($tempPassword) {
-                \Log::info('temporal password have been created. now guest data will now be
-            created in the database ');
+                \Log::info('temporal password have been created. now guest data will now be created in the database ');
             }
 
             // Find or create the user

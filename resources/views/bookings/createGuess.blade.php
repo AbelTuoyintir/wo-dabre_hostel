@@ -367,7 +367,7 @@
                         </span>
                     </div>
                 </form>
-                @endif {{-- THIS WAS MISSING --}}
+                @endif
             </div>
         </div>
     </div>
