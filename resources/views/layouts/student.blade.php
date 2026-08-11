@@ -380,6 +380,62 @@
         });
     </script>
 
+    <!-- Quick Actions Menu (Positioned bottom-left globally for all student views, preventing overlap with support-widget) -->
+    @auth
+        <div x-data="{ open: false }"
+             class="fixed bottom-6 left-6 z-[100] md:bottom-8 md:left-8"
+             @keydown.escape.window="open = false"
+             @click.outside="open = false">
+
+            <!-- Floating toggle button -->
+            <button @click="open = !open"
+                    type="button"
+                    aria-haspopup="true"
+                    :aria-expanded="open.toString()"
+                    aria-label="Toggle Quick Actions Menu"
+                    class="bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500 transition-all duration-300 transform active:scale-95 flex items-center justify-center">
+                <!-- Rotatable toggle icon -->
+                <i class="fas fa-plus text-xl transition-transform duration-300"
+                   :class="open ? 'rotate-45' : 'rotate-0'"
+                   aria-hidden="true"></i>
+            </button>
+
+            <!-- Quick Actions Menu -->
+            <div x-show="open"
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 translate-y-4 scale-95"
+                 x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                 x-transition:leave="transition ease-in duration-150"
+                 x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                 x-transition:leave-end="opacity-0 translate-y-4 scale-95"
+                 class="absolute bottom-16 left-0 bg-white rounded-2xl shadow-2xl border border-gray-100 p-2 w-52 flex flex-col gap-1 z-[110] focus:outline-none animate-fade-in"
+                 style="display: none;">
+
+                <div class="px-3 py-1.5 text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-50 mb-1">
+                    Quick Actions
+                </div>
+
+                <a href="{{ route('student.hostels.browse') }}"
+                   class="flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+                    <i class="fas fa-building text-gray-400 w-5 text-center" aria-hidden="true"></i>
+                    <span>Browse Hostels</span>
+                </a>
+
+                <a href="{{ route('student.complaints') }}"
+                   class="flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+                    <i class="fas fa-exclamation-triangle text-gray-400 w-5 text-center" aria-hidden="true"></i>
+                    <span>Submit Complaint</span>
+                </a>
+
+                <a href="{{ route('student.profile') }}"
+                   class="flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+                    <i class="fas fa-user text-gray-400 w-5 text-center" aria-hidden="true"></i>
+                    <span>Update Profile</span>
+                </a>
+            </div>
+        </div>
+    @endauth
+
     @include('components.support-widget')
 
     @stack('scripts')
