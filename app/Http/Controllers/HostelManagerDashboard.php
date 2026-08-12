@@ -618,7 +618,7 @@ class HostelManagerDashboard extends Controller
             public function showOccupant(User $user): View
             {
                 $authUser = Auth::user();
-                $hostelIds = Hostel::where('user_id', $authUser->id)->pluck('id');
+                $hostelIds = $authUser->managedHostels()->pluck('hostels.id');
 
                 // Verify the occupant has bookings in managed hostels
                 if (!$user->bookings()->whereIn('hostel_id', $hostelIds)->exists()) {
@@ -630,7 +630,11 @@ class HostelManagerDashboard extends Controller
                     ->with('room', 'hostel')
                     ->get();
 
-                return view('hostel-manager.occupants.show', compact('user', 'bookings'));
+                return view('hostel-manager.occupants.show', [
+                    'student' => $user,
+                    'user' => $user,
+                    'bookings' => $bookings
+                ]);
             }
 
             public function contactOccupant(Request $request, User $user): RedirectResponse
@@ -693,7 +697,7 @@ class HostelManagerDashboard extends Controller
             public function exportOccupants(Request $request)
             {
                 $user = Auth::user();
-                $hostelIds = Hostel::where('user_id', $user->id)->pluck('id');
+                $hostelIds = $user->managedHostels()->pluck('hostels.id');
 
         $query = User::whereHas('bookings', function($q) use ($hostelIds) {
             $q->whereIn('hostel_id', $hostelIds)
@@ -749,7 +753,7 @@ class HostelManagerDashboard extends Controller
     public function complaints(Request $request): View
     {
         $user = Auth::user();
-        $hostelIds = Hostel::where('user_id', $user->id)->pluck('id');
+        $hostelIds = $user->managedHostels()->pluck('hostels.id');
 
         $query = Complaint::whereIn('hostel_id', $hostelIds)
             ->with(['user', 'room', 'hostel']);
@@ -787,7 +791,7 @@ class HostelManagerDashboard extends Controller
             'urgent' => Complaint::whereIn('hostel_id', $hostelIds)->where('priority', 'urgent')->whereIn('status', ['pending', 'in_progress'])->count(),
         ];
 
-        $hostels = Hostel::where('user_id', $user->id)->get();
+        $hostels = $user->managedHostels()->get();
 
         return view('hostel-manager.complaints.index', compact('complaints', 'hostels', 'stats'));
     }
