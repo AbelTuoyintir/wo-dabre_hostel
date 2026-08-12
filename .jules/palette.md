@@ -21,3 +21,7 @@ Critical UX/accessibility learnings and reusable patterns for the UCC Hostel Boo
 ## 2026-03-05 - [Dynamic Aria-Label and Chat Input Focus Retention]
 **Learning:** Heart icon buttons and dynamic action controls should synchronize their `aria-label` and `title` attributes on click to prevent screen-readers and visual hover users from receiving stale labels (like "Add..." when the item is already added). In messaging views, always programmatically refocus the text input after form submission so keyboard focus is not lost and users can type consecutively.
 **Action:** Always update the attributes (`aria-label`, `title`) dynamically in event handlers, and use Alpine.js `$nextTick` with `$refs` to restore input focus on submit.
+
+## 2026-03-06 - [Modal Focus Control and Polite Live Regions]
+**Learning:** Custom interactive modal dialogs should enforce semantic attributes (`role="dialog"`, `aria-modal="true"`) to prevent assistive tech from leaking to background elements. Programmatically focusing the primary input upon opening ensures keyboard/screen-reader users immediately land in the context. Character counters should dynamically update pre-defined `aria-live="polite"` elements instead of performing disruptive, repetitive DOM node mutations.
+**Action:** Always include auto-focus hooks on modal opens, register an Escape key press listener globally, and target static live elements for feedback messages.
