@@ -229,11 +229,11 @@
 @endif
 
 <!-- Create/Edit Complaint Modal -->
-<div id="complaintModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+<div id="complaintModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div class="sticky top-0 bg-white px-6 py-4 border-b flex justify-between items-center">
             <h3 class="text-xl font-bold text-gray-800" id="modalTitle">Submit New Complaint</h3>
-            <button onclick="closeComplaintModal()" class="text-gray-500 hover:text-gray-700">
+            <button onclick="closeComplaintModal()" aria-label="Close complaint modal" class="text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg p-1">
                 <i class="fas fa-times"></i>
             </button>
         </div>
@@ -245,22 +245,22 @@
             <div class="space-y-4">
                 <!-- Subject -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2" for="subject">
                         Subject <span class="text-red-500">*</span>
                     </label>
                     <input type="text" name="subject" id="subject"
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                            placeholder="Brief summary of your complaint"
                            required>
                 </div>
 
                 <!-- Category -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2" for="category">
                         Category <span class="text-red-500">*</span>
                     </label>
                     <select name="category" id="category"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                             required>
                         <option value="">Select Category</option>
                         <option value="maintenance">Maintenance (Plumbing, Electricity, etc.)</option>
@@ -272,11 +272,11 @@
 
                 <!-- Priority -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2" for="priority">
                         Priority
                     </label>
                     <select name="priority" id="priority"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
                         <option value="low">Low</option>
                         <option value="medium" selected>Medium</option>
                         <option value="high">High</option>
@@ -286,11 +286,11 @@
 
                 <!-- Related Booking (Optional) -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2" for="booking_id">
                         Related Booking (Optional)
                     </label>
                     <select name="booking_id" id="booking_id"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
                         <option value="">Select a booking (optional)</option>
                         @foreach(auth()->user()->bookings()->where('booking_status', 'confirmed')->get() as $booking)
                             <option value="{{ $booking->id }}">
@@ -303,35 +303,36 @@
 
                 <!-- Description -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2" for="description">
                         Description <span class="text-red-500">*</span>
                     </label>
                     <textarea name="description" id="description" rows="5"
-                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                               placeholder="Please provide detailed information about your complaint..."
+                              aria-describedby="description-counter"
                               required></textarea>
-                    <p class="text-xs text-gray-500 mt-1">Minimum 20 characters</p>
+                    <p id="description-counter" class="text-xs text-gray-500 mt-1 char-counter font-medium" aria-live="polite">Minimum 20 characters</p>
                 </div>
 
                 <!-- Attachments (Optional) -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2" for="attachments">
                         Attachments (Optional)
                     </label>
-                    <input type="file" name="attachments[]" multiple
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    <input type="file" name="attachments[]" id="attachments" multiple
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                            accept="image/*,.pdf">
                     <p class="text-xs text-gray-500 mt-1">Upload images or PDF files (max 5MB each)</p>
                 </div>
 
                 <!-- Submit Buttons -->
                 <div class="flex justify-end space-x-3 pt-4">
-                    <button type="button" onclick="closeComplaintModal()"
-                            class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                    <button type="button" onclick="closeComplaintModal()" aria-label="Cancel and close modal"
+                            class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                         Cancel
                     </button>
-                    <button type="submit" id="submitBtn"
-                            class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    <button type="submit" id="submitBtn" aria-label="Submit complaint"
+                            class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                         Submit Complaint
                     </button>
                 </div>
@@ -350,6 +351,11 @@ function openComplaintModal() {
     document.getElementById('complaintForm').action = "{{ route('student.complaints.store') }}";
     document.getElementById('complaintModal').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
+
+    // Set automatic keyboard focus to the first input field
+    setTimeout(() => {
+        document.getElementById('subject')?.focus();
+    }, 50);
 }
 
 function closeComplaintModal() {
@@ -428,21 +434,29 @@ function deleteComplaint(id) {
 document.getElementById('description')?.addEventListener('input', function() {
     const minLength = 20;
     const currentLength = this.value.length;
+    const counter = document.getElementById('description-counter');
 
-    if (currentLength < minLength) {
-        this.classList.add('border-red-500');
-        if (!this.nextElementSibling?.classList.contains('char-counter')) {
-            const warning = document.createElement('p');
-            warning.className = 'text-xs text-red-500 mt-1 char-counter';
-            warning.textContent = `${minLength - currentLength} more characters needed`;
-            this.parentNode.insertBefore(warning, this.nextSibling);
+    if (counter) {
+        if (currentLength < minLength) {
+            this.classList.add('border-red-500');
+            counter.classList.add('text-red-500');
+            counter.classList.remove('text-gray-500', 'text-green-600');
+            counter.textContent = `${minLength - currentLength} more characters needed`;
         } else {
-            this.nextElementSibling.textContent = `${minLength - currentLength} more characters needed`;
+            this.classList.remove('border-red-500');
+            counter.classList.remove('text-red-500', 'text-gray-500');
+            counter.classList.add('text-green-600');
+            counter.textContent = `Excellent! Minimum length met (${currentLength} characters)`;
         }
-    } else {
-        this.classList.remove('border-red-500');
-        if (this.nextElementSibling?.classList.contains('char-counter')) {
-            this.nextElementSibling.remove();
+    }
+});
+
+// Close modal when clicking Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const modal = document.getElementById('complaintModal');
+        if (modal && !modal.classList.contains('hidden')) {
+            closeComplaintModal();
         }
     }
 });
