@@ -42,4 +42,16 @@ class Complaint extends Model
     {
         return $this->belongsTo(Booking::class);
     }
+
+    public function room()
+    {
+        return $this->hasOneThrough(
+            Room::class,
+            Booking::class,
+            'id', // Foreign key on bookings table
+            'id', // Foreign key on rooms table
+            'booking_id', // Local key on complaints table
+            'room_id' // Local key on bookings table
+        );
+    }
 }

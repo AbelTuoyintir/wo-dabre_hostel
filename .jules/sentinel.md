@@ -1,3 +1,8 @@
+## 2026-08-06 - Hostel Manager Dashboard BOLA & IDOR Vulnerabilities
+**Vulnerability:** The occupant details, export, and complaint index routes in the Hostel Manager Dashboard relied on raw queries matching `Hostel::where('user_id', ...)` rather than querying the managed hostels relationship mapped to `manager_id`. This created Broken Object-Level Authorization (BOLA/IDOR) where unassigned owners/managers or agents could view/export occupants and list complaints of hostels they didn't manage, whilst actual managers were locked out of their own data.
+**Learning:** Inconsistent multi-tenant modeling (e.g. having both `user_id` and `manager_id` columns) can lead to using incorrect, unverified attributes for authorization checks.
+**Prevention:** Consistently resolve tenant context through robust Eloquent relationships (such as `$user->managedHostels()`) rather than writing manual constraints against generic owner columns in controllers.
+
 ## 2026-08-05 - Missing Global HTTP Security Headers (Defense in Depth)
 **Vulnerability:** The application was missing standard HTTP security headers (such as `X-Frame-Options`, `X-Content-Type-Options`, `X-XSS-Protection`, `Referrer-Policy`, and `Content-Security-Policy`), leaving web responses vulnerable to clickjacking, MIME-type sniffing, and cross-site data leakage.
 **Learning:** Default framework configurations often omit strict security headers, leaving clickjacking and data leakage vectors unmitigated out-of-the-box. A central global middleware is the cleanest mechanism to consistently apply secure default transport headers across all web routes.

@@ -124,8 +124,8 @@
                         <span class="text-xs font-medium text-gray-900">#{{ $complaint->id }}</span>
                     </td>
                     <td class="px-4 py-2">
-                        <div class="text-xs font-medium text-gray-900">{{ Str::limit($complaint->title, 30) }}</div>
-                        <div class="text-[10px] text-gray-500">{{ Str::limit($complaint->description, 40) }}</div>
+                        <div class="text-xs font-medium text-gray-900">{{ \Illuminate\Support\Str::limit($complaint->title, 30) }}</div>
+                        <div class="text-[10px] text-gray-500">{{ \Illuminate\Support\Str::limit($complaint->description, 40) }}</div>
                     </td>
                     <td class="px-4 py-2 whitespace-nowrap">
                         <div class="flex items-center">
