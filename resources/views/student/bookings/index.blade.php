@@ -539,15 +539,6 @@
     </div>
 @endif
 
-<!-- Floating Action Button -->
-<div class="fixed bottom-6 right-6 z-50">
-    <a href="{{ route('student.hostels.browse') }}"
-       class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-full shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300">
-        <i class="fas fa-plus"></i>
-        <span class="font-medium">Book Now</span>
-    </a>
-</div>
-
 @push('scripts')
 <script>
 function confirmCancel() {

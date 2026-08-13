@@ -529,39 +529,6 @@
     </div>
 </div>
 
-<!-- Floating Quick Action -->
-<div class="fixed bottom-6 right-6 z-50">
-    <div x-data="{ open: false }" class="relative">
-        <button @click="open = !open" 
-                aria-label="Toggle Quick Actions Menu"
-                :aria-expanded="open"
-                class="bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition transform hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400 focus-visible:ring-offset-2">
-            <i class="fas fa-plus text-xl" :class="open ? 'fa-times' : 'fa-plus'"></i>
-        </button>
-        
-        <div x-show="open" 
-             @click.outside="open = false"
-             x-transition:enter="transition ease-out duration-200"
-             x-transition:enter-start="transform opacity-0 scale-95"
-             x-transition:enter-end="transform opacity-100 scale-100"
-             class="absolute bottom-16 right-0 bg-white rounded-2xl shadow-xl p-2 w-56 animate-fade-in"
-             style="display: none;">
-            <a href="{{ route('student.hostels.browse') }}" class="no-loader flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 rounded-xl transition group">
-                <i class="fas fa-search text-blue-500 w-6 group-hover:scale-110 transition"></i>
-                <span class="ml-3">Browse Hostels</span>
-            </a>
-            <a href="#" class="no-loader flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 rounded-xl transition group">
-                <i class="fas fa-heart text-red-500 w-6 group-hover:scale-110 transition"></i>
-                <span class="ml-3">Saved Hostels</span>
-            </a>
-            <a href="{{ route('student.bookings') }}" class="no-loader flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 rounded-xl transition group">
-                <i class="fas fa-calendar-check text-green-500 w-6 group-hover:scale-110 transition"></i>
-                <span class="ml-3">My Bookings</span>
-            </a>
-        </div>
-    </div>
-</div>
-
 @endsection
 
 @section('scripts')

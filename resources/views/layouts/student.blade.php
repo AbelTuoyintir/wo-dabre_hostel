@@ -380,6 +380,64 @@
         });
     </script>
 
+    <!-- Global Student Quick Actions Menu -->
+    <div x-data="{ open: false }"
+         @keydown.escape.window="open = false"
+         class="fixed bottom-6 left-6 z-[100] md:bottom-8 md:left-8">
+
+        <!-- Quick Actions Toggle Button -->
+        <button @click="open = !open"
+                aria-label="Toggle Quick Actions Menu"
+                :aria-expanded="open"
+                class="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-yellow-400 focus-visible:ring-offset-2 flex items-center justify-center relative group"
+                title="Quick Actions">
+            <!-- Icon that rotates when open -->
+            <i class="fas fa-plus text-xl transition-transform duration-300" :class="open ? 'rotate-45' : ''" aria-hidden="true"></i>
+            <span class="sr-only">Quick Actions</span>
+        </button>
+
+        <!-- Quick Actions List (Hidden by default) -->
+        <div x-show="open"
+             @click.outside="open = false"
+             x-transition:enter="transition ease-out duration-200 transform"
+             x-transition:enter-start="opacity-0 translate-y-4 scale-95"
+             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+             x-transition:leave="transition ease-in duration-150 transform"
+             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+             x-transition:leave-end="opacity-0 translate-y-4 scale-95"
+             class="absolute bottom-16 left-0 bg-white rounded-2xl shadow-2xl border border-gray-100 p-2 w-56 flex flex-col gap-1"
+             style="display: none;">
+
+            <div class="px-3 py-1.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-gray-50">
+                Quick Navigation
+            </div>
+
+            <a href="{{ route('student.hostels.browse') }}"
+               class="no-loader flex items-center px-3 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-xl transition-all duration-200 group focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+                <i class="fas fa-search text-blue-500 w-6 group-hover:scale-110 transition-transform" aria-hidden="true"></i>
+                <span class="font-medium">Browse Hostels</span>
+            </a>
+
+            <a href="{{ route('student.bookings') }}"
+               class="no-loader flex items-center px-3 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-xl transition-all duration-200 group focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+                <i class="fas fa-calendar-check text-green-500 w-6 group-hover:scale-110 transition-transform" aria-hidden="true"></i>
+                <span class="font-medium">My Bookings</span>
+            </a>
+
+            <a href="{{ route('student.complaints') }}"
+               class="no-loader flex items-center px-3 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-xl transition-all duration-200 group focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+                <i class="fas fa-exclamation-triangle text-orange-500 w-6 group-hover:scale-110 transition-transform" aria-hidden="true"></i>
+                <span class="font-medium">Submit Complaint</span>
+            </a>
+
+            <a href="{{ route('student.profile') }}"
+               class="no-loader flex items-center px-3 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-xl transition-all duration-200 group focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+                <i class="fas fa-user text-purple-500 w-6 group-hover:scale-110 transition-transform" aria-hidden="true"></i>
+                <span class="font-medium">Update Profile</span>
+            </a>
+        </div>
+    </div>
+
     @include('components.support-widget')
 
     @stack('scripts')
