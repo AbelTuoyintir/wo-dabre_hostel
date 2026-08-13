@@ -21,3 +21,7 @@ Critical UX/accessibility learnings and reusable patterns for the UCC Hostel Boo
 ## 2026-03-05 - [Dynamic Aria-Label and Chat Input Focus Retention]
 **Learning:** Heart icon buttons and dynamic action controls should synchronize their `aria-label` and `title` attributes on click to prevent screen-readers and visual hover users from receiving stale labels (like "Add..." when the item is already added). In messaging views, always programmatically refocus the text input after form submission so keyboard focus is not lost and users can type consecutively.
 **Action:** Always update the attributes (`aria-label`, `title`) dynamically in event handlers, and use Alpine.js `$nextTick` with `$refs` to restore input focus on submit.
+
+## 2026-03-05 - [Global Stacking Context & Floating Widget Collision]
+**Learning:** Pinned/fixed floating interaction widgets (such as quick action shortcuts and chat support buttons) can easily collide, overlap, or hide one another if hardcoded locally within different dashboard sub-pages. Extracting redundant, page-specific floating actions and unifying them into a single, keyboard-accessible global navigation layout at the bottom-left (`fixed bottom-6 left-6 z-[100] md:bottom-8 md:left-8`) resolves layout stacking context conflicts and keeps key touch areas distinct and fully reachable.
+**Action:** Always verify floating widgets globally and relocate shortcuts to bottom-left layout sections to maintain visual breathing room for bottom-right chat support panels.
