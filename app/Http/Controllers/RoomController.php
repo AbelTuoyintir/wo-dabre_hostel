@@ -116,13 +116,15 @@ public function store(Request $request)
                     $coverPath = $request->file('cover_image')->store('rooms/covers', 'public');
                 } elseif ($request->filled('temp_cover_path')) {
                     $tempPath = $request->temp_cover_path;
-                    $disk = \Illuminate\Support\Facades\Storage::disk('public');
-                    if ($disk->exists($tempPath)) {
-                        // Move/copy from temp to permanent location
-                        $newFilename = 'rooms/covers/' . basename($tempPath);
-                        $disk->copy($tempPath, $newFilename);
-                        $disk->delete($tempPath);
-                        $coverPath = $newFilename;
+                    if ($this->isValidTempPath($tempPath)) {
+                        $disk = \Illuminate\Support\Facades\Storage::disk('public');
+                        if ($disk->exists($tempPath)) {
+                            // Move/copy from temp to permanent location
+                            $newFilename = 'rooms/covers/' . basename($tempPath);
+                            $disk->copy($tempPath, $newFilename);
+                            $disk->delete($tempPath);
+                            $coverPath = $newFilename;
+                        }
                     }
                 }
 
@@ -182,7 +184,7 @@ public function store(Request $request)
                 if ($request->filled('temp_gallery_paths')) {
                     $disk = \Illuminate\Support\Facades\Storage::disk('public');
                     foreach ($request->temp_gallery_paths as $tempPath) {
-                        if ($disk->exists($tempPath)) {
+                        if ($this->isValidTempPath($tempPath) && $disk->exists($tempPath)) {
                             $galleryImages->push($tempPath);
                         }
                     }
@@ -658,6 +660,13 @@ $path = $image->store('rooms/gallery', 'public');
      */
     public function deleteTempImage($tempId)
     {
+        if (!preg_match('/^temp_[a-zA-Z0-9_\.]+$/', $tempId)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid temp ID format.',
+            ], 400);
+        }
+
         try {
             // Find and delete the temp file
             $disk = \Illuminate\Support\Facades\Storage::disk('public');
@@ -665,7 +674,7 @@ $path = $image->store('rooms/gallery', 'public');
 
             $deleted = false;
             foreach ($files as $file) {
-                if (str_contains($file, $tempId)) {
+                if (pathinfo($file, PATHINFO_FILENAME) === $tempId) {
                     $disk->delete($file);
                     $deleted = true;
                     break;
@@ -1020,5 +1029,22 @@ $path = $image->store('rooms/gallery', 'public');
             ["\\\\", "\\(", "\\)", ''],
             $encoded
         );
+    }
+
+    /**
+     * Validate temporary image path to prevent path traversal and arbitrary file deletion.
+     */
+    private function isValidTempPath(string $path): bool
+    {
+        if (!str_starts_with($path, 'temp/room-images/')) {
+            return false;
+        }
+
+        if (str_contains($path, '..') || str_contains($path, '\\')) {
+            return false;
+        }
+
+        $basename = basename($path);
+        return preg_match('/^temp_[a-zA-Z0-9_\.]+\.[a-zA-Z0-9]+$/', $basename) === 1;
     }
 }
