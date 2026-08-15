@@ -751,12 +751,17 @@ public function viewHostel(Hostel $hostel)
             'description' => 'required|string|min:20|max:2000',
         ]);
 
-        // Get hostel_id from booking if provided
+        // Get hostel_id from booking if provided (verify ownership to prevent IDOR)
         $hostelId = null;
         if (!empty($validated['booking_id'])) {
-            $booking = Booking::find($validated['booking_id']);
+            $booking = Booking::where('id', $validated['booking_id'])
+                ->where('user_id', Auth::id())
+                ->first();
             if ($booking) {
-                $hostelId = $booking->room->hostel_id;
+                $hostelId = $booking->room->hostel_id ?? $booking->hostel_id;
+            } else {
+                return redirect()->route('student.complaints')
+                    ->with('error', 'Please select a valid booking to file a complaint.');
             }
         }
 
