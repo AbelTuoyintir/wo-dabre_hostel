@@ -1,3 +1,8 @@
+## 2026-08-14 - Temporary Path Traversal & Substring File Deletion in Room Image Uploads
+**Vulnerability:** The `RoomController`'s store process processed user-supplied temporary paths (`temp_cover_path` and `temp_gallery_paths`) without prefix or traversal validation, exposing copy/deletion of system files like `.env`. Furthermore, the `deleteTempImage($tempId)` endpoint used a loose `str_contains` check, allowing authenticated attackers to delete arbitrary files via substring match.
+**Learning:** Storing and retrieving user-supplied temporary file paths without strict directory constraints and filename pattern matches creates critical directory traversal and arbitrary file manipulation vectors.
+**Prevention:** Validate all temporary uploaded paths to ensure they strictly reside within designated directories (e.g. `temp/room-images/`), contain no traversal segments (`..` or `\`), and match a strict filename format. Always delete temporary files using exact filename matching (`pathinfo(..., PATHINFO_FILENAME) === $tempId`) instead of loose substring searches.
+
 ## 2026-08-05 - Missing Global HTTP Security Headers (Defense in Depth)
 **Vulnerability:** The application was missing standard HTTP security headers (such as `X-Frame-Options`, `X-Content-Type-Options`, `X-XSS-Protection`, `Referrer-Policy`, and `Content-Security-Policy`), leaving web responses vulnerable to clickjacking, MIME-type sniffing, and cross-site data leakage.
 **Learning:** Default framework configurations often omit strict security headers, leaving clickjacking and data leakage vectors unmitigated out-of-the-box. A central global middleware is the cleanest mechanism to consistently apply secure default transport headers across all web routes.
