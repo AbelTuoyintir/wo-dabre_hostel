@@ -5,8 +5,8 @@
 @section('content')
 <div class="container mx-auto px-4 py-8">
     <div class="mb-8">
-        <a href="{{ route('hostels.index') }}" class="text-blue-600 hover:underline flex items-center gap-2">
-            <i class="fas fa-arrow-left"></i> Back to Exploration
+        <a href="{{ route('hostels.index') }}" class="text-blue-600 hover:underline flex items-center gap-2 w-fit rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2" aria-label="Back to hostel exploration">
+            <i class="fas fa-arrow-left" aria-hidden="true"></i> Back to Exploration
         </a>
         <h1 class="text-3xl font-bold text-slate-800 mt-4">Compare Hostels</h1>
         <p class="text-slate-600">Find the perfect stay by comparing your favorites side-by-side.</p>
@@ -28,7 +28,7 @@
                                 @endphp
                                 <img src="{{ $imageUrl }}" alt="{{ $hostel->name }}" class="w-32 h-32 object-cover rounded-lg shadow-sm">
                                 <h3 class="font-bold text-slate-800">{{ $hostel->name }}</h3>
-                                <a href="{{ route('hostels.guest.show', $hostel->uuid ?? $hostel->id) }}" class="text-xs bg-rose-500 text-white px-3 py-1 rounded-full hover:bg-rose-600 transition">View Details</a>
+                                <a href="{{ route('hostels.guest.show', $hostel->uuid ?? $hostel->id) }}" class="text-xs bg-rose-500 text-white px-3 py-1 rounded-full hover:bg-rose-600 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2" aria-label="View details for {{ $hostel->name }}">View Details</a>
                             </div>
                         </th>
                     @endforeach
@@ -64,9 +64,9 @@
                                 @foreach($hostel->amenities->take(5) as $amenity)
                                     <span class="inline-flex items-center gap-1 text-[10px] bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full">
                                         @if($amenity->icon)
-                                            <i class="{{ $amenity->icon }} text-blue-500 text-xs"></i>
+                                            <i class="{{ $amenity->icon }} text-blue-500 text-xs" aria-hidden="true"></i>
                                         @else
-                                            <i class="fas fa-circle-check text-blue-500 text-xs"></i>
+                                            <i class="fas fa-circle-check text-blue-500 text-xs" aria-hidden="true"></i>
                                         @endif
                                         {{ $amenity->name }}
                                     </span>
@@ -103,7 +103,7 @@
                         <td class="p-4 text-center">
                             <div class="flex items-center justify-center gap-1">
 
-                                <i class="fas fa-star text-amber-400 text-xs"></i>
+                                <i class="fas fa-star text-amber-400 text-xs" aria-hidden="true"></i>
                                 <span class="font-bold">{{ $hostel->rating ?? '4.5' }}</span>
                             </div>
                         </td>
