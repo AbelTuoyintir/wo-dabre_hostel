@@ -59,5 +59,12 @@ class BookingCalculationTest extends TestCase
         $expectedTotal = $room->room_cost;
 
         $this->assertEquals($expectedTotal, $data['total']);
+
+        // Ensure no extra fields containing fee breakdowns leak in the JSON response
+        $this->assertArrayNotHasKey('platform_fee', $data);
+        $this->assertArrayNotHasKey('paystack_buffer', $data);
+        $this->assertArrayNotHasKey('banking_charge', $data);
+        $this->assertArrayNotHasKey('service_charge', $data);
+        $this->assertArrayNotHasKey('total_service_charge', $data);
     }
 }
