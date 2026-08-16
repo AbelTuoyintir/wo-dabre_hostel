@@ -929,9 +929,10 @@ class BookingController extends Controller
     /**
      * Calculate booking totals
      *
-     * Fee Structure (calculated server-side, not exposed to frontend):
-     *   - Total Service Charge: 5.10% of room_cost
-     *   - Final Total:         room_cost + Total Service Charge
+     * Pre-calculated Pricing Structure:
+     *   - The room_cost stored in the database is all-inclusive of platform fees, platform profits,
+     *     and processing charges (total = base price x 1.0512).
+     *   - Final Total: matches room_cost directly so customers are not shown additional fees.
      */
     public function calculate(Request $request)
     {
