@@ -451,6 +451,22 @@ class StudentController extends Controller
             return back()->with('error', 'You can only review hostels you have stayed at.');
         }
 
+        // IDOR Guard: Verify that any supplied booking_id belongs to a completed booking owned by this student for this hostel
+        if (!empty($validated['booking_id'])) {
+            $validBooking = Booking::where('id', $validated['booking_id'])
+                ->where('user_id', Auth::id())
+                ->where(function ($q) use ($validated) {
+                    $q->where('hostel_id', $validated['hostel_id'])
+                      ->orWhereHas('room', fn($rq) => $rq->where('hostel_id', $validated['hostel_id']));
+                })
+                ->whereIn('booking_status', ['checked_out', 'completed'])
+                ->exists();
+
+            if (!$validBooking) {
+                return back()->with('error', 'Invalid booking selected for review.');
+            }
+        }
+
         DB::transaction(function () use ($validated) {
             // Create the review
             $review = Review::create([
