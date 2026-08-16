@@ -457,9 +457,11 @@
         <!-- Load More / Pagination -->
         <div id="load-more-container" class="mt-8 text-center">
             <button type="button" id="load-more-rooms-btn"
-                    class="px-8 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition font-medium">
-                <i class="fas fa-sync-alt mr-2"></i>
-                Load More Rooms
+                    aria-controls="available-rooms-grid"
+                    aria-expanded="false"
+                    class="px-8 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 transition font-medium disabled:opacity-60 disabled:cursor-not-allowed">
+                <i class="fas fa-sync-alt mr-2" id="load-more-rooms-icon"></i>
+                <span id="load-more-rooms-text">Load More Rooms</span>
             </button>
         </div>
     @else
@@ -605,6 +607,8 @@
         if (grid && loadMoreBtn) {
             const rooms = Array.from(grid.querySelectorAll('.room-card'));
             const batchSize = 6;
+            const iconEl = document.getElementById('load-more-rooms-icon');
+            const textEl = document.getElementById('load-more-rooms-text');
 
             // Hide the button entirely if all rooms already fit on screen
             if (rooms.length <= batchSize) {
@@ -612,20 +616,36 @@
             }
 
             loadMoreBtn.addEventListener('click', function () {
-                let revealed = 0;
-                rooms.forEach(room => {
-                    if (revealed >= batchSize) return;
-                    if (room.classList.contains('hidden')) {
-                        room.classList.remove('hidden');
-                        revealed++;
-                    }
-                });
+                if (loadMoreBtn.disabled) return;
 
-                // If no more hidden rooms remain, hide the button
-                const remaining = rooms.filter(room => room.classList.contains('hidden')).length;
-                if (remaining === 0 && loadMoreContainer) {
-                    loadMoreContainer.style.display = 'none';
-                }
+                // Set loading state
+                loadMoreBtn.disabled = true;
+                if (iconEl) iconEl.className = 'fas fa-spinner fa-spin mr-2';
+                if (textEl) textEl.textContent = 'Loading rooms...';
+
+                setTimeout(() => {
+                    let revealed = 0;
+                    rooms.forEach(room => {
+                        if (revealed >= batchSize) return;
+                        if (room.classList.contains('hidden')) {
+                            room.classList.remove('hidden');
+                            revealed++;
+                        }
+                    });
+
+                    loadMoreBtn.setAttribute('aria-expanded', 'true');
+
+                    // Reset button state
+                    loadMoreBtn.disabled = false;
+                    if (iconEl) iconEl.className = 'fas fa-sync-alt mr-2';
+                    if (textEl) textEl.textContent = 'Load More Rooms';
+
+                    // If no more hidden rooms remain, hide the button
+                    const remaining = rooms.filter(room => room.classList.contains('hidden')).length;
+                    if (remaining === 0 && loadMoreContainer) {
+                        loadMoreContainer.style.display = 'none';
+                    }
+                }, 250);
             });
         }
     });
