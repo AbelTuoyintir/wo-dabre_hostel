@@ -327,7 +327,7 @@
                     }
 
                     // Skip quick actions
-                    if (this.closest('.fixed.bottom-6.right-6') || this.closest('#quickActionsMenu')) {
+                    if (this.closest('.fixed.bottom-6.right-6') || this.closest('.fixed.bottom-6.left-6') || this.closest('#quickActionsMenu')) {
                         return;
                     }
 
@@ -379,6 +379,44 @@
             });
         });
     </script>
+
+    <!-- Global Floating Quick Actions Menu (Bottom-Left) -->
+    <div x-data="{ open: false }" class="fixed bottom-6 left-6 z-[100] md:bottom-8 md:left-8">
+        <!-- Floating Toggle Button -->
+        <button @click="open = !open"
+                @keydown.escape.window="open = false"
+                aria-label="Toggle Quick Actions Menu"
+                :aria-expanded="open"
+                aria-haspopup="true"
+                class="bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-all duration-300 transform hover:scale-105 focus:outline-none focus-visible:ring-4 focus-visible:ring-yellow-400 focus-visible:ring-offset-2 flex items-center justify-center">
+            <i class="fas fa-plus text-xl transition-transform duration-300" :class="open ? 'rotate-45' : ''" aria-hidden="true"></i>
+        </button>
+
+        <!-- Quick Actions Dropdown Menu -->
+        <div x-show="open"
+             @click.outside="open = false"
+             x-transition:enter="transition ease-out duration-200 transform"
+             x-transition:enter-start="opacity-0 translate-y-4 scale-95"
+             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+             x-transition:leave="transition ease-in duration-150 transform"
+             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+             x-transition:leave-end="opacity-0 translate-y-4 scale-95"
+             class="absolute bottom-16 left-0 bg-white rounded-2xl shadow-xl border border-gray-100 p-2 w-52"
+             style="display: none;">
+            <a href="{{ route('student.hostels.browse') }}" class="no-loader flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 rounded-xl transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+                <i class="fas fa-building text-blue-500 w-5" aria-hidden="true"></i>
+                <span class="ml-3 font-medium">Browse Hostels</span>
+            </a>
+            <a href="{{ route('student.bookings') }}" class="no-loader flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 rounded-xl transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+                <i class="fas fa-calendar-check text-green-500 w-5" aria-hidden="true"></i>
+                <span class="ml-3 font-medium">My Bookings</span>
+            </a>
+            <a href="{{ route('student.complaints') }}" class="no-loader flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 rounded-xl transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+                <i class="fas fa-exclamation-triangle text-orange-500 w-5" aria-hidden="true"></i>
+                <span class="ml-3 font-medium">Submit Complaint</span>
+            </a>
+        </div>
+    </div>
 
     @include('components.support-widget')
 

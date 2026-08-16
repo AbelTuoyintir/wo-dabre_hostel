@@ -2,6 +2,10 @@
 
 Critical UX/accessibility learnings and reusable patterns for the UCC Hostel Booking System.
 
+## 2026-03-06 - [Avoiding Floating Widget Overlaps and Placement Conflicts]
+**Learning:** Floating action buttons and widgets (such as quick action menus and support bubbles) are highly prone to physical overlap and z-index context conflicts when placed independently on individual views using the same spatial positioning (e.g., bottom-right). Extracting page-level floating controls into a single global layout widget placed on the opposite side of the viewport (e.g., bottom-left) ensures visual clarity, prevents interaction blocking with support widgets, and unifies the design system.
+**Action:** Consolidate isolated floating triggers into a cohesive, keyboard-friendly global quick actions menu using Alpine.js and position it to avoid colliding with other persistent bottom widgets.
+
 ## 2026-03-05 - [Keyboard-Accessible Star Rating Controls]
 **Learning:** Interactive star rating controls are often built using decorative icons (e.g., `<i>` tag with hover events) which are completely inaccessible to keyboard-only and screen-reader users. Replacing icons with semantic `<button type="button">` elements equipped with explicit dynamic `aria-label` tags, focused-visible rings, and separating hovering preview state from fixed selected rating state solves this.
 **Action:** Always wrap interactive rating stars in semantic buttons and manage both `rating` and `hoverRating` states dynamically in Alpine.js.
