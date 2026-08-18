@@ -204,9 +204,11 @@
                 <i class="fas fa-plus mr-2"></i>
                 Book New Room
             </a>
-            <button onclick="window.print()" 
-                    class="inline-flex items-center px-5 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition">
-                <i class="fas fa-print mr-2"></i>
+            <button type="button"
+                    onclick="window.print()"
+                    aria-label="Print bookings list"
+                    class="inline-flex items-center px-5 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 transition">
+                <i class="fas fa-print mr-2" aria-hidden="true"></i>
                 Print
             </button>
         </div>
