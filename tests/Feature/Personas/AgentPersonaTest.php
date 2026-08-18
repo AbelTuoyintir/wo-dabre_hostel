@@ -750,4 +750,82 @@ class AgentPersonaTest extends TestCase
 
         $this->assertEquals(1, $agent->fresh()->total_rooms_added);
     }
+
+    /**
+     * Agent cannot view unowned hostel details (IDOR protection).
+     */
+    public function test_agent_cannot_view_unowned_hostel_details_idor(): void
+    {
+        $agentUser1 = User::create([
+            'name' => 'Agent One',
+            'email' => 'agent1_'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '080'.str_pad((string)random_int(0, 9999999), 7, '0', STR_PAD_LEFT),
+            'role' => 'hostel_agent',
+            'email_verified_at' => now(),
+        ]);
+
+        HostelAgent::create([
+            'user_id' => $agentUser1->id,
+            'agent_code' => 'AG-1-'.uniqid(),
+            'phone' => $agentUser1->phone,
+            'total_commission' => 0,
+            'available_balance' => 0,
+            'withdrawn_amount' => 0,
+            'total_hostels_added' => 1,
+            'total_rooms_added' => 0,
+            'status' => 'active',
+            'approved_at' => now(),
+        ]);
+
+        $hostelAgent1 = \App\Models\Hostel::forceCreate([
+            'name' => 'Agent One Hostel',
+            'description' => 'Hostel belonging to Agent 1.',
+            'location' => 'amamoma',
+            'address' => '100 Main St',
+            'user_id' => $agentUser1->id,
+            'status' => 'active',
+        ]);
+
+        $agentUser2 = User::create([
+            'name' => 'Agent Two',
+            'email' => 'agent2_'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '080'.str_pad((string)random_int(0, 9999999), 7, '0', STR_PAD_LEFT),
+            'role' => 'hostel_agent',
+            'email_verified_at' => now(),
+        ]);
+
+        HostelAgent::create([
+            'user_id' => $agentUser2->id,
+            'agent_code' => 'AG-2-'.uniqid(),
+            'phone' => $agentUser2->phone,
+            'total_commission' => 0,
+            'available_balance' => 0,
+            'withdrawn_amount' => 0,
+            'total_hostels_added' => 1,
+            'total_rooms_added' => 0,
+            'status' => 'active',
+            'approved_at' => now(),
+        ]);
+
+        $hostelAgent2 = \App\Models\Hostel::forceCreate([
+            'name' => 'Agent Two Hostel',
+            'description' => 'Hostel belonging to Agent 2.',
+            'location' => 'amamoma',
+            'address' => '200 Main St',
+            'user_id' => $agentUser2->id,
+            'status' => 'active',
+        ]);
+
+        // Agent 1 can view their own hostel via UUID
+        $this->actingAs($agentUser1)
+            ->get(route('agent.hostels.show', $hostelAgent1->uuid))
+            ->assertOk();
+
+        // Agent 1 is forbidden from viewing Agent 2's hostel
+        $this->actingAs($agentUser1)
+            ->get(route('agent.hostels.show', $hostelAgent2->uuid))
+            ->assertForbidden();
+    }
 }

@@ -107,15 +107,20 @@ $hostel->images()->create([
         // Therefore, DO NOT create an 'hostel_added' commission here.
         $agent->increment('total_hostels_added');
 
-        return redirect()->route('agent.hostels.show', $hostel->id)
+        return redirect()->route('agent.hostels.show', $hostel->uuid)
             ->with('success', 'Hostel created successfully! Pending admin approval.');
     }
 
-    public function show($id)
+    public function show(Hostel $hostel)
     {
-        $hostel = $this->getAgentHostelQuery(Auth::user()->agent)
-            ->with(['rooms', 'amenities', 'images'])
-            ->findOrFail($id);
+        $agent = Auth::user()->agent;
+
+        // Ensure the hostel belongs to this agent to prevent IDOR / unauthorized access
+        if (!$agent || !$this->getAgentHostelQuery($agent)->where('id', $hostel->id)->exists()) {
+            abort(403, 'Unauthorized access to hostel.');
+        }
+
+        $hostel->load(['rooms', 'amenities', 'images']);
 
         return view('agent.hostels.show', compact('hostel'));
     }
