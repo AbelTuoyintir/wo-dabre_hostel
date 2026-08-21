@@ -327,7 +327,7 @@
                     }
 
                     // Skip quick actions
-                    if (this.closest('.fixed.bottom-6.right-6') || this.closest('#quickActionsMenu')) {
+                    if (this.closest('.fixed.bottom-6') || this.closest('#quickActionsMenu')) {
                         return;
                     }
 
