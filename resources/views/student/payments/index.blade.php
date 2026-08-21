@@ -13,8 +13,9 @@
         </div>
         <div class="mt-4 md:mt-0">
             <a href="{{ route('student.payment') }}"
-               class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-                <i class="fas fa-plus mr-2"></i>Make New Payment
+               aria-label="Make new payment"
+               class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                <i class="fas fa-plus mr-2" aria-hidden="true"></i>Make New Payment
             </a>
         </div>
     </div>
@@ -56,7 +57,8 @@
 <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
     <form method="GET" action="{{ route('student.payments') }}" class="flex flex-wrap items-center gap-4">
         <div class="flex-1 min-w-[200px]">
-            <select name="status" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+            <label for="status-filter" class="sr-only">Filter by payment status</label>
+            <select id="status-filter" name="status" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
                 <option value="">All Status</option>
                 <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
                 <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Completed</option>
@@ -65,7 +67,8 @@
             </select>
         </div>
         <div class="flex-1 min-w-[200px]">
-            <select name="payment_method" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+            <label for="payment-method-filter" class="sr-only">Filter by payment method</label>
+            <select id="payment-method-filter" name="payment_method" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
                 <option value="">All Methods</option>
                 <option value="card" {{ request('payment_method') == 'card' ? 'selected' : '' }}>Card</option>
                 <option value="mobile_money" {{ request('payment_method') == 'mobile_money' ? 'selected' : '' }}>Mobile Money</option>
@@ -73,19 +76,21 @@
             </select>
         </div>
         <div class="flex-1 min-w-[200px]">
-            <input type="date" name="date_from" value="{{ request('date_from') }}"
-                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            <label for="date-from-filter" class="sr-only">Filter payments from date</label>
+            <input id="date-from-filter" type="date" name="date_from" value="{{ request('date_from') }}"
+                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                    placeholder="From Date">
         </div>
         <div class="flex-1 min-w-[200px]">
-            <input type="date" name="date_to" value="{{ request('date_to') }}"
-                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            <label for="date-to-filter" class="sr-only">Filter payments to date</label>
+            <input id="date-to-filter" type="date" name="date_to" value="{{ request('date_to') }}"
+                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                    placeholder="To Date">
         </div>
-        <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+        <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 transition">
             Apply Filters
         </button>
-        <a href="{{ route('student.payments') }}" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+        <a href="{{ route('student.payments') }}" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 transition">
             Clear
         </a>
     </form>
@@ -136,19 +141,19 @@
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
                                     <!-- Transaction ID -->
                                     <div class="flex items-center text-sm text-gray-600">
-                                        <i class="fas fa-hashtag text-blue-500 w-5"></i>
+                                        <i class="fas fa-hashtag text-blue-500 w-5" aria-hidden="true"></i>
                                         <span class="font-mono text-xs">{{ $payment->transaction_id ?? 'N/A' }}</span>
                                     </div>
 
                                     <!-- Date -->
                                     <div class="flex items-center text-sm text-gray-600">
-                                        <i class="fas fa-calendar-alt text-green-500 w-5"></i>
+                                        <i class="fas fa-calendar-alt text-green-500 w-5" aria-hidden="true"></i>
                                         <span>{{ $payment->created_at->format('M d, Y h:i A') }}</span>
                                     </div>
 
                                     <!-- Method -->
                                     <div class="flex items-center text-sm text-gray-600">
-                                        <i class="fas fa-credit-card text-purple-500 w-5"></i>
+                                        <i class="fas fa-credit-card text-purple-500 w-5" aria-hidden="true"></i>
                                         <span>
                                             @php
                                                 $methodDisplay = match($payment->payment_method) {
@@ -166,7 +171,7 @@
                                 <!-- Booking Reference -->
                                 @if($payment->booking)
                                 <div class="mt-2 text-xs text-gray-400">
-                                    <i class="fas fa-bookmark mr-1"></i>
+                                    <i class="fas fa-bookmark mr-1" aria-hidden="true"></i>
                                     Booking Ref: {{ $payment->booking->booking_reference ?? 'N/A' }}
                                     @if($payment->booking->room)
                                         • Room {{ $payment->booking->room->number }}
@@ -192,13 +197,15 @@
                         <div class="flex flex-col space-y-2">
                             @if($payment->status == 'completed')
                                 <a href="{{ route('student.payments.receipt', $payment) }}"
-                                   class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition text-center">
-                                    <i class="fas fa-receipt mr-1"></i>Receipt
+                                   aria-label="View receipt for transaction {{ $payment->transaction_id ?? 'N/A' }}"
+                                   class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                                    <i class="fas fa-receipt mr-1" aria-hidden="true"></i>Receipt
                                 </a>
                             @endif
                             @if($payment->status == 'pending')
                                 <a href="{{ route('student.payment.initialize', ['booking_id' => $payment->booking_id]) }}"
-                                   class="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition text-center">
+                                   aria-label="Pay now for transaction {{ $payment->transaction_id ?? 'N/A' }}"
+                                   class="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2">
                                     Pay Now
                                 </a>
                             @endif
