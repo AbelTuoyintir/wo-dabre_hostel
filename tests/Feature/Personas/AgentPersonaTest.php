@@ -476,6 +476,76 @@ class AgentPersonaTest extends TestCase
         ]);
 
         $this->assertNotNull($withdrawal->fresh()->processed_at);
+        $this->assertEquals(50.00, (float) $agent->fresh()->withdrawn_amount);
+    }
+
+    public function test_admin_process_withdrawal_rejects_already_processed_withdrawal(): void
+    {
+        $admin = User::create([
+            'name' => 'Admin',
+            'email' => 'admin'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '08000000000',
+            'role' => 'admin',
+            'email_verified_at' => now(),
+        ]);
+
+        $agentUser = User::create([
+            'name' => 'Agent',
+            'email' => 'agent'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '08011122233',
+            'role' => 'hostel_agent',
+            'email_verified_at' => now(),
+        ]);
+
+        $agent = HostelAgent::create([
+            'user_id' => $agentUser->id,
+            'agent_code' => 'AG-TEST'.uniqid(),
+            'phone' => $agentUser->phone,
+            'total_commission' => 0,
+            'available_balance' => 100,
+            'withdrawn_amount' => 50,
+            'total_hostels_added' => 0,
+            'total_rooms_added' => 0,
+            'status' => 'active',
+            'approved_at' => now(),
+        ]);
+
+        $completedWithdrawal = AgentWithdrawal::create([
+            'agent_id' => $agent->id,
+            'status' => 'completed',
+            'amount' => 50.00,
+            'payment_method' => 'mobile_money',
+            'account_number' => '123',
+            'account_name' => 'Agent',
+            'bank_name' => null,
+            'processed_at' => now(),
+        ]);
+
+        // Attempting to reject an already completed withdrawal must fail
+        $this->actingAs($admin)
+            ->post(route('admin.agents.process-withdrawal', ['id' => $completedWithdrawal->id]), [
+                'action' => 'reject',
+                'notes' => 'Attempt duplicate reject',
+            ])
+            ->assertStatus(422)
+            ->assertJson(['error' => 'Withdrawal request is not pending approval']);
+
+        // Available balance must not be refunded/incremented
+        $this->assertEquals(100.00, (float) $agent->fresh()->available_balance);
+
+        // Attempting to approve an already completed withdrawal must also fail
+        $this->actingAs($admin)
+            ->post(route('admin.agents.process-withdrawal', ['id' => $completedWithdrawal->id]), [
+                'action' => 'approve',
+                'notes' => 'Attempt duplicate approve',
+            ])
+            ->assertStatus(422)
+            ->assertJson(['error' => 'Withdrawal request is not pending approval']);
+
+        // Total withdrawn amount must remain unchanged
+        $this->assertEquals(50.00, (float) $agent->fresh()->withdrawn_amount);
     }
 
     /**
