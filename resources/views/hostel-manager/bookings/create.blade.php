@@ -97,10 +97,6 @@
                         <span>Total amount:</span>
                         <span id="totalAmount" class="font-bold text-blue-600"></span>
                     </div>
-                    <div class="flex justify-between text-xs text-gray-500 mt-2 pt-2 border-t">
-                        <span>Processing fee (1.95%):</span>
-                        <span id="feeAmount"></span>
-                    </div>
                 </div>
 
                 <button type="submit" id="submitBtn" disabled
@@ -129,11 +125,9 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (diffDays > 0) {
                 const totalAmount = (monthlyRate / 30) * diffDays;
-                const fee = totalAmount * 0.0195;
                 
                 document.getElementById('durationDisplay').textContent = diffDays + ' nights';
                 document.getElementById('totalAmount').textContent = '₵' + totalAmount.toFixed(2);
-                document.getElementById('feeAmount').textContent = '₵' + fee.toFixed(2);
                 
                 priceSummary.style.display = 'block';
                 submitBtn.disabled = false;

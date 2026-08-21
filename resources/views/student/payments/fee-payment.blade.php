@@ -49,39 +49,13 @@
     <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
         <h2 class="text-lg font-semibold text-gray-800 mb-4">Payment Summary</h2>
 
+        @php
+            $grandTotal = (float) $feeAmountInGHS;
+        @endphp
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-4">
-            <div class="flex justify-between items-center mb-4">
-                <span class="text-gray-700">Site Security and Maintenance:</span>
-                <span class="text-2xl font-bold text-blue-600">₵{{ number_format($feeAmountInGHS, 2) }}</span>
-            </div>
-
-
-                $platformFee = round($feeAmountInGHS * $platformRate, 2);
-                $bankingFee = round($feeAmountInGHS * $bankingRate, 2);
-                $totalServiceCharge = round($feeAmountInGHS * $totalServiceRate, 2);
-                $grandTotal = round($feeAmountInGHS + $totalServiceCharge, 2);
-            @endphp
-
-            <div class="flex justify-between items-center text-sm text-gray-500 border-t border-blue-200 pt-4">
-                <span>Paystack fee (1.95%):</span>
-                <span>₵{{ number_format($paystackFee, 2) }}</span>
-            </div>
-            <div class="flex justify-between items-center text-sm text-gray-500 pt-2">
-                <span>Platform fee (2.80%):</span>
-                <span>₵{{ number_format($platformFee, 2) }}</span>
-            </div>
-            <div class="flex justify-between items-center text-sm text-gray-500 pt-2">
-                <span>Banking charge (0.35%):</span>
-                <span>₵{{ number_format($bankingFee, 2) }}</span>
-            </div>
-            <div class="flex justify-between items-center text-sm font-semibold text-gray-700 border-t border-blue-200 pt-4 mt-2">
-                <span>Total Service Charge (5.10%):</span>
-                <span>₵{{ number_format($totalServiceCharge, 2) }}</span>
-            </div>
-
-            <div class="flex justify-between items-center font-bold text-gray-900 border-t-2 border-blue-300 pt-4 mt-2">
-                <span>Grand Total:</span>
-                <span class="text-xl font-bold text-green-600">₵{{ number_format($grandTotal, 2) }}</span>
+            <div class="flex justify-between items-center">
+                <span class="text-gray-700 font-medium">Site Security and Maintenance:</span>
+                <span class="text-2xl font-bold text-blue-600">₵{{ number_format($grandTotal, 2) }}</span>
             </div>
         </div>
 
