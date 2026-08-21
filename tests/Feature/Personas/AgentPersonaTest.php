@@ -820,4 +820,67 @@ class AgentPersonaTest extends TestCase
 
         $this->assertEquals(1, $agent->fresh()->total_rooms_added);
     }
+
+    /**
+     * Agent cannot view details of a hostel that belongs to another agent (IDOR protection).
+     */
+    public function test_agent_cannot_view_unowned_hostel_details_idor(): void
+    {
+        $ownerUser = User::create([
+            'name' => 'Owner Agent',
+            'email' => 'owner_agent'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '080'.str_pad((string)random_int(0, 9999999), 7, '0', STR_PAD_LEFT),
+            'role' => 'hostel_agent',
+            'email_verified_at' => now(),
+        ]);
+
+        $ownerAgent = HostelAgent::create([
+            'user_id' => $ownerUser->id,
+            'agent_code' => 'AG-OWNER'.uniqid(),
+            'phone' => $ownerUser->phone,
+            'total_commission' => 0,
+            'available_balance' => 0,
+            'withdrawn_amount' => 0,
+            'total_hostels_added' => 1,
+            'total_rooms_added' => 0,
+            'status' => 'active',
+            'approved_at' => now(),
+        ]);
+
+        $hostel = \App\Models\Hostel::forceCreate([
+            'name' => 'Owner Hostel',
+            'description' => 'Owned hostel description.',
+            'location' => 'amamoma',
+            'address' => '789 Main St',
+            'user_id' => $ownerUser->id,
+            'status' => 'active',
+        ]);
+
+        $otherUser = User::create([
+            'name' => 'Other Agent',
+            'email' => 'other_agent'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '080'.str_pad((string)random_int(0, 9999999), 7, '0', STR_PAD_LEFT),
+            'role' => 'hostel_agent',
+            'email_verified_at' => now(),
+        ]);
+
+        HostelAgent::create([
+            'user_id' => $otherUser->id,
+            'agent_code' => 'AG-OTHER'.uniqid(),
+            'phone' => $otherUser->phone,
+            'total_commission' => 0,
+            'available_balance' => 0,
+            'withdrawn_amount' => 0,
+            'total_hostels_added' => 0,
+            'total_rooms_added' => 0,
+            'status' => 'active',
+            'approved_at' => now(),
+        ]);
+
+        $this->actingAs($otherUser)
+            ->get(route('agent.hostels.show', $hostel))
+            ->assertForbidden();
+    }
 }
