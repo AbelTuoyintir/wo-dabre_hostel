@@ -105,8 +105,11 @@
 
                     <!-- Mobile menu button -->
                     <div class="flex items-center sm:hidden">
-                        <button @click="mobileOpen = !mobileOpen" class="text-gray-500 hover:text-gray-700">
-                            <i class="fas fa-bars text-xl"></i>
+                        <button @click="mobileOpen = !mobileOpen"
+                                :aria-expanded="mobileOpen"
+                                aria-label="Toggle navigation menu"
+                                class="p-1.5 text-gray-500 hover:text-gray-700 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 transition-colors">
+                            <i class="fas fa-bars text-xl" aria-hidden="true"></i>
                         </button>
                     </div>
 
@@ -114,12 +117,15 @@
                     <div class="hidden sm:flex items-center">
                         <div class="ml-3 relative">
                             <div x-data="{ open: false }">
-                                <button @click="open = !open" class="flex items-center text-sm focus:outline-none">
-                                    <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white">
+                                <button @click="open = !open"
+                                        :aria-expanded="open"
+                                        aria-label="User account menu"
+                                        class="flex items-center text-sm rounded-lg p-1 text-gray-700 hover:text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 transition-colors">
+                                    <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-medium">
                                         {{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}
                                     </div>
-                                    <span class="ml-2 text-gray-700">{{ Auth::user()->name ?? 'User' }}</span>
-                                    <i class="fas fa-chevron-down ml-1 text-xs text-gray-500"></i>
+                                    <span class="ml-2 text-gray-700 font-medium">{{ Auth::user()->name ?? 'User' }}</span>
+                                    <i class="fas fa-chevron-down ml-1.5 text-xs text-gray-500 transition-transform duration-200" :class="{ 'rotate-180': open }" aria-hidden="true"></i>
                                 </button>
 
                                 <div x-show="open" @click.outside="open = false"
