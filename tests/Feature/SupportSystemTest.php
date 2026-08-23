@@ -326,4 +326,23 @@ class SupportSystemTest extends TestCase
         $response = $this->post(route('support.ticket.store'), $payload);
         $response->assertStatus(429);
     }
+
+    /**
+     * Test support message validation rejects messages over 5000 characters.
+     */
+    public function test_support_message_length_validation(): void
+    {
+        $tooLongMessage = str_repeat('a', 5001);
+
+        $payload = [
+            'guest_name' => 'John Guest',
+            'guest_email' => 'john@example.com',
+            'category' => 'booking',
+            'subject' => 'Excessive length test',
+            'message' => $tooLongMessage,
+        ];
+
+        $response = $this->post(route('support.ticket.store'), $payload);
+        $response->assertSessionHasErrors(['message']);
+    }
 }
