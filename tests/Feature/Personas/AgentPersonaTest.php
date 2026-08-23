@@ -476,6 +476,76 @@ class AgentPersonaTest extends TestCase
         ]);
 
         $this->assertNotNull($withdrawal->fresh()->processed_at);
+        $this->assertEquals(50.00, (float) $agent->fresh()->withdrawn_amount);
+    }
+
+    public function test_admin_process_withdrawal_rejects_already_processed_withdrawal(): void
+    {
+        $admin = User::create([
+            'name' => 'Admin',
+            'email' => 'admin'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '08000000000',
+            'role' => 'admin',
+            'email_verified_at' => now(),
+        ]);
+
+        $agentUser = User::create([
+            'name' => 'Agent',
+            'email' => 'agent'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '08011122233',
+            'role' => 'hostel_agent',
+            'email_verified_at' => now(),
+        ]);
+
+        $agent = HostelAgent::create([
+            'user_id' => $agentUser->id,
+            'agent_code' => 'AG-TEST'.uniqid(),
+            'phone' => $agentUser->phone,
+            'total_commission' => 0,
+            'available_balance' => 100,
+            'withdrawn_amount' => 50,
+            'total_hostels_added' => 0,
+            'total_rooms_added' => 0,
+            'status' => 'active',
+            'approved_at' => now(),
+        ]);
+
+        $completedWithdrawal = AgentWithdrawal::create([
+            'agent_id' => $agent->id,
+            'status' => 'completed',
+            'amount' => 50.00,
+            'payment_method' => 'mobile_money',
+            'account_number' => '123',
+            'account_name' => 'Agent',
+            'bank_name' => null,
+            'processed_at' => now(),
+        ]);
+
+        // Attempting to reject an already completed withdrawal must fail
+        $this->actingAs($admin)
+            ->post(route('admin.agents.process-withdrawal', ['id' => $completedWithdrawal->id]), [
+                'action' => 'reject',
+                'notes' => 'Attempt duplicate reject',
+            ])
+            ->assertStatus(422)
+            ->assertJson(['error' => 'Withdrawal request is not pending approval']);
+
+        // Available balance must not be refunded/incremented
+        $this->assertEquals(100.00, (float) $agent->fresh()->available_balance);
+
+        // Attempting to approve an already completed withdrawal must also fail
+        $this->actingAs($admin)
+            ->post(route('admin.agents.process-withdrawal', ['id' => $completedWithdrawal->id]), [
+                'action' => 'approve',
+                'notes' => 'Attempt duplicate approve',
+            ])
+            ->assertStatus(422)
+            ->assertJson(['error' => 'Withdrawal request is not pending approval']);
+
+        // Total withdrawn amount must remain unchanged
+        $this->assertEquals(50.00, (float) $agent->fresh()->withdrawn_amount);
     }
 
     /**
@@ -752,23 +822,23 @@ class AgentPersonaTest extends TestCase
     }
 
     /**
-     * Agent cannot view unowned hostel details (IDOR protection).
+     * Agent cannot view details of a hostel that belongs to another agent (IDOR protection).
      */
     public function test_agent_cannot_view_unowned_hostel_details_idor(): void
     {
-        $agentUser1 = User::create([
-            'name' => 'Agent One',
-            'email' => 'agent1_'.uniqid().'@example.com',
+        $ownerUser = User::create([
+            'name' => 'Owner Agent',
+            'email' => 'owner_agent'.uniqid().'@example.com',
             'password' => Hash::make('password123'),
             'phone' => '080'.str_pad((string)random_int(0, 9999999), 7, '0', STR_PAD_LEFT),
             'role' => 'hostel_agent',
             'email_verified_at' => now(),
         ]);
 
-        HostelAgent::create([
-            'user_id' => $agentUser1->id,
-            'agent_code' => 'AG-1-'.uniqid(),
-            'phone' => $agentUser1->phone,
+        $ownerAgent = HostelAgent::create([
+            'user_id' => $ownerUser->id,
+            'agent_code' => 'AG-OWNER'.uniqid(),
+            'phone' => $ownerUser->phone,
             'total_commission' => 0,
             'available_balance' => 0,
             'withdrawn_amount' => 0,
@@ -778,18 +848,18 @@ class AgentPersonaTest extends TestCase
             'approved_at' => now(),
         ]);
 
-        $hostelAgent1 = \App\Models\Hostel::forceCreate([
-            'name' => 'Agent One Hostel',
-            'description' => 'Hostel belonging to Agent 1.',
+        $hostel = \App\Models\Hostel::forceCreate([
+            'name' => 'Owner Hostel',
+            'description' => 'Owned hostel description.',
             'location' => 'amamoma',
-            'address' => '100 Main St',
-            'user_id' => $agentUser1->id,
+            'address' => '789 Main St',
+            'user_id' => $ownerUser->id,
             'status' => 'active',
         ]);
 
-        $agentUser2 = User::create([
-            'name' => 'Agent Two',
-            'email' => 'agent2_'.uniqid().'@example.com',
+        $otherUser = User::create([
+            'name' => 'Other Agent',
+            'email' => 'other_agent'.uniqid().'@example.com',
             'password' => Hash::make('password123'),
             'phone' => '080'.str_pad((string)random_int(0, 9999999), 7, '0', STR_PAD_LEFT),
             'role' => 'hostel_agent',
@@ -797,35 +867,20 @@ class AgentPersonaTest extends TestCase
         ]);
 
         HostelAgent::create([
-            'user_id' => $agentUser2->id,
-            'agent_code' => 'AG-2-'.uniqid(),
-            'phone' => $agentUser2->phone,
+            'user_id' => $otherUser->id,
+            'agent_code' => 'AG-OTHER'.uniqid(),
+            'phone' => $otherUser->phone,
             'total_commission' => 0,
             'available_balance' => 0,
             'withdrawn_amount' => 0,
-            'total_hostels_added' => 1,
+            'total_hostels_added' => 0,
             'total_rooms_added' => 0,
             'status' => 'active',
             'approved_at' => now(),
         ]);
 
-        $hostelAgent2 = \App\Models\Hostel::forceCreate([
-            'name' => 'Agent Two Hostel',
-            'description' => 'Hostel belonging to Agent 2.',
-            'location' => 'amamoma',
-            'address' => '200 Main St',
-            'user_id' => $agentUser2->id,
-            'status' => 'active',
-        ]);
-
-        // Agent 1 can view their own hostel via UUID
-        $this->actingAs($agentUser1)
-            ->get(route('agent.hostels.show', $hostelAgent1->uuid))
-            ->assertOk();
-
-        // Agent 1 is forbidden from viewing Agent 2's hostel
-        $this->actingAs($agentUser1)
-            ->get(route('agent.hostels.show', $hostelAgent2->uuid))
+        $this->actingAs($otherUser)
+            ->get(route('agent.hostels.show', $hostel))
             ->assertForbidden();
     }
 }

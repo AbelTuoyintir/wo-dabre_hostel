@@ -200,13 +200,15 @@
         </div>
         <div class="flex flex-wrap gap-3">
             <a href="{{ route('student.hostels.browse') }}"
-               class="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg transform hover:scale-105">
-                <i class="fas fa-plus mr-2"></i>
+               class="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg transform hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                <i class="fas fa-plus mr-2" aria-hidden="true"></i>
                 Book New Room
             </a>
-            <button onclick="window.print()" 
-                    class="inline-flex items-center px-5 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition">
-                <i class="fas fa-print mr-2"></i>
+            <button type="button"
+                    onclick="window.print()"
+                    aria-label="Print bookings list"
+                    class="inline-flex items-center px-5 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                <i class="fas fa-print mr-2" aria-hidden="true"></i>
                 Print
             </button>
         </div>
@@ -312,11 +314,11 @@
             </select>
         </div>
         <div class="flex gap-2">
-            <button type="submit" class="px-6 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition shadow-md hover:shadow-lg">
-                <i class="fas fa-filter mr-2"></i>Apply
+            <button type="submit" class="px-6 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition shadow-md hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                <i class="fas fa-filter mr-2" aria-hidden="true"></i>Apply
             </button>
-            <a href="{{ route('student.bookings') }}" class="px-6 py-2.5 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 transition">
-                <i class="fas fa-times mr-2"></i>Clear
+            <a href="{{ route('student.bookings') }}" class="px-6 py-2.5 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                <i class="fas fa-times mr-2" aria-hidden="true"></i>Clear
             </a>
         </div>
     </form>

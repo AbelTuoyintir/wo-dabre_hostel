@@ -267,34 +267,51 @@ class AgentManagementController extends Controller
             'notes' => 'nullable|string'
         ]);
 
-        if ($request->action === 'approve') {
-            $withdrawal->update([
-                'status' => 'completed',
-                'processed_at' => now(),
-                'processed_by' => auth()->id(),
-                'notes' => $request->notes
-            ]);
-
-            $message = 'Withdrawal approved and processed';
-        } else {
-            // Refund the amount back to agent's available balance
-            $agent = $withdrawal->agent;
-            $agent->increment('available_balance', $withdrawal->amount);
-
-            $withdrawal->update([
-                'status' => 'rejected',
-                'processed_at' => now(),
-                'processed_by' => auth()->id(),
-                'rejection_reason' => $request->notes
-            ]);
-
-            $message = 'Withdrawal rejected and amount refunded';
+        // Security check: ensure withdrawal is in pending state to prevent double-processing/refunds
+        if ($withdrawal->status !== 'pending') {
+            return response()->json(['error' => 'Withdrawal request is not pending approval'], 422);
         }
+
+        $message = '';
+
+        DB::transaction(function () use ($withdrawal, $request, &$message) {
+            if ($request->action === 'approve') {
+                $withdrawal->update([
+                    'status' => 'completed',
+                    'processed_at' => now(),
+                    'processed_by' => auth()->id(),
+                    'notes' => $request->notes
+                ]);
+
+                // Track total withdrawn amount on agent profile
+                $agent = $withdrawal->agent;
+                if ($agent) {
+                    $agent->increment('withdrawn_amount', $withdrawal->amount);
+                }
+
+                $message = 'Withdrawal approved and processed';
+            } else {
+                // Refund the amount back to agent's available balance
+                $agent = $withdrawal->agent;
+                if ($agent) {
+                    $agent->increment('available_balance', $withdrawal->amount);
+                }
+
+                $withdrawal->update([
+                    'status' => 'rejected',
+                    'processed_at' => now(),
+                    'processed_by' => auth()->id(),
+                    'rejection_reason' => $request->notes
+                ]);
+
+                $message = 'Withdrawal rejected and amount refunded';
+            }
+        });
 
         return response()->json([
             'success' => true,
             'message' => $message,
-            'withdrawal' => $withdrawal
+            'withdrawal' => $withdrawal->fresh()
         ]);
     }
 
