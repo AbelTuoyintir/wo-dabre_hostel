@@ -35,7 +35,7 @@ class SupportController extends Controller
         $rules = [
             'subject' => 'required|string|max:255',
             'category' => 'required|string|in:general,booking,payment,technical',
-            'message' => 'required|string',
+            'message' => 'required|string|max:5000',
             'priority' => 'nullable|string|in:low,medium,high',
         ];
 
@@ -139,7 +139,7 @@ class SupportController extends Controller
         }
 
         $validated = $request->validate([
-            'message' => 'required|string',
+            'message' => 'required|string|max:5000',
         ]);
 
         $senderName = Auth::check() ? Auth::user()->name : ($ticket->guest_name ?? 'Guest');
@@ -180,7 +180,7 @@ class SupportController extends Controller
     public function adminReply(Request $request, SupportTicket $ticket)
     {
         $validated = $request->validate([
-            'message' => 'required|string',
+            'message' => 'required|string|max:5000',
         ]);
 
         $msg = SupportMessage::create([

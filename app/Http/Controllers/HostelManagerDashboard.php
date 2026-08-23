@@ -1008,7 +1008,7 @@ class HostelManagerDashboard extends Controller
     {
         $user = Auth::user();
 
-        if (!$user->managedHostels()->where('hostels.id', $payment->booking->hostel_id)->exists()) {
+        if (!$payment->booking || !$user->managedHostels()->where('hostels.id', $payment->booking->hostel_id)->exists()) {
             abort(403);
         }
 
@@ -1021,7 +1021,7 @@ class HostelManagerDashboard extends Controller
     {
         $user = Auth::user();
 
-        if (!$user->managedHostels()->where('hostels.id', $payment->booking->hostel_id)->exists()) {
+        if (!$payment->booking || !$user->managedHostels()->where('hostels.id', $payment->booking->hostel_id)->exists()) {
             abort(403);
         }
 
@@ -1034,7 +1034,7 @@ class HostelManagerDashboard extends Controller
     {
         $user = Auth::user();
 
-        if (!$user->managedHostels()->where('hostels.id', $payment->booking->hostel_id)->exists()) {
+        if (!$payment->booking || !$user->managedHostels()->where('hostels.id', $payment->booking->hostel_id)->exists()) {
             abort(403);
         }
 

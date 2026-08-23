@@ -23,5 +23,5 @@ Critical UX/accessibility learnings and reusable patterns for the UCC Hostel Boo
 **Action:** Always update the attributes (`aria-label`, `title`) dynamically in event handlers, and use Alpine.js `$nextTick` with `$refs` to restore input focus on submit.
 
 ## 2026-03-05 - [Password Visibility Toggle Accessibility]
-**Learning:** Dynamic password visibility toggles with eye icons are often missing `aria-label` tags and focus-visible indicators. Because their state changes, screen readers need updated labels ("Show password" / "Hide password") and keyboard users need explicit focus rings (`focus-visible:ring-2 focus-visible:ring-yellow-400`).
-**Action:** Include dynamic `:aria-label` attributes bound to state in Alpine.js (`show ? 'Hide password' : 'Show password'`), ensure `type="button"` is set, and apply visible focus ring classes on all password toggles.
+**Learning:** When adding password show/hide toggles next to inputs with matching `for` / `id` labels, ensure the toggle button's `aria-label` is explicitly action-based (e.g., "Show current password") so screen readers distinguish between field labels and button actions cleanly.
+**Action:** Use specific action phrases in button `:aria-label` bindings such as `show ? 'Hide password' : 'Show password'`.
