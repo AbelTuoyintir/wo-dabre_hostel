@@ -21,3 +21,7 @@ Critical UX/accessibility learnings and reusable patterns for the UCC Hostel Boo
 ## 2026-03-05 - [Dynamic Aria-Label and Chat Input Focus Retention]
 **Learning:** Heart icon buttons and dynamic action controls should synchronize their `aria-label` and `title` attributes on click to prevent screen-readers and visual hover users from receiving stale labels (like "Add..." when the item is already added). In messaging views, always programmatically refocus the text input after form submission so keyboard focus is not lost and users can type consecutively.
 **Action:** Always update the attributes (`aria-label`, `title`) dynamically in event handlers, and use Alpine.js `$nextTick` with `$refs` to restore input focus on submit.
+
+## 2026-03-05 - [Password Visibility Toggle Accessibility]
+**Learning:** When adding password show/hide toggles next to inputs with matching `for` / `id` labels, ensure the toggle button's `aria-label` is explicitly action-based (e.g., "Show current password") so screen readers distinguish between field labels and button actions cleanly.
+**Action:** Use specific action phrases in button `:aria-label` bindings such as `show ? 'Hide password' : 'Show password'`.

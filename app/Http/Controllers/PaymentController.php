@@ -29,13 +29,8 @@ class PaymentController extends Controller
      */
     public function show(Payment $payment)
     {
-        $userId = auth()->id();
-
-        // Require authentication and verify payment belongs to user or user's booking
-        $hasAccess = $userId && (
-            $payment->user_id === $userId ||
-            ($payment->booking && $payment->booking->user_id === $userId)
-        );
+        $hasAccess = ($payment->user_id === auth()->id()) ||
+            ($payment->booking && $payment->booking->user_id === auth()->id());
 
         if (!$hasAccess) {
             abort(403);
