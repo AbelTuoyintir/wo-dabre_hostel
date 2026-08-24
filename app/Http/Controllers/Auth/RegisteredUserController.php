@@ -36,10 +36,9 @@ class RegisteredUserController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'phone' => ['nullable', 'string', 'max:255'],
             'gender' => ['nullable', 'in:male,female'],
-            'role' => ['nullable', 'string', 'max:255'],
-            'is_active' => ['nullable', 'boolean'],
         ]);
 
+        // Security check: Force student role and active state on public self-registration to prevent privilege escalation.
         $user = User::create([
             'school_id' => $request->school_id,
             'name' => $request->name,
@@ -47,8 +46,8 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
             'phone' => $request->phone,
             'gender' => $request->gender,
-            'role' => $request->role ?? 'student',
-            'is_active' => $request->is_active ?? true,
+            'role' => 'student',
+            'is_active' => true,
         ]);
 
         event(new Registered($user));

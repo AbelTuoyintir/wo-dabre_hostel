@@ -52,3 +52,8 @@
 **Vulnerability:** `AgentManagementController::processWithdrawal` lacked status validation, allowing already completed or rejected withdrawal requests to be re-processed. Re-rejecting a completed withdrawal incremented the agent's `available_balance` without reversing the completed payout, enabling double-refund balance inflation exploits.
 **Learning:** Omission of strict status guards on stateful financial operations allows duplicate execution race conditions and balance duplication exploits.
 **Prevention:** Enforce strict state transition validation (`$record->status === 'pending'`) prior to executing state mutations or balance updates, wrap mutations in database transactions, and update lifetime ledger metrics (`withdrawn_amount`).
+
+## 2026-08-22 - Self-Registration Privilege Escalation via User-Supplied Role
+**Vulnerability:** The public registration controller (`RegisteredUserController::store`) accepted user-supplied `role` and `is_active` parameters from the request payload, allowing unauthenticated guests to self-register as administrators or hostel managers.
+**Learning:** Accepting mass-assignable or explicit user input for role or status fields on public registration endpoints exposes privilege escalation vectors.
+**Prevention:** Hardcode default roles (e.g., `'student'`) and active states during public self-registration, ignoring user-supplied authority fields.
