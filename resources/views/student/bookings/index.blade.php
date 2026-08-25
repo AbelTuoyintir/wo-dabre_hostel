@@ -286,8 +286,8 @@
 <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
     <form method="GET" action="{{ route('student.bookings') }}" class="flex flex-wrap items-end gap-4">
         <div class="flex-1 min-w-[180px]">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-            <select name="status" class="filter-input w-full px-4 py-2.5 rounded-xl bg-gray-50">
+            <label for="filter_status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <select id="filter_status" name="status" class="filter-input w-full px-4 py-2.5 rounded-xl bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
                 <option value="">All Status</option>
                 <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
                 <option value="confirmed" {{ request('status') == 'confirmed' ? 'selected' : '' }}>Confirmed</option>
@@ -296,8 +296,8 @@
             </select>
         </div>
         <div class="flex-1 min-w-[180px]">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
-            <select name="sort" class="filter-input w-full px-4 py-2.5 rounded-xl bg-gray-50">
+            <label for="filter_sort" class="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
+            <select id="filter_sort" name="sort" class="filter-input w-full px-4 py-2.5 rounded-xl bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
                 <option value="latest" {{ request('sort') == 'latest' ? 'selected' : '' }}>Latest First</option>
                 <option value="oldest" {{ request('sort') == 'oldest' ? 'selected' : '' }}>Oldest First</option>
                 <option value="checkin_asc" {{ request('sort') == 'checkin_asc' ? 'selected' : '' }}>Check-in (Earliest)</option>
@@ -305,8 +305,8 @@
             </select>
         </div>
         <div class="flex-1 min-w-[180px]">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Payment Status</label>
-            <select name="payment_status" class="filter-input w-full px-4 py-2.5 rounded-xl bg-gray-50">
+            <label for="filter_payment_status" class="block text-sm font-medium text-gray-700 mb-1">Payment Status</label>
+            <select id="filter_payment_status" name="payment_status" class="filter-input w-full px-4 py-2.5 rounded-xl bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
                 <option value="">All</option>
                 <option value="paid" {{ request('payment_status') == 'paid' ? 'selected' : '' }}>Paid</option>
                 <option value="pending" {{ request('payment_status') == 'pending' ? 'selected' : '' }}>Pending</option>
@@ -434,14 +434,14 @@
                     <!-- Actions -->
                     <div class="booking-actions flex flex-wrap gap-2 lg:flex-col lg:items-stretch">
                         <a href="{{ route('student.bookings.show', $booking->uuid ?? $booking->id) }}"
-                           class="action-btn px-4 py-2 bg-blue-600 text-white text-sm rounded-xl hover:bg-blue-700 transition shadow-md text-center">
-                            <i class="fas fa-eye mr-1"></i> View Details
+                           class="action-btn px-4 py-2 bg-blue-600 text-white text-sm rounded-xl hover:bg-blue-700 transition shadow-md text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                            <i class="fas fa-eye mr-1" aria-hidden="true"></i> View Details
                         </a>
                         
                         @if($booking->status == 'pending')
                             <a href="{{ route('payment.initialize', $booking) }}"
-                               class="action-btn px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white text-sm rounded-xl hover:from-green-700 hover:to-green-800 transition shadow-md text-center">
-                                <i class="fas fa-credit-card mr-1"></i> Pay Now
+                               class="action-btn px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white text-sm rounded-xl hover:from-green-700 hover:to-green-800 transition shadow-md text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2">
+                                <i class="fas fa-credit-card mr-1" aria-hidden="true"></i> Pay Now
                             </a>
                         @endif
 
@@ -453,16 +453,16 @@
                                 @csrf
                                 @method('PATCH')
                                 <button type="submit"
-                                        class="action-btn w-full px-4 py-2 border-2 border-red-300 text-red-600 text-sm rounded-xl hover:bg-red-50 transition text-center">
-                                    <i class="fas fa-times mr-1"></i> Cancel
+                                        class="action-btn w-full px-4 py-2 border-2 border-red-300 text-red-600 text-sm rounded-xl hover:bg-red-50 transition text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2">
+                                    <i class="fas fa-times mr-1" aria-hidden="true"></i> Cancel
                                 </button>
                             </form>
                         @endif
 
                         @if($booking->status == 'confirmed' && $booking->payment_status == 'paid' && $booking->payment)
                             <a href="{{ route('student.payments.receipt', $booking->payment->uuid) }}"
-                               class="action-btn px-4 py-2 border border-gray-300 text-gray-700 text-sm rounded-xl hover:bg-gray-50 transition text-center flex items-center justify-center gap-1.5">
-                                <i class="fas fa-file-invoice mr-1 text-blue-500"></i> Receipt
+                               class="action-btn px-4 py-2 border border-gray-300 text-gray-700 text-sm rounded-xl hover:bg-gray-50 transition text-center flex items-center justify-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                                <i class="fas fa-file-invoice mr-1 text-blue-500" aria-hidden="true"></i> Receipt
                             </a>
                         @endif
                     </div>
@@ -544,8 +544,9 @@
 <!-- Floating Action Button -->
 <div class="fixed bottom-6 right-6 z-50">
     <a href="{{ route('student.hostels.browse') }}"
-       class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-full shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300">
-        <i class="fas fa-plus"></i>
+       aria-label="Book a new room now"
+       class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-full shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+        <i class="fas fa-plus" aria-hidden="true"></i>
         <span class="font-medium">Book Now</span>
     </a>
 </div>
