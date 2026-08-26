@@ -191,11 +191,21 @@
                 <div class="space-y-3" x-data="{ activeFAQ: null }">
                     @foreach($faqs as $index => $faq)
                         <div class="border border-gray-100 rounded-xl overflow-hidden shadow-sm">
-                            <button @click="activeFAQ = activeFAQ === {{ $index }} ? null : {{ $index }}" class="w-full flex items-center justify-between p-4 text-left text-xs font-semibold text-gray-700 hover:bg-gray-50/50 transition">
+                            <button type="button"
+                                    id="faq-btn-{{ $index }}"
+                                    @click="activeFAQ = activeFAQ === {{ $index }} ? null : {{ $index }}"
+                                    :aria-expanded="activeFAQ === {{ $index }} ? 'true' : 'false'"
+                                    aria-controls="faq-panel-{{ $index }}"
+                                    class="w-full flex items-center justify-between p-4 text-left text-xs font-semibold text-gray-700 hover:bg-gray-50/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 transition">
                                 <span>{{ $faq['question'] }}</span>
-                                <i class="fas" :class="activeFAQ === {{ $index }} ? 'fa-chevron-up text-blue-600' : 'fa-chevron-down text-gray-400'"></i>
+                                <i class="fas" aria-hidden="true" :class="activeFAQ === {{ $index }} ? 'fa-chevron-up text-blue-600' : 'fa-chevron-down text-gray-400'"></i>
                             </button>
-                            <div x-show="activeFAQ === {{ $index }}" class="p-4 border-t border-gray-50 text-xs text-gray-500 leading-relaxed bg-gray-50/30" style="display: none;">
+                            <div id="faq-panel-{{ $index }}"
+                                 role="region"
+                                 aria-labelledby="faq-btn-{{ $index }}"
+                                 x-show="activeFAQ === {{ $index }}"
+                                 class="p-4 border-t border-gray-50 text-xs text-gray-500 leading-relaxed bg-gray-50/30"
+                                 style="display: none;">
                                 {{ $faq['answer'] }}
                             </div>
                         </div>
