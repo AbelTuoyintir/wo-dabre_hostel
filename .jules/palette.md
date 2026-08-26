@@ -25,3 +25,7 @@ Critical UX/accessibility learnings and reusable patterns for the UCC Hostel Boo
 ## 2026-03-05 - [Password Visibility Toggle Accessibility]
 **Learning:** When adding password show/hide toggles next to inputs with matching `for` / `id` labels, ensure the toggle button's `aria-label` is explicitly action-based (e.g., "Show current password") so screen readers distinguish between field labels and button actions cleanly.
 **Action:** Use specific action phrases in button `:aria-label` bindings such as `show ? 'Hide password' : 'Show password'`.
+
+## 2026-03-05 - [Filter Control Label Association and Focus Ring Consistency]
+**Learning:** Filter controls and select dropdowns without explicit `for`/`id` pairings prevent screen reader users from identifying field purposes when navigating form filters. Explicit `for`/`id` associations combined with Tailwind `focus-visible:ring-2` outline states provide robust keyboard navigation and screen-reader context across dashboard list filters.
+**Action:** Always link filter labels to `<select>` elements via matching `for` and `id` attributes and apply `focus-visible:ring-2` focus styles to interactive controls.
