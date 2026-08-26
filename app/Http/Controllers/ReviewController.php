@@ -72,15 +72,21 @@ class ReviewController extends Controller
 
     public function destroy(Review $review)
     {
-        // Check if user owns this review or is admin
-        if ($review->user_id !== Auth::id() && !Auth::user()->isAdmin()) {
+        $user = Auth::user();
+
+        // Security check: Verify user owns this review or has admin role safely
+        $isAdmin = $user && (method_exists($user, 'isAdmin') ? $user->isAdmin() : ($user->role === 'admin'));
+
+        if (!$user || ($review->user_id !== $user->id && !$isAdmin)) {
             abort(403, 'Unauthorized action.');
         }
 
         $review->delete();
 
-        // Update hostel rating
-        $review->hostel->updateRating();
+        // Update hostel rating if hostel relation exists
+        if ($review->hostel) {
+            $review->hostel->updateRating();
+        }
 
         return back()->with('success', 'Review deleted successfully.');
     }

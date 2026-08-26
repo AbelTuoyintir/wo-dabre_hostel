@@ -451,6 +451,22 @@ class StudentController extends Controller
             return back()->with('error', 'You can only review hostels you have stayed at.');
         }
 
+        // IDOR Guard: Verify that any supplied booking_id belongs to a completed booking owned by this student for this hostel
+        if (!empty($validated['booking_id'])) {
+            $validBooking = Booking::where('id', $validated['booking_id'])
+                ->where('user_id', Auth::id())
+                ->where(function ($q) use ($validated) {
+                    $q->where('hostel_id', $validated['hostel_id'])
+                      ->orWhereHas('room', fn($rq) => $rq->where('hostel_id', $validated['hostel_id']));
+                })
+                ->whereIn('booking_status', ['checked_out', 'completed'])
+                ->exists();
+
+            if (!$validBooking) {
+                return back()->with('error', 'Invalid booking selected for review.');
+            }
+        }
+
         DB::transaction(function () use ($validated) {
             // Create the review
             $review = Review::create([
@@ -751,12 +767,17 @@ public function viewHostel(Hostel $hostel)
             'description' => 'required|string|min:20|max:2000',
         ]);
 
-        // Get hostel_id from booking if provided
+        // Get hostel_id from booking if provided (verify ownership to prevent IDOR)
         $hostelId = null;
         if (!empty($validated['booking_id'])) {
-            $booking = Booking::find($validated['booking_id']);
+            $booking = Booking::where('id', $validated['booking_id'])
+                ->where('user_id', Auth::id())
+                ->first();
             if ($booking) {
-                $hostelId = $booking->room->hostel_id;
+                $hostelId = $booking->room->hostel_id ?? $booking->hostel_id;
+            } else {
+                return redirect()->route('student.complaints')
+                    ->with('error', 'Please select a valid booking to file a complaint.');
             }
         }
 

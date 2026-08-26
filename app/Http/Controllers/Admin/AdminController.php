@@ -84,12 +84,18 @@ class AdminController extends Controller
             'is_active' => 'nullable|boolean',
         ]);
 
+        // Security check: Prevent administrators from deactivating their own active account
+        $isActive = $request->has('is_active');
+        if ($user->id === auth()->id() && !$isActive) {
+            return redirect()->back()->with('error', 'You cannot deactivate your own administrative account.');
+        }
+
         $user->update([
             'name' => $request->name,
             'email' => $request->email,
             'student_id' => $request->student_id,
             'role' => $request->role,
-            'is_active' => $request->has('is_active'),
+            'is_active' => $isActive,
         ]);
 
         return redirect()->route('admin.users.index')->with('success', 'User updated successfully.');
@@ -100,6 +106,11 @@ class AdminController extends Controller
      */
     public function toggleUserStatus(User $user): RedirectResponse
     {
+        // Security check: Prevent administrators from deactivating their own active account
+        if ($user->id === auth()->id() && $user->is_active) {
+            return redirect()->back()->with('error', 'You cannot deactivate your own administrative account.');
+        }
+
         $user->update(['is_active' => !$user->is_active]);
 
         $status = $user->is_active ? 'activated' : 'deactivated';

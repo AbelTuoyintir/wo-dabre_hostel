@@ -318,4 +318,42 @@
     @endif
 </div>
 
+<!-- Quick Actions -->
+<div x-data="{ open: false }" class="fixed bottom-6 left-6 z-40 md:bottom-8 md:left-8">
+    <!-- Floating Action Button -->
+    <button @click="open = !open"
+            @click.outside="open = false"
+            @keydown.escape.window="open = false"
+            :aria-expanded="open"
+            aria-label="Toggle Quick Actions menu"
+            data-no-loader="true"
+            class="bg-blue-600 text-white p-4 rounded-full shadow-xl hover:bg-blue-700 hover:scale-105 active:scale-95 transition-all duration-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-yellow-400 focus-visible:ring-offset-2 no-loader group flex items-center justify-center">
+        <i class="fas fa-plus text-xl transition-transform duration-300" :class="open ? 'rotate-45' : ''"></i>
+    </button>
+
+    <!-- Quick Actions Menu -->
+    <div x-show="open"
+         x-transition:enter="transition ease-out duration-200 transform"
+         x-transition:enter-start="opacity-0 translate-y-4 scale-95"
+         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+         x-transition:leave="transition ease-in duration-150 transform"
+         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+         x-transition:leave-end="opacity-0 translate-y-4 scale-95"
+         class="absolute bottom-16 left-0 bg-white rounded-2xl shadow-2xl border border-gray-100 p-2 w-52 no-loader space-y-1 z-50"
+         style="display: none;">
+        <span class="block px-3 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Quick Actions</span>
+        <a href="{{ route('student.hostels.browse') }}" data-no-loader="true"
+           class="flex items-center px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+            <i class="fas fa-building w-5 text-blue-500"></i>Browse Hostels
+        </a>
+        <a href="{{ route('student.complaints') }}" data-no-loader="true"
+           class="flex items-center px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+            <i class="fas fa-exclamation-triangle w-5 text-amber-500"></i>Submit Complaint
+        </a>
+        <a href="{{ route('student.profile') }}" data-no-loader="true"
+           class="flex items-center px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+            <i class="fas fa-user w-5 text-purple-500"></i>Update Profile
+        </a>
+    </div>
+</div>
 @endsection

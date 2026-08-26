@@ -1,3 +1,8 @@
+## 2026-08-14 - Temporary Path Traversal & Substring File Deletion in Room Image Uploads
+**Vulnerability:** The `RoomController`'s store process processed user-supplied temporary paths (`temp_cover_path` and `temp_gallery_paths`) without prefix or traversal validation, exposing copy/deletion of system files like `.env`. Furthermore, the `deleteTempImage($tempId)` endpoint used a loose `str_contains` check, allowing authenticated attackers to delete arbitrary files via substring match.
+**Learning:** Storing and retrieving user-supplied temporary file paths without strict directory constraints and filename pattern matches creates critical directory traversal and arbitrary file manipulation vectors.
+**Prevention:** Validate all temporary uploaded paths to ensure they strictly reside within designated directories (e.g. `temp/room-images/`), contain no traversal segments (`..` or `\`), and match a strict filename format. Always delete temporary files using exact filename matching (`pathinfo(..., PATHINFO_FILENAME) === $tempId`) instead of loose substring searches.
+
 ## 2026-08-05 - Missing Global HTTP Security Headers (Defense in Depth)
 **Vulnerability:** The application was missing standard HTTP security headers (such as `X-Frame-Options`, `X-Content-Type-Options`, `X-XSS-Protection`, `Referrer-Policy`, and `Content-Security-Policy`), leaving web responses vulnerable to clickjacking, MIME-type sniffing, and cross-site data leakage.
 **Learning:** Default framework configurations often omit strict security headers, leaving clickjacking and data leakage vectors unmitigated out-of-the-box. A central global middleware is the cleanest mechanism to consistently apply secure default transport headers across all web routes.
@@ -32,3 +37,28 @@
 **Vulnerability:** The active room details endpoint `/hostel-manager/rooms/{room:uuid}` mapped to `HostelManagerDashboard::showRoom` lacked any authorization check, allowing any authenticated hostel manager to view arbitrary room details, student occupant profiles, and transaction histories across the entire application.
 **Learning:** Duplicate controller implementations (e.g., `HostelManagerController` vs `HostelManagerDashboard`) can lead to situations where security patches are applied to one class while active routes map to another insecure class, leaving critical vulnerabilities unpatched in production.
 **Prevention:** Avoid maintaining redundant or duplicate controllers for the same domain. Always check active routing configuration (`routes/*.php`) to confirm the controller and method receiving live traffic. Ensure all model detail endpoints verify resource ownership before rendering sensitive user/occupant data.
+
+## 2026-08-18 - Unauthenticated Authorization Bypass via Null Comparison
+**Vulnerability:** `PaymentController::show` checked `if ($payment->user_id !== auth()->id()) { abort(403); }`. For unauthenticated requests (`auth()->id()` is null) querying guest payments (`$payment->user_id` is null), `null !== null` evaluated to `false`, allowing unauthenticated attackers to bypass authorization and view sensitive payment receipts.
+**Learning:** Checking ownership using strict equality checks (`$record->user_id !== auth()->id()`) without first verifying that `auth()->id()` is non-null allows unauthenticated requests to bypass authorization when target records have null owner IDs (e.g., guest records).
+**Prevention:** Always verify that `auth()->check()` or `auth()->id()` is truthy before evaluating resource ownership, or require authentication middleware explicitly on protected routes.
+
+## 2026-08-06 - Student Complaint Submission IDOR & Hostel Manager Access Control
+**Vulnerability:** `StudentController@storeComplaint` accepted a user-supplied `booking_id` without verifying ownership (`$booking->user_id === Auth::id()`), allowing students to link complaints to other users' bookings and hostels. Additionally, `HostelManagerDashboard` methods (`showOccupant`, `exportOccupants`, and `complaints`) queried `Hostel::where('user_id', $user->id)` instead of `$user->managedHostels()`, breaking authorization for assigned managers.
+**Learning:** Using generic database lookups on user-provided foreign keys without validating user ownership exposes cross-tenant IDOR vectors. Furthermore, using creator/owner foreign keys (`user_id`) instead of designated operational relationships (`manager_id` / `managedHostels()`) causes broken access control across manager dashboards.
+**Prevention:** Always scope user-supplied IDs to the authenticated user (`where('user_id', Auth::id())`) when referencing parent records. Ensure dashboard controllers consistently use role-appropriate relationship methods (e.g. `managedHostels()`) rather than raw entity ownership checks.
+
+## 2026-08-21 - Double-Processing & Unchecked State Machine Transitions in Withdrawal Requests
+**Vulnerability:** `AgentManagementController::processWithdrawal` lacked status validation, allowing already completed or rejected withdrawal requests to be re-processed. Re-rejecting a completed withdrawal incremented the agent's `available_balance` without reversing the completed payout, enabling double-refund balance inflation exploits.
+**Learning:** Omission of strict status guards on stateful financial operations allows duplicate execution race conditions and balance duplication exploits.
+**Prevention:** Enforce strict state transition validation (`$record->status === 'pending'`) prior to executing state mutations or balance updates, wrap mutations in database transactions, and update lifetime ledger metrics (`withdrawn_amount`).
+
+## 2026-08-22 - Self-Registration Privilege Escalation via User-Supplied Role
+**Vulnerability:** The public registration controller (`RegisteredUserController::store`) accepted user-supplied `role` and `is_active` parameters from the request payload, allowing unauthenticated guests to self-register as administrators or hostel managers.
+**Learning:** Accepting mass-assignable or explicit user input for role or status fields on public registration endpoints exposes privilege escalation vectors.
+**Prevention:** Hardcode default roles (e.g., `'student'`) and active states during public self-registration, ignoring user-supplied authority fields.
+
+## 2026-08-23 - Premature Referral Commission Payout on Pending Agent Self-Registration
+**Vulnerability:** `AgentRegisterController::register` immediately called `$referrer->addCommission(...)` upon public registration with a referral code. This immediately credited `50.00` GHS to the referrer's `available_balance` and `total_commission` before the newly registered agent was vetted or approved by an administrator, enabling automated balance inflation attacks.
+**Learning:** Awarding immediate financial credits on unapproved or unverified public registrations allows attackers to script dummy signups and drain funds via referral bonus systems.
+**Prevention:** Create referral commissions with a `pending` status upon public registration without mutating financial balances. Only credit and transition the commission to `paid` when an administrator explicitly approves the newly recruited agent application.
