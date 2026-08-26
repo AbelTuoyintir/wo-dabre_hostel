@@ -57,3 +57,8 @@
 **Vulnerability:** The public registration controller (`RegisteredUserController::store`) accepted user-supplied `role` and `is_active` parameters from the request payload, allowing unauthenticated guests to self-register as administrators or hostel managers.
 **Learning:** Accepting mass-assignable or explicit user input for role or status fields on public registration endpoints exposes privilege escalation vectors.
 **Prevention:** Hardcode default roles (e.g., `'student'`) and active states during public self-registration, ignoring user-supplied authority fields.
+
+## 2026-08-23 - Premature Referral Commission Payout on Pending Agent Self-Registration
+**Vulnerability:** `AgentRegisterController::register` immediately called `$referrer->addCommission(...)` upon public registration with a referral code. This immediately credited `50.00` GHS to the referrer's `available_balance` and `total_commission` before the newly registered agent was vetted or approved by an administrator, enabling automated balance inflation attacks.
+**Learning:** Awarding immediate financial credits on unapproved or unverified public registrations allows attackers to script dummy signups and drain funds via referral bonus systems.
+**Prevention:** Create referral commissions with a `pending` status upon public registration without mutating financial balances. Only credit and transition the commission to `paid` when an administrator explicitly approves the newly recruited agent application.

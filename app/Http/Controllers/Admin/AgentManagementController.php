@@ -108,6 +108,21 @@ class AgentManagementController extends Controller
             'approved_at' => now()
         ]);
 
+        // Process any pending referral signup commissions for this agent's approval using exact description matching
+        $pendingCommissions = AgentCommission::where('type', 'signup_bonus')
+            ->where('status', 'pending')
+            ->where('description', "Pending referral bonus for recruiting agent {$agent->agent_code}")
+            ->get();
+
+        foreach ($pendingCommissions as $commission) {
+            $referrer = $commission->agent;
+            if ($referrer && $referrer->status === 'active') {
+                $commission->update(['status' => 'paid', 'paid_at' => now()]);
+                $referrer->increment('total_commission', $commission->amount);
+                $referrer->increment('available_balance', $commission->amount);
+            }
+        }
+
         // Send approval email (you can implement this)
         // Mail::to($agent->user->email)->send(new AgentApprovedMail($agent));
 

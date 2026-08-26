@@ -883,4 +883,186 @@ class AgentPersonaTest extends TestCase
             ->get(route('agent.hostels.show', $hostel))
             ->assertForbidden();
     }
+
+    /**
+     * Pending agent registration with referral code does not inflate referrer balance.
+     */
+    public function test_pending_agent_registration_does_not_inflate_referrer_balance(): void
+    {
+        $referrerUser = User::create([
+            'name' => 'Active Referrer',
+            'email' => 'referrer'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '080'.str_pad((string)random_int(0, 9999999), 7, '0', STR_PAD_LEFT),
+            'role' => 'hostel_agent',
+            'email_verified_at' => now(),
+        ]);
+
+        $referrer = HostelAgent::create([
+            'user_id' => $referrerUser->id,
+            'agent_code' => 'AG-REF-ACTIVE',
+            'phone' => $referrerUser->phone,
+            'total_commission' => 0,
+            'available_balance' => 0,
+            'withdrawn_amount' => 0,
+            'total_hostels_added' => 0,
+            'total_rooms_added' => 0,
+            'status' => 'active',
+            'approved_at' => now(),
+        ]);
+
+        $payload = [
+            'name' => 'Pending Recruited Agent',
+            'email' => 'recruited'.uniqid().'@example.com',
+            'phone' => '080'.str_pad((string)random_int(0, 9999999), 7, '0', STR_PAD_LEFT),
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+            'id_card_number' => 'ID-999',
+            'referral_code' => $referrer->agent_code,
+        ];
+
+        $this->post(route('agent.register'), $payload)
+            ->assertRedirect();
+
+        // The newly registered agent is pending
+        $this->assertDatabaseHas('hostel_agents', [
+            'phone' => $payload['phone'],
+            'status' => 'pending',
+        ]);
+
+        // Referrer available balance and total commission must NOT be inflated for pending signups
+        $this->assertEquals(0.00, (float) $referrer->fresh()->available_balance);
+        $this->assertEquals(0.00, (float) $referrer->fresh()->total_commission);
+
+        // A pending commission record exists
+        $this->assertDatabaseHas('agent_commissions', [
+            'hostel_agent_id' => $referrer->id,
+            'type' => 'signup_bonus',
+            'status' => 'pending',
+        ]);
+
+        // When admin approves the pending recruited agent, the referral bonus is paid
+        $admin = User::create([
+            'name' => 'Admin User',
+            'email' => 'admin_ref'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '08000001111',
+            'role' => 'admin',
+            'email_verified_at' => now(),
+        ]);
+
+        $recruitedAgent = HostelAgent::where('phone', $payload['phone'])->firstOrFail();
+
+        $this->actingAs($admin)
+            ->post(route('admin.agents.approve', ['id' => $recruitedAgent->id]))
+            ->assertOk();
+
+        $this->assertEquals(50.00, (float) $referrer->fresh()->available_balance);
+        $this->assertEquals(50.00, (float) $referrer->fresh()->total_commission);
+        $this->assertDatabaseHas('agent_commissions', [
+            'hostel_agent_id' => $referrer->id,
+            'type' => 'signup_bonus',
+            'status' => 'paid',
+        ]);
+    }
+
+    /**
+     * Approving an agent does not trigger referral payout for overlapping agent codes.
+     */
+    public function test_approving_agent_does_not_trigger_payout_for_overlapping_agent_codes(): void
+    {
+        $admin = User::create([
+            'name' => 'Admin User 2',
+            'email' => 'admin_overlap'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '08000002222',
+            'role' => 'admin',
+            'email_verified_at' => now(),
+        ]);
+
+        $referrerUser = User::create([
+            'name' => 'Referrer Agent',
+            'email' => 'ref_overlap'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '080'.str_pad((string)random_int(0, 9999999), 7, '0', STR_PAD_LEFT),
+            'role' => 'hostel_agent',
+            'email_verified_at' => now(),
+        ]);
+
+        $referrer = HostelAgent::create([
+            'user_id' => $referrerUser->id,
+            'agent_code' => 'AG-REF-OVERLAP',
+            'phone' => $referrerUser->phone,
+            'total_commission' => 0,
+            'available_balance' => 0,
+            'status' => 'active',
+            'approved_at' => now(),
+        ]);
+
+        $agent1User = User::create([
+            'name' => 'Agent One',
+            'email' => 'ag1'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '080'.str_pad((string)random_int(0, 9999999), 7, '0', STR_PAD_LEFT),
+            'role' => 'hostel_agent',
+            'email_verified_at' => now(),
+        ]);
+
+        $agent1 = HostelAgent::create([
+            'user_id' => $agent1User->id,
+            'agent_code' => 'AG-1',
+            'phone' => $agent1User->phone,
+            'status' => 'pending',
+        ]);
+
+        $agent10User = User::create([
+            'name' => 'Agent Ten',
+            'email' => 'ag10'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '080'.str_pad((string)random_int(0, 9999999), 7, '0', STR_PAD_LEFT),
+            'role' => 'hostel_agent',
+            'email_verified_at' => now(),
+        ]);
+
+        $agent10 = HostelAgent::create([
+            'user_id' => $agent10User->id,
+            'agent_code' => 'AG-10',
+            'phone' => $agent10User->phone,
+            'status' => 'pending',
+        ]);
+
+        // Pending referral commissions for AG-1 and AG-10
+        \App\Models\AgentCommission::create([
+            'hostel_agent_id' => $referrer->id,
+            'amount' => 50.00,
+            'commission_percentage' => 20.00,
+            'type' => 'signup_bonus',
+            'status' => 'pending',
+            'description' => "Pending referral bonus for recruiting agent AG-1",
+        ]);
+
+        \App\Models\AgentCommission::create([
+            'hostel_agent_id' => $referrer->id,
+            'amount' => 50.00,
+            'commission_percentage' => 20.00,
+            'type' => 'signup_bonus',
+            'status' => 'pending',
+            'description' => "Pending referral bonus for recruiting agent AG-10",
+        ]);
+
+        // Approve AG-1
+        $this->actingAs($admin)
+            ->post(route('admin.agents.approve', ['id' => $agent1->id]))
+            ->assertOk();
+
+        // AG-1 referral commission paid (50.00 balance)
+        $this->assertEquals(50.00, (float) $referrer->fresh()->available_balance);
+
+        // AG-10 referral commission remains pending!
+        $this->assertDatabaseHas('agent_commissions', [
+            'hostel_agent_id' => $referrer->id,
+            'status' => 'pending',
+            'description' => "Pending referral bonus for recruiting agent AG-10",
+        ]);
+    }
 }
