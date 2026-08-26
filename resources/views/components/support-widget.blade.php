@@ -46,13 +46,13 @@
 
         <!-- Tabs Navigation -->
         <div role="tablist" class="flex border-b border-gray-100 bg-gray-50/50 text-sm font-semibold">
-            <button role="tab" :aria-selected="tab === 'chat'" @click="tab = 'chat'" :class="tab === 'chat' ? 'border-b-2 border-blue-600 text-blue-600 bg-white' : 'text-gray-500 hover:text-gray-700'" class="flex-1 py-3 text-center transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:z-10">
+            <button id="tab-chat" role="tab" aria-controls="tabpanel-chat" :aria-selected="tab === 'chat'" @click="tab = 'chat'" :class="tab === 'chat' ? 'border-b-2 border-blue-600 text-blue-600 bg-white' : 'text-gray-500 hover:text-gray-700'" class="flex-1 py-3 text-center transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:z-10">
                 <i class="fas fa-comments mr-1.5"></i>Live Chat
             </button>
-            <button role="tab" :aria-selected="tab === 'faq'" @click="tab = 'faq'" :class="tab === 'faq' ? 'border-b-2 border-blue-600 text-blue-600 bg-white' : 'text-gray-500 hover:text-gray-700'" class="flex-1 py-3 text-center transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:z-10">
+            <button id="tab-faq" role="tab" aria-controls="tabpanel-faq" :aria-selected="tab === 'faq'" @click="tab = 'faq'" :class="tab === 'faq' ? 'border-b-2 border-blue-600 text-blue-600 bg-white' : 'text-gray-500 hover:text-gray-700'" class="flex-1 py-3 text-center transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:z-10">
                 <i class="fas fa-question-circle mr-1.5"></i>FAQs
             </button>
-            <button role="tab" :aria-selected="tab === 'contact'" @click="tab = 'contact'" :class="tab === 'contact' ? 'border-b-2 border-blue-600 text-blue-600 bg-white' : 'text-gray-500 hover:text-gray-700'" class="flex-1 py-3 text-center transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:z-10">
+            <button id="tab-contact" role="tab" aria-controls="tabpanel-contact" :aria-selected="tab === 'contact'" @click="tab = 'contact'" :class="tab === 'contact' ? 'border-b-2 border-blue-600 text-blue-600 bg-white' : 'text-gray-500 hover:text-gray-700'" class="flex-1 py-3 text-center transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:z-10">
                 <i class="fas fa-phone mr-1.5"></i>Helpline
             </button>
         </div>
@@ -61,7 +61,7 @@
         <div class="flex-1 overflow-y-auto p-4 bg-gray-50/50">
 
             <!-- Tab: Live Chat -->
-            <div x-show="tab === 'chat'" class="h-full flex flex-col justify-between">
+            <div x-show="tab === 'chat'" role="tabpanel" id="tabpanel-chat" aria-labelledby="tab-chat" class="h-full flex flex-col justify-between">
 
                 <!-- Ticket selector / Create form if no active ticket -->
                 <div x-show="!activeTicketUuid" class="flex flex-col justify-center h-full text-center p-4">
@@ -146,7 +146,7 @@
 
                     <!-- Message sender form -->
                     <form @submit.prevent="sendMessage()" class="mt-3 flex gap-2 border-t border-gray-100 pt-3 bg-white p-2 rounded-xl shadow-inner">
-                        <input type="text" x-model="replyText" required placeholder="Type your message..." aria-label="Type your message"
+                        <input type="text" x-model="replyText" x-ref="replyInput" required placeholder="Type your message..." aria-label="Type your message"
                                class="flex-1 text-xs px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition">
                         <button type="submit" aria-label="Send message"
                                 class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-xl text-xs transition flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -158,7 +158,7 @@
             </div>
 
             <!-- Tab: FAQs Searchable -->
-            <div x-show="tab === 'faq'" class="space-y-4">
+            <div x-show="tab === 'faq'" role="tabpanel" id="tabpanel-faq" aria-labelledby="tab-faq" class="space-y-4">
                 <!-- Search FAQ Input -->
                 <div class="relative">
                     <i class="fas fa-search absolute left-3.5 top-3 text-gray-400 text-xs"></i>
@@ -184,7 +184,7 @@
             </div>
 
             <!-- Tab: Contact Helpline -->
-            <div x-show="tab === 'contact'" class="space-y-4 text-center py-4">
+            <div x-show="tab === 'contact'" role="tabpanel" id="tabpanel-contact" aria-labelledby="tab-contact" class="space-y-4 text-center py-4">
                 <div class="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-2">
                     <i class="fas fa-phone-alt text-xl"></i>
                 </div>
@@ -369,6 +369,11 @@ function supportWidget() {
             if (!this.replyText.trim()) return;
             const tempReply = this.replyText;
             this.replyText = '';
+            this.$nextTick(() => {
+                if (this.$refs.replyInput) {
+                    this.$refs.replyInput.focus();
+                }
+            });
 
             // Add message locally for instant feedback
             const tempMsg = {

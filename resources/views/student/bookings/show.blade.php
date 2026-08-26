@@ -8,8 +8,11 @@
     <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
         <div class="flex items-center justify-between">
             <div class="flex items-center">
-                <a href="{{ route('student.bookings') }}" class="text-gray-500 hover:text-gray-700 mr-4">
-                    <i class="fas fa-arrow-left"></i>
+                <a href="{{ route('student.bookings') }}"
+                   class="text-gray-500 hover:text-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded-lg p-1.5 transition mr-4"
+                   aria-label="Back to bookings"
+                   title="Back to bookings">
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
                 </a>
                 <div>
                     <h1 class="text-2xl font-bold text-gray-800">Booking Details</h1>
@@ -97,8 +100,8 @@
                 </div>
 
                 <a href="{{ route('student.payments.receipt', $booking->payment) }}"
-                   class="mt-4 inline-block text-blue-600 hover:text-blue-800">
-                    <i class="fas fa-download mr-1"></i>Download Receipt
+                   class="mt-4 inline-block text-blue-600 hover:text-blue-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded-md transition">
+                    <i class="fas fa-download mr-1" aria-hidden="true"></i>Download Receipt
                 </a>
             </div>
             @endif
@@ -114,7 +117,7 @@
                     <div class="flex items-start">
                         <div class="flex-shrink-0 mr-3">
                             <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                                <i class="fas fa-plus text-blue-600 text-sm"></i>
+                                <i class="fas fa-plus text-blue-600 text-sm" aria-hidden="true"></i>
                             </div>
                         </div>
                         <div>
@@ -127,7 +130,7 @@
                     <div class="flex items-start">
                         <div class="flex-shrink-0 mr-3">
                             <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                                <i class="fas fa-check text-green-600 text-sm"></i>
+                                <i class="fas fa-check text-green-600 text-sm" aria-hidden="true"></i>
                             </div>
                         </div>
                         <div>
@@ -145,29 +148,30 @@
 
                 <div class="space-y-3">
                     @if($booking->status == 'pending')
-                        <a href="{{ route('student.bookings.pay', $booking) }}"
-                           class="block w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-center">
-                            <i class="fas fa-credit-card mr-2"></i>Complete Payment
+                        <a href="{{ route('bookings.payment.callback', ['gateway' => 'paystack', 'booking_id' => $booking->id]) }}"
+                           class="block w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 transition text-center">
+                            <i class="fas fa-credit-card mr-2" aria-hidden="true"></i>Complete Payment
                         </a>
                     @endif
 
                     @if(in_array($booking->status, ['pending', 'confirmed']))
-                        <button onclick="cancelBooking({{ $booking->id }})"
-                                class="block w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-center">
-                            <i class="fas fa-times-circle mr-2"></i>Cancel Booking
+                        <button type="button"
+                                onclick="cancelBooking({{ $booking->id }})"
+                                class="block w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 transition text-center">
+                            <i class="fas fa-times-circle mr-2" aria-hidden="true"></i>Cancel Booking
                         </button>
                     @endif
 
                     @if(in_array($booking->status, ['completed', 'checked_out']) && !$booking->review)
                         <a href="{{ route('student.reviews.create', ['booking_id' => $booking->id]) }}"
-                           class="block w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-center">
-                            <i class="fas fa-star mr-2"></i>Rate Hostel
+                           class="block w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 transition text-center">
+                            <i class="fas fa-star mr-2" aria-hidden="true"></i>Rate Hostel
                         </a>
                     @endif
 
                     <a href="{{ route('student.complaints', ['booking' => $booking->id]) }}"
-                       class="block w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition text-center">
-                        <i class="fas fa-exclamation-triangle mr-2"></i>Report Issue
+                       class="block w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 transition text-center">
+                        <i class="fas fa-exclamation-triangle mr-2" aria-hidden="true"></i>Report Issue
                     </a>
                 </div>
             </div>
@@ -176,9 +180,9 @@
             <div class="bg-blue-50 rounded-lg p-4">
                 <h3 class="font-semibold text-blue-800 mb-2">Important Information</h3>
                 <ul class="text-sm text-blue-700 space-y-1">
-                    <li><i class="fas fa-check mr-2"></i>Check-in: 2:00 PM</li>
-                    <li><i class="fas fa-check mr-2"></i>Check-out: 12:00 PM</li>
-                    <li><i class="fas fa-check mr-2"></i>Bring valid ID for check-in</li>
+                    <li><i class="fas fa-check mr-2" aria-hidden="true"></i>Check-in: 2:00 PM</li>
+                    <li><i class="fas fa-check mr-2" aria-hidden="true"></i>Check-out: 12:00 PM</li>
+                    <li><i class="fas fa-check mr-2" aria-hidden="true"></i>Bring valid ID for check-in</li>
                 </ul>
             </div>
         </div>

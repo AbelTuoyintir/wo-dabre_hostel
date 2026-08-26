@@ -25,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // ✅ CORRECT: Append to existing web middleware group
         $middleware->web(append: [
             \App\Http\Middleware\VerifyCsrfToken::class,
+            \App\Http\Middleware\SecurityHeadersMiddleware::class,
         ]);
 
         // If you need to add middleware to API group
