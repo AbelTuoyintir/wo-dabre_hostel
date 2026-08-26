@@ -929,9 +929,10 @@ class BookingController extends Controller
     /**
      * Calculate booking totals
      *
-     * Pricing Structure:
-     *   - room_cost retrieved from database is all-inclusive (includes all platform fees & surcharges).
-     *   - Total matches room_cost exactly.
+     * Pre-calculated Pricing Structure:
+     *   - The room_cost stored in the database is all-inclusive of platform fees, platform profits,
+     *     and processing charges (total = base price x 1.0512).
+     *   - Final Total: matches room_cost directly so customers are not shown additional fees.
      */
     public function calculate(Request $request)
     {

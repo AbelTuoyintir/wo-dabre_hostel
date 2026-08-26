@@ -85,16 +85,20 @@ class AgentRegisterController extends Controller
                 'available_balance' => 0
             ]);
 
-            // Handle referral bonus
+            // Handle referral bonus: record pending commission for active referrers without premature balance inflation
             if ($request->referral_code) {
-                $referrer = HostelAgent::where('agent_code', $request->referral_code)->first();
+                $referrer = HostelAgent::where('agent_code', $request->referral_code)
+                    ->where('status', 'active')
+                    ->first();
+
                 if ($referrer) {
-                    $referrer->addCommission(
-                        50.00,
-                        'signup_bonus',
-                        "Referral bonus for recruiting agent {$agentCode}",
-                        $agent->id
-                    );
+                    $referrer->commissions()->create([
+                        'amount' => 50.00,
+                        'commission_percentage' => 20.00,
+                        'type' => 'signup_bonus',
+                        'status' => 'pending',
+                        'description' => "Pending referral bonus for recruiting agent {$agentCode}",
+                    ]);
                 }
             }
 
