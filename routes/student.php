@@ -16,6 +16,9 @@ Route::middleware(['auth', 'student'])->prefix('student')->name('student.')->gro
     Route::post('/payment/initialize', [StudentController::class, 'initializeFeePayment'])->name('payment.initialize');
     Route::get('/payment/callback', [StudentController::class, 'handlePaymentCallback'])->name('payment.callback');
 
+    // Booking Payment — initialize or retry payment for an existing pending booking
+    Route::get('/bookings/{booking:uuid}/pay', [StudentController::class, 'initializeBookingPayment'])->name('bookings.pay');
+
     // Hostel browsing
     Route::get('/hostels', [StudentController::class, 'browseHostels'])->name('hostels.browse');
     Route::get('/hostels/filter', [StudentController::class, 'filterHostels'])->name('hostels.filter'); // AJAX

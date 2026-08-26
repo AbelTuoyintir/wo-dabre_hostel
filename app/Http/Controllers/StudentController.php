@@ -16,6 +16,7 @@ use App\Models\Payment;
 use App\Models\Complaint;
 use Unicodeveloper\Paystack\Facades\Paystack;
 use App\Mail\PaymentReceiptMail;
+use App\Support\PaystackSplitService;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Hash;
 
@@ -212,6 +213,109 @@ class StudentController extends Controller
             \Log::error('Payment callback failed: ' . $e->getMessage());
             return redirect()->route('student.payment')
                 ->with('error', 'Unable to verify payment. Please contact support.');
+        }
+    }
+
+    /**
+     * Initialize (or retry) payment for an existing pending booking.
+     *
+     * This is different from the initial booking flow (BookingController::StudentStore)
+     * because here the Booking record already exists in a 'pending' state and we simply
+     * need to re-run the Paystack authorization for the outstanding amount.
+     */
+    public function initializeBookingPayment(Booking $booking)
+    {
+        // Security: only the owning student may pay for this booking.
+        if ($booking->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        // Only allow payment while the booking is still pending.
+        if ($booking->booking_status !== 'pending') {
+            return redirect()->route('student.bookings.show', $booking)
+                ->with('error', 'Payment can only be completed for pending bookings.');
+        }
+
+        $user = Auth::user();
+        $room = $booking->room;
+        $hostel = $booking->hostel;
+
+        // Reconstruct the split-payment configuration for the booking's room cost.
+        $roomCost = (float) $booking->total_amount;
+        $splitService = app(PaystackSplitService::class);
+
+        $totalSurchargeRate = config('payments.total_surcharge_rate', 0.0512);
+        $basePrice = $roomCost / (1 + $totalSurchargeRate);
+        $platformFee = round($basePrice * config('payments.platform_fee_rate', 0.028), 2);
+        $finalTotal = $roomCost;
+        $netAmount = round($basePrice, 2);
+
+        $subaccountCode = $hostel?->subaccount_code;
+        $transactionCharge = $splitService->getTransactionChargeInPesewas($basePrice);
+
+        $amountInPesewas = (int) round($finalTotal * 100);
+
+        try {
+            $reference = Paystack::genTranxRef();
+
+            $paymentData = [
+                'email' => $user->email,
+                'amount' => $amountInPesewas,
+                'currency' => 'GHS',
+                'reference' => $reference,
+                'callback_url' => route('bookings.payment.callback', ['gateway' => 'paystack']),
+                'metadata' => [
+                    'user_id' => $user->id,
+                    'is_guest' => false,
+                    'booking_data' => [
+                        'room_id' => $room?->id,
+                        'hostel_id' => $hostel?->id,
+                        'check_in_date' => $booking->check_in_date->format('Y-m-d'),
+                        'check_out_date' => $booking->check_out_date->format('Y-m-d'),
+                        'room_cost' => $roomCost,
+                        'agent_fee' => 0,
+                        'net_amount' => $netAmount,
+                        'final_total' => $finalTotal,
+                        'room_gender' => $room?->gender,
+                        'room_occupancy' => $room?->current_occupancy,
+                    ],
+                    'reference' => $reference,
+                ],
+            ];
+
+            // Apply split payment configuration if the hostel has a Paystack subaccount.
+            if (! empty($subaccountCode)) {
+                $paymentData['subaccount'] = $subaccountCode;
+                $paymentData['transaction_charge'] = $transactionCharge;
+            }
+
+            session(['pending_booking' => [
+                'user_id' => $user->id,
+                'room_id' => $room?->id,
+                'hostel_id' => $hostel?->id,
+                'check_in_date' => $booking->check_in_date->format('Y-m-d'),
+                'check_out_date' => $booking->check_out_date->format('Y-m-d'),
+                'room_cost' => $roomCost,
+                'final_total' => $finalTotal,
+                'platform_fee' => $platformFee,
+                'transaction_charge' => $transactionCharge,
+                'subaccount_code' => $subaccountCode,
+                'agent_fee' => 0,
+                'net_amount' => $netAmount,
+                'room_gender' => $room?->gender,
+                'room_occupancy' => $room?->current_occupancy,
+                'is_authenticated' => true,
+            ]]);
+
+            session(['payment_reference' => $reference]);
+
+            return Paystack::getAuthorizationUrl($paymentData)->redirectNow();
+
+        } catch (\Exception $e) {
+            \Log::error('Booking payment initialization failed for booking #'.$booking->id.': '.$e->getMessage());
+
+            return redirect()->route('student.bookings.show', $booking)
+                ->with('error', 'Unable to initialize payment. Please try again.');
         }
     }
 

@@ -145,7 +145,7 @@
 
                 <div class="space-y-3">
                     @if($booking->status == 'pending')
-<a href="{{ route('bookings.payment.callback', ['gateway' => 'paystack', 'booking_id' => $booking->id]) }}"
+                        <a href="{{ route('student.bookings.pay', $booking) }}"
                            class="block w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-center">
                             <i class="fas fa-credit-card mr-2"></i>Complete Payment
                         </a>

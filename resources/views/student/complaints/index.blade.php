@@ -12,7 +12,7 @@
             <p class="text-gray-600 mt-1">Submit and track your complaints</p>
         </div>
         <div class="mt-4 md:mt-0">
-            <button onclick="openComplaintModal()"
+            <button type="button" onclick="openComplaintModal()"
                     class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
                 <i class="fas fa-plus mr-2"></i>New Complaint
             </button>
@@ -189,16 +189,16 @@
 
                     <!-- Actions -->
                     <div class="flex items-center space-x-2 mt-4 md:mt-0 md:ml-4">
-                        <button onclick="viewComplaint({{ $complaint->id }})"
+                        <button type="button" onclick="viewComplaint({{ $complaint->id }})"
                                 class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition">
                             <i class="fas fa-eye mr-1"></i>View
                         </button>
                         @if($complaint->status == 'pending')
-                            <button onclick="editComplaint({{ $complaint->id }})"
+                            <button type="button" onclick="editComplaint({{ $complaint->id }})"
                                     class="px-4 py-2 bg-yellow-600 text-white text-sm rounded-lg hover:bg-yellow-700 transition">
                                 <i class="fas fa-edit mr-1"></i>Edit
                             </button>
-                            <button onclick="deleteComplaint({{ $complaint->id }})"
+                            <button type="button" onclick="deleteComplaint({{ $complaint->id }})"
                                     class="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition">
                                 <i class="fas fa-trash mr-1"></i>Delete
                             </button>
@@ -221,7 +221,7 @@
         </div>
         <h3 class="text-xl font-semibold text-gray-800 mb-2">No Complaints</h3>
         <p class="text-gray-500 mb-6">You haven't submitted any complaints yet.</p>
-        <button onclick="openComplaintModal()"
+        <button type="button" onclick="openComplaintModal()"
                 class="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
             <i class="fas fa-plus mr-2"></i>Submit Your First Complaint
         </button>
@@ -416,12 +416,13 @@ function deleteComplaint(id) {
 
 // open modal if booking query param present
 @if(request('booking'))
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        openComplaintModal();
-        document.getElementById('booking_id').value = "{{ request('booking') }}";
-    });
-</script>
+document.addEventListener('DOMContentLoaded', function() {
+    openComplaintModal();
+    const bookingSelect = document.getElementById('booking_id');
+    if (bookingSelect) {
+        bookingSelect.value = "{{ request('booking') }}";
+    }
+});
 @endif
 
 // Character counter for description
