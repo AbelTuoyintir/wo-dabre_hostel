@@ -166,10 +166,10 @@
             <!-- Add Room Form -->
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
                 <div class="px-4 py-2.5 border-b border-gray-200">
-                    <h6 class="text-sm font-semibold text-gray-800">Add New Room</h6>
+                    <h2 class="text-sm font-semibold text-gray-800">Add New Room</h2>
                 </div>
                 <div class="p-4">
-                    <form action="{{ route('agent.hostels.add-room', $hostel->id) }}" method="POST">
+                    <form action="{{ route('agent.hostels.add-room', $hostel) }}" method="POST">
                         @csrf
                         <div class="space-y-3">
                             <div>
@@ -177,8 +177,8 @@
                                     Room Number <span class="text-red-500">*</span>
                                 </label>
                                 <input type="text" 
-                                       class="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('room_number') border-red-500 @enderror" 
-                                       id="room_number" name="room_number" required>
+                                       class="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500 @error('room_number') border-red-500 @enderror"
+                                       id="room_number" name="room_number" value="{{ old('room_number') }}" required>
                                 @error('room_number')
                                     <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                                 @enderror
@@ -187,7 +187,7 @@
                                 <label for="room_type" class="block text-xs font-medium text-gray-700 mb-1">
                                     Room Type <span class="text-red-500">*</span>
                                 </label>
-                                <select class="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('room_type') border-red-500 @enderror" 
+                                <select class="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500 @error('room_type') border-red-500 @enderror"
                                         id="room_type" name="room_type" required>
                                     <option value="">Select Room Type</option>
                                     <!-- Single Rooms -->
@@ -324,8 +324,8 @@
                                     Capacity <span class="text-red-500">*</span>
                                 </label>
                                 <input type="number" 
-                                       class="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('capacity') border-red-500 @enderror" 
-                                       id="capacity" name="capacity" min="1" required>
+                                       class="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500 @error('capacity') border-red-500 @enderror"
+                                       id="capacity" name="capacity" value="{{ old('capacity') }}" min="1" required>
                                 @error('capacity')
                                     <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                                 @enderror
@@ -335,16 +335,16 @@
                                     Price/Year <span class="text-red-500">*</span>
                                 </label>
                                 <input type="number" step="0.01" 
-                                       class="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('price_per_year') border-red-500 @enderror" 
-                                       id="price_per_year" name="price_per_year" min="0" required>
+                                       class="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500 @error('price_per_year') border-red-500 @enderror"
+                                       id="price_per_year" name="price_per_year" value="{{ old('price_per_year') }}" min="0" required>
                                 @error('price_per_year')
                                     <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                                 @enderror
                             </div>
                             <div>
                                 <label for="room_description" class="block text-xs font-medium text-gray-700 mb-1">Description</label>
-                                <textarea class="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('description') border-red-500 @enderror" 
-                                          id="room_description" name="description" rows="2"></textarea>
+                                <textarea class="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500 @error('description') border-red-500 @enderror"
+                                          id="room_description" name="description" rows="2">{{ old('description') }}</textarea>
                                 @error('description')
                                     <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                                 @enderror
@@ -355,8 +355,8 @@
                                        id="is_available" name="is_available" value="1" checked>
                                 <label class="text-xs text-gray-700" for="is_available">Available</label>
                             </div>
-                            <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg transition-colors duration-200">
-                                <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                                <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                                 </svg>
                                 Add Room
@@ -486,7 +486,7 @@ function closeImageModal() {
 
 function openDeleteRoomModal(roomId, roomNumber) {
     document.getElementById('deleteRoomMessage').textContent = `Are you sure you want to delete room "${roomNumber}"? This action cannot be undone.`;
-    document.getElementById('deleteRoomForm').action = `/agent/hostels/{{ $hostel->id }}/rooms/${roomId}`;
+    document.getElementById('deleteRoomForm').action = `{{ route('agent.hostels.index') }}/{{ $hostel->uuid }}/rooms/${roomId}`;
     document.getElementById('deleteRoomModal').classList.remove('hidden');
 }
 

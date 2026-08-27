@@ -885,6 +885,83 @@ class AgentPersonaTest extends TestCase
     }
 
     /**
+     * Agent cannot add a room to a hostel owned by another agent (IDOR protection).
+     */
+    public function test_agent_cannot_add_room_to_unowned_hostel_idor(): void
+    {
+        $ownerUser = User::create([
+            'name' => 'Owner Agent 2',
+            'email' => 'owner_agent2'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '080'.str_pad((string)random_int(0, 9999999), 7, '0', STR_PAD_LEFT),
+            'role' => 'hostel_agent',
+            'email_verified_at' => now(),
+        ]);
+
+        HostelAgent::create([
+            'user_id' => $ownerUser->id,
+            'agent_code' => 'AG-OWNER2'.uniqid(),
+            'phone' => $ownerUser->phone,
+            'total_commission' => 0,
+            'available_balance' => 0,
+            'withdrawn_amount' => 0,
+            'total_hostels_added' => 1,
+            'total_rooms_added' => 0,
+            'status' => 'active',
+            'approved_at' => now(),
+        ]);
+
+        $hostel = \App\Models\Hostel::forceCreate([
+            'name' => 'Owner Hostel 2',
+            'description' => 'Owned hostel description 2.',
+            'location' => 'amamoma',
+            'address' => '790 Main St',
+            'user_id' => $ownerUser->id,
+            'status' => 'active',
+        ]);
+
+        $otherUser = User::create([
+            'name' => 'Other Agent 2',
+            'email' => 'other_agent2'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '080'.str_pad((string)random_int(0, 9999999), 7, '0', STR_PAD_LEFT),
+            'role' => 'hostel_agent',
+            'email_verified_at' => now(),
+        ]);
+
+        HostelAgent::create([
+            'user_id' => $otherUser->id,
+            'agent_code' => 'AG-OTHER2'.uniqid(),
+            'phone' => $otherUser->phone,
+            'total_commission' => 0,
+            'available_balance' => 0,
+            'withdrawn_amount' => 0,
+            'total_hostels_added' => 0,
+            'total_rooms_added' => 0,
+            'status' => 'active',
+            'approved_at' => now(),
+        ]);
+
+        $payload = [
+            'room_number' => 'E505',
+            'room_type' => 'single_room',
+            'capacity' => 1,
+            'price_per_year' => 500.00,
+            'description' => 'Unauthorized room addition',
+            'is_available' => 1,
+        ];
+
+        $this->actingAs($otherUser)
+            ->post(route('agent.hostels.add-room', $hostel), $payload)
+            ->assertForbidden();
+
+        $this->assertDatabaseMissing('rooms', [
+            'hostel_id' => $hostel->id,
+            'number' => 'E505',
+        ]);
+    }
+
+    /**
      * Pending agent registration with referral code does not inflate referrer balance.
      */
     public function test_pending_agent_registration_does_not_inflate_referrer_balance(): void
