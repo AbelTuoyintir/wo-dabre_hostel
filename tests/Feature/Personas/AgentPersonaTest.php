@@ -1065,4 +1065,67 @@ class AgentPersonaTest extends TestCase
             'description' => "Pending referral bonus for recruiting agent AG-10",
         ]);
     }
+
+    public function test_admin_add_commission_validates_amount_and_description(): void
+    {
+        $admin = User::create([
+            'name' => 'Admin User',
+            'email' => 'admin_comm'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '08000003333',
+            'role' => 'admin',
+            'email_verified_at' => now(),
+        ]);
+
+        $agentUser = User::create([
+            'name' => 'Target Agent',
+            'email' => 'target_agent'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '08011122233',
+            'role' => 'hostel_agent',
+            'email_verified_at' => now(),
+        ]);
+
+        $agent = HostelAgent::create([
+            'user_id' => $agentUser->id,
+            'agent_code' => 'AG-COMM-TEST',
+            'phone' => $agentUser->phone,
+            'total_commission' => 0,
+            'available_balance' => 0,
+            'status' => 'active',
+            'approved_at' => now(),
+        ]);
+
+        // Non-positive amount rejected
+        $this->actingAs($admin)
+            ->post(route('admin.agents.add-commission', ['id' => $agent->id]), [
+                'amount' => 0,
+                'type' => 'signup_bonus',
+                'description' => 'Zero amount test',
+            ])
+            ->assertStatus(302)
+            ->assertSessionHasErrors(['amount']);
+
+        // Excessive amount rejected
+        $this->actingAs($admin)
+            ->post(route('admin.agents.add-commission', ['id' => $agent->id]), [
+                'amount' => 1000000,
+                'type' => 'signup_bonus',
+                'description' => 'Too high amount test',
+            ])
+            ->assertStatus(302)
+            ->assertSessionHasErrors(['amount']);
+
+        // Valid amount succeeds
+        $this->actingAs($admin)
+            ->post(route('admin.agents.add-commission', ['id' => $agent->id]), [
+                'amount' => 50,
+                'type' => 'signup_bonus',
+                'description' => 'Valid bonus',
+            ])
+            ->assertOk()
+            ->assertJson(['success' => true]);
+
+        $this->assertEquals(50.00, (float) $agent->fresh()->available_balance);
+    }
 }
