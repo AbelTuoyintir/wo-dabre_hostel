@@ -17,7 +17,7 @@
                 </svg>
                 Back
             </a>
-            <a href="{{ route('agent.hostels.edit', $hostel->id) }}" class="inline-flex items-center px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg transition-colors duration-200">
+            <a href="{{ route('agent.hostels.edit', $hostel) }}" class="inline-flex items-center px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg transition-colors duration-200">
                 <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                 </svg>
@@ -169,7 +169,7 @@
                     <h6 class="text-sm font-semibold text-gray-800">Add New Room</h6>
                 </div>
                 <div class="p-4">
-                    <form action="{{ route('agent.hostels.add-room', $hostel->id) }}" method="POST">
+                    <form action="{{ route('agent.hostels.add-room', $hostel) }}" method="POST">
                         @csrf
                         <div class="space-y-3">
                             <div>
@@ -178,7 +178,7 @@
                                 </label>
                                 <input type="text" 
                                        class="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('room_number') border-red-500 @enderror" 
-                                       id="room_number" name="room_number" required>
+                                       id="room_number" name="room_number" value="{{ old('room_number') }}" required>
                                 @error('room_number')
                                     <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                                 @enderror
@@ -325,7 +325,7 @@
                                 </label>
                                 <input type="number" 
                                        class="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('capacity') border-red-500 @enderror" 
-                                       id="capacity" name="capacity" min="1" required>
+                                       id="capacity" name="capacity" min="1" value="{{ old('capacity') }}" required>
                                 @error('capacity')
                                     <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                                 @enderror
@@ -336,7 +336,7 @@
                                 </label>
                                 <input type="number" step="0.01" 
                                        class="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('price_per_year') border-red-500 @enderror" 
-                                       id="price_per_year" name="price_per_year" min="0" required>
+                                       id="price_per_year" name="price_per_year" min="0" value="{{ old('price_per_year') }}" required>
                                 @error('price_per_year')
                                     <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                                 @enderror
@@ -344,7 +344,7 @@
                             <div>
                                 <label for="room_description" class="block text-xs font-medium text-gray-700 mb-1">Description</label>
                                 <textarea class="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('description') border-red-500 @enderror" 
-                                          id="room_description" name="description" rows="2"></textarea>
+                                          id="room_description" name="description" rows="2">{{ old('description') }}</textarea>
                                 @error('description')
                                     <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                                 @enderror
@@ -486,7 +486,7 @@ function closeImageModal() {
 
 function openDeleteRoomModal(roomId, roomNumber) {
     document.getElementById('deleteRoomMessage').textContent = `Are you sure you want to delete room "${roomNumber}"? This action cannot be undone.`;
-    document.getElementById('deleteRoomForm').action = `/agent/hostels/{{ $hostel->id }}/rooms/${roomId}`;
+    document.getElementById('deleteRoomForm').action = `{{ route('agent.hostels.delete-room', [$hostel, ':roomId']) }}`.replace(':roomId', roomId);
     document.getElementById('deleteRoomModal').classList.remove('hidden');
 }
 
