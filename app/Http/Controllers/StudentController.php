@@ -907,6 +907,30 @@ public function viewHostel(Hostel $hostel)
     }
 
     /**
+     * Update an existing complaint
+     */
+    public function updateComplaint(Request $request, Complaint $complaint)
+    {
+        // Security check: Verify authenticated user owns this complaint to prevent IDOR
+        if ($complaint->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized access to this complaint.');
+        }
+
+        $validated = $request->validate([
+            'description' => 'required|string|min:20|max:2000',
+            'priority' => 'nullable|in:low,medium,high,urgent',
+        ]);
+
+        $complaint->update([
+            'description' => $validated['description'],
+            'priority' => $validated['priority'] ?? $complaint->priority,
+        ]);
+
+        return redirect()->route('student.complaints')
+            ->with('success', 'Your complaint has been updated.');
+    }
+
+    /**
      * List user's payments (amounts in GHS)
      */
     public function payments(Request $request)
