@@ -163,4 +163,114 @@ class StudentReviewSecurityTest extends TestCase
             'rating' => 4,
         ]);
     }
+
+    public function test_user_cannot_edit_or_update_another_students_review(): void
+    {
+        $owner = User::create([
+            'name' => 'Review Owner',
+            'email' => 'owner_'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '08011122234',
+            'role' => 'student',
+            'gender' => 'male',
+            'email_verified_at' => now(),
+        ]);
+
+        $attacker = User::create([
+            'name' => 'Attacker Student',
+            'email' => 'attacker_'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '08011122235',
+            'role' => 'student',
+            'gender' => 'female',
+            'email_verified_at' => now(),
+        ]);
+
+        $hostel = Hostel::create([
+            'name' => 'Edit Security Hostel',
+            'location' => 'amamoma',
+            'address' => '789 Edit Ave',
+            'email' => 'editsec@example.com',
+            'is_approved' => true,
+            'status' => 'active',
+        ]);
+
+        $review = Review::create([
+            'user_id' => $owner->id,
+            'hostel_id' => $hostel->id,
+            'rating' => 5,
+            'title' => 'Original Title',
+            'review' => 'Original review body text with sufficient character length.',
+            'status' => 'published',
+            'created_at' => now(),
+        ]);
+
+        // Attempting to edit another student's review
+        $editResponse = $this->actingAs($attacker)->get(route('student.reviews.edit', $review->uuid ?? $review->id));
+        $editResponse->assertStatus(403);
+
+        // Attempting to update another student's review
+        $updateResponse = $this->actingAs($attacker)->put(route('student.reviews.update', $review->uuid ?? $review->id), [
+            'rating' => 1,
+            'title' => 'Hacked Title',
+            'review' => 'Hacked review body text with sufficient character length.',
+        ]);
+        $updateResponse->assertStatus(403);
+
+        $this->assertDatabaseHas('reviews', [
+            'id' => $review->id,
+            'title' => 'Original Title',
+            'rating' => 5,
+        ]);
+    }
+
+    public function test_review_owner_can_edit_and_update_own_review(): void
+    {
+        $student = User::create([
+            'name' => 'Valid Owner',
+            'email' => 'validowner_'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '08011122236',
+            'role' => 'student',
+            'gender' => 'male',
+            'email_verified_at' => now(),
+        ]);
+
+        $hostel = Hostel::create([
+            'name' => 'Update Hostel',
+            'location' => 'amamoma',
+            'address' => '101 Update Ave',
+            'email' => 'update@example.com',
+            'is_approved' => true,
+            'status' => 'active',
+        ]);
+
+        $review = Review::create([
+            'user_id' => $student->id,
+            'hostel_id' => $hostel->id,
+            'rating' => 3,
+            'title' => 'Initial Title',
+            'review' => 'Initial review text content long enough to pass validation.',
+            'status' => 'published',
+            'created_at' => now(),
+        ]);
+
+        $editResponse = $this->actingAs($student)->get(route('student.reviews.edit', $review->uuid ?? $review->id));
+        $editResponse->assertOk();
+
+        $updateResponse = $this->actingAs($student)->put(route('student.reviews.update', $review->uuid ?? $review->id), [
+            'rating' => 5,
+            'title' => 'Updated Positive Title',
+            'review' => 'Updated review text content long enough to pass validation.',
+        ]);
+
+        $updateResponse->assertRedirect(route('student.reviews'));
+        $updateResponse->assertSessionHas('success');
+
+        $this->assertDatabaseHas('reviews', [
+            'id' => $review->id,
+            'title' => 'Updated Positive Title',
+            'rating' => 5,
+        ]);
+    }
 }

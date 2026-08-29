@@ -600,8 +600,9 @@ class StudentController extends Controller
      */
     public function editReview(Review $review)
     {
-        if ($review->user_id !== Auth::id()) {
-            abort(403);
+        // Security check: Verify user is authenticated and owns this review
+        if (!Auth::check() || $review->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized action.');
         }
 
         // Only allow editing within 30 days
@@ -620,8 +621,9 @@ class StudentController extends Controller
      */
     public function updateReview(Request $request, Review $review)
     {
-        if ($review->user_id !== Auth::id()) {
-            abort(403);
+        // Security check: Verify user is authenticated and owns this review
+        if (!Auth::check() || $review->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized action.');
         }
 
         // Only allow editing within 30 days
