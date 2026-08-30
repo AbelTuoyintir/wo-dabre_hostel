@@ -70,4 +70,23 @@ class PasswordResetTest extends TestCase
             return true;
         });
     }
+
+    public function test_forgot_password_requests_are_rate_limited(): void
+    {
+        Notification::fake();
+
+        $user = User::factory()->create();
+
+        // 1st request succeeds
+        $response = $this->post('/forgot-password', ['email' => $user->email]);
+        $response->assertSessionHasNoErrors();
+
+        // Subsequent rapid requests within throttle window trigger rate limit
+        for ($i = 0; $i < 5; $i++) {
+            $response = $this->post('/forgot-password', ['email' => $user->email]);
+        }
+
+        // Must be throttled with 429 status code
+        $response->assertStatus(429);
+    }
 }

@@ -30,5 +30,10 @@ class RouteServiceProvider extends ServiceProvider
         RateLimiter::for('support', function (Request $request) {
             return Limit::perMinute(10)->by($request->user()?->id ?: $request->ip());
         });
+
+        // Rate limit for sensitive password reset attempts to prevent email flooding & enumeration
+        RateLimiter::for('password-reset', function (Request $request) {
+            return Limit::perMinute(5)->by($request->user()?->id ?: $request->ip());
+        });
     }
 }
