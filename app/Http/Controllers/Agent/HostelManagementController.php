@@ -143,11 +143,26 @@ $hostel->images()->create([
         return $query->whereRaw('1 = 0');
     }
 
-    public function addRoom(Request $request, Hostel $hostel)
+    public function createRoom(Request $request, ?Hostel $hostel = null)
     {
-        $request->validate([
-            'room_number' => 'required|string',
-            'room_type' => 'required|string',
+        $agent = Auth::user()->agent;
+        $hostels = $this->getAgentHostelQuery($agent)->get();
+
+        if ($hostel && !$this->getAgentHostelQuery($agent)->where('id', $hostel->id)->exists()) {
+            abort(403, 'Unauthorized access to this hostel.');
+        }
+
+        $selectedHostelId = $hostel ? $hostel->id : $request->get('hostel_id');
+
+        return view('agent.rooms.create', compact('hostels', 'selectedHostelId'));
+    }
+
+    public function storeRoom(Request $request)
+    {
+        $validated = $request->validate([
+            'hostel_id' => 'required|exists:hostels,id',
+            'room_number' => 'required|string|max:255',
+            'room_type' => 'required|string|max:255',
             'capacity' => 'required|integer|min:1',
             'price_per_year' => 'required|numeric|min:0',
             'description' => 'nullable|string',
@@ -155,15 +170,16 @@ $hostel->images()->create([
         ]);
 
         $agent = Auth::user()->agent;
+        $hostel = Hostel::findOrFail($validated['hostel_id']);
 
         // Ensure the hostel belongs to this agent
         if (!$this->getAgentHostelQuery($agent)->where('id', $hostel->id)->exists()) {
-            abort(403, 'Unauthorized.');
+            abort(403, 'Unauthorized access to this hostel.');
         }
 
         // Validate uniqueness of room number in this hostel
         $exists = Room::where('hostel_id', $hostel->id)
-            ->where('number', $request->room_number)
+            ->where('number', $validated['room_number'])
             ->exists();
 
         if ($exists) {
@@ -174,11 +190,11 @@ $hostel->images()->create([
 
         $room = Room::create([
             'hostel_id' => $hostel->id,
-            'number' => $request->room_number,
-            'room_type' => $request->room_type,
-            'capacity' => $request->capacity,
-            'room_cost' => $request->price_per_year,
-            'description' => $request->description,
+            'number' => $validated['room_number'],
+            'room_type' => $validated['room_type'],
+            'capacity' => $validated['capacity'],
+            'room_cost' => $validated['price_per_year'],
+            'description' => $validated['description'] ?? null,
             'status' => $request->has('is_available') ? 'available' : 'unavailable',
             'gender' => 'any'
         ]);
@@ -194,6 +210,12 @@ $hostel->images()->create([
 
         return redirect()->route('agent.hostels.show', $hostel->uuid)
             ->with('success', 'Room added successfully!');
+    }
+
+    public function addRoom(Request $request, Hostel $hostel)
+    {
+        $request->merge(['hostel_id' => $hostel->id]);
+        return $this->storeRoom($request);
     }
 
     public function deleteRoom(Hostel $hostel, Room $room)
