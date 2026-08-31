@@ -1065,4 +1065,94 @@ class AgentPersonaTest extends TestCase
             'description' => "Pending referral bonus for recruiting agent AG-10",
         ]);
     }
+
+    /**
+     * Admin adding manual commission validates amount, type, and description.
+     */
+    public function test_admin_add_commission_validates_payload(): void
+    {
+        $admin = User::create([
+            'name' => 'Admin User',
+            'email' => 'admin_comm'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '08000003333',
+            'role' => 'admin',
+            'email_verified_at' => now(),
+        ]);
+
+        $agentUser = User::create([
+            'name' => 'Agent User',
+            'email' => 'ag_comm'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '080'.str_pad((string)random_int(0, 9999999), 7, '0', STR_PAD_LEFT),
+            'role' => 'hostel_agent',
+            'email_verified_at' => now(),
+        ]);
+
+        $agent = HostelAgent::create([
+            'user_id' => $agentUser->id,
+            'agent_code' => 'AG-COMM-VAL',
+            'phone' => $agentUser->phone,
+            'total_commission' => 0,
+            'available_balance' => 0,
+            'status' => 'active',
+            'approved_at' => now(),
+        ]);
+
+        // 1. Invalid commission type (e.g. 'bonus' which is not in db enum) must fail validation
+        $this->actingAs($admin)
+            ->postJson(route('admin.agents.add-commission', ['id' => $agent->id]), [
+                'amount' => 50.00,
+                'type' => 'bonus',
+                'description' => 'Manual bonus',
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['type']);
+
+        // 2. Invalid amount (<= 0 or > 100000) must fail validation
+        $this->actingAs($admin)
+            ->postJson(route('admin.agents.add-commission', ['id' => $agent->id]), [
+                'amount' => 0,
+                'type' => 'signup_bonus',
+                'description' => 'Zero amount bonus',
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['amount']);
+
+        $this->actingAs($admin)
+            ->postJson(route('admin.agents.add-commission', ['id' => $agent->id]), [
+                'amount' => 150000.00,
+                'type' => 'signup_bonus',
+                'description' => 'Excessive amount bonus',
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['amount']);
+
+        // 3. Excessive description length (> 1000) must fail validation
+        $this->actingAs($admin)
+            ->postJson(route('admin.agents.add-commission', ['id' => $agent->id]), [
+                'amount' => 10.00,
+                'type' => 'signup_bonus',
+                'description' => str_repeat('a', 1001),
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['description']);
+
+        // 4. Valid commission payload succeeds and creates record
+        $this->actingAs($admin)
+            ->postJson(route('admin.agents.add-commission', ['id' => $agent->id]), [
+                'amount' => 100.00,
+                'type' => 'booking_commission',
+                'description' => 'Valid manual commission',
+            ])
+            ->assertOk()
+            ->assertJson(['success' => true]);
+
+        $this->assertDatabaseHas('agent_commissions', [
+            'hostel_agent_id' => $agent->id,
+            'amount' => 100.00,
+            'type' => 'booking_commission',
+            'description' => 'Valid manual commission',
+        ]);
+    }
 }
