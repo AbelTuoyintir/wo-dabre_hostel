@@ -71,4 +71,28 @@ class AdminSecurityTest extends TestCase
 
         $this->assertEquals(0, $otherUser->fresh()->is_active);
     }
+
+    public function test_admin_can_view_image_proxy_logs_safely(): void
+    {
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'is_active' => true,
+            'gender' => 'male',
+        ]);
+
+        $logFile = storage_path('logs/laravel.log');
+        $logDir = dirname($logFile);
+        if (!file_exists($logDir)) {
+            mkdir($logDir, 0755, true);
+        }
+
+        file_put_contents($logFile, "[2026-09-01 10:00:00] local.INFO: Image proxy served path=test.jpg\n");
+
+        $response = $this->actingAs($admin)
+            ->get(route('admin.image-proxy-logs'));
+
+        $response->assertOk();
+        $response->assertViewHas('lines');
+        $this->assertNotEmpty($response->viewData('lines'));
+    }
 }

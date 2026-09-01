@@ -382,18 +382,32 @@ class AdminController extends Controller
         $lines = [];
 
         if (file_exists($logFile)) {
-            $content = file_get_contents($logFile);
-            // Get last ~1000 lines to keep memory small
-            $allLines = preg_split("/\r\n|\n|\r/", $content);
-            $tail = array_slice($allLines, -1000);
-
-            foreach ($tail as $line) {
-                if (stripos($line, 'Image proxy') !== false || stripos($line, '[image.php]') !== false) {
-                    $lines[] = $line;
+            $fileSize = filesize($logFile);
+            $handle = @fopen($logFile, 'rb');
+            if ($handle) {
+                // Security check: read only the tail (max 512KB) to prevent DoS via memory exhaustion on large log files
+                $readLength = 512 * 1024;
+                if ($fileSize > $readLength) {
+                    fseek($handle, -$readLength, SEEK_END);
                 }
+                $content = stream_get_contents($handle);
+                fclose($handle);
+
+                $allLines = preg_split("/\r\n|\n|\r/", $content);
+                // Drop initial line if seek started in the middle of a line
+                if ($fileSize > $readLength) {
+                    array_shift($allLines);
+                }
+                $tail = array_slice($allLines, -1000);
+
+                foreach ($tail as $line) {
+                    if (stripos($line, 'Image proxy') !== false || stripos($line, '[image.php]') !== false) {
+                        $lines[] = $line;
+                    }
+                }
+                // Reverse to show newest first
+                $lines = array_reverse($lines);
             }
-            // Reverse to show newest first
-            $lines = array_reverse($lines);
         }
 
         return view('admin.image-proxy-logs', compact('lines'));
