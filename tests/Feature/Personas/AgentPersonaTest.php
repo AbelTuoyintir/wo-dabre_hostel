@@ -1065,4 +1065,145 @@ class AgentPersonaTest extends TestCase
             'description' => "Pending referral bonus for recruiting agent AG-10",
         ]);
     }
+
+    /**
+     * Agent can access standalone room creation page and store room via agent.rooms.store.
+     */
+    public function test_agent_can_create_room_via_standalone_routes(): void
+    {
+        $user = User::create([
+            'name' => 'Standalone Room Agent',
+            'email' => 'agent_std_room'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '080'.str_pad((string)random_int(0, 9999999), 7, '0', STR_PAD_LEFT),
+            'role' => 'hostel_agent',
+            'email_verified_at' => now(),
+        ]);
+
+        $agent = HostelAgent::create([
+            'user_id' => $user->id,
+            'agent_code' => 'AG-STD-ROOM'.uniqid(),
+            'phone' => $user->phone,
+            'total_commission' => 0,
+            'available_balance' => 0,
+            'withdrawn_amount' => 0,
+            'total_hostels_added' => 1,
+            'total_rooms_added' => 0,
+            'status' => 'active',
+            'approved_at' => now(),
+        ]);
+
+        $hostel = \App\Models\Hostel::forceCreate([
+            'name' => 'Standalone Hostel',
+            'description' => 'A test hostel for standalone room creation.',
+            'location' => 'amamoma',
+            'address' => '999 Main St',
+            'user_id' => $user->id,
+            'status' => 'active',
+        ]);
+
+        // Access standalone create room page
+        $this->actingAs($user)
+            ->get(route('agent.rooms.create'))
+            ->assertOk()
+            ->assertViewIs('agent.rooms.create');
+
+        // Access hostel-specific create room page
+        $this->actingAs($user)
+            ->get(route('agent.hostels.rooms.create', $hostel->uuid))
+            ->assertOk()
+            ->assertViewIs('agent.rooms.create')
+            ->assertViewHas('selectedHostelId', $hostel->id);
+
+        // Store room via agent.rooms.store
+        $payload = [
+            'hostel_id' => $hostel->id,
+            'room_number' => 'STD-101',
+            'room_type' => 'single_room',
+            'capacity' => 1,
+            'price_per_year' => 1500.00,
+            'description' => 'Standalone route test room',
+            'is_available' => 1,
+        ];
+
+        $this->actingAs($user)
+            ->post(route('agent.rooms.store'), $payload)
+            ->assertRedirect(route('agent.hostels.show', $hostel->uuid))
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('rooms', [
+            'hostel_id' => $hostel->id,
+            'number' => 'STD-101',
+            'room_type' => 'single_room',
+        ]);
+
+        $this->assertEquals(1, $agent->fresh()->total_rooms_added);
+    }
+
+    /**
+     * Agent cannot store a room for a hostel owned by another agent (IDOR protection).
+     */
+    public function test_agent_cannot_store_room_for_unowned_hostel_idor(): void
+    {
+        $ownerUser = User::create([
+            'name' => 'Hostel Owner Agent',
+            'email' => 'hostel_owner'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '080'.str_pad((string)random_int(0, 9999999), 7, '0', STR_PAD_LEFT),
+            'role' => 'hostel_agent',
+            'email_verified_at' => now(),
+        ]);
+
+        $ownerAgent = HostelAgent::create([
+            'user_id' => $ownerUser->id,
+            'agent_code' => 'AG-HST-OWNER'.uniqid(),
+            'phone' => $ownerUser->phone,
+            'status' => 'active',
+            'approved_at' => now(),
+        ]);
+
+        $hostel = \App\Models\Hostel::forceCreate([
+            'name' => 'Unowned Hostel',
+            'description' => 'Not owned by attacker.',
+            'location' => 'amamoma',
+            'address' => '000 Secret St',
+            'user_id' => $ownerUser->id,
+            'status' => 'active',
+        ]);
+
+        $attackerUser = User::create([
+            'name' => 'Attacker Agent',
+            'email' => 'attacker_agent'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '080'.str_pad((string)random_int(0, 9999999), 7, '0', STR_PAD_LEFT),
+            'role' => 'hostel_agent',
+            'email_verified_at' => now(),
+        ]);
+
+        HostelAgent::create([
+            'user_id' => $attackerUser->id,
+            'agent_code' => 'AG-ATTACKER'.uniqid(),
+            'phone' => $attackerUser->phone,
+            'status' => 'active',
+            'approved_at' => now(),
+        ]);
+
+        $payload = [
+            'hostel_id' => $hostel->id,
+            'room_number' => 'HACK-101',
+            'room_type' => 'single_room',
+            'capacity' => 1,
+            'price_per_year' => 500.00,
+            'is_available' => 1,
+        ];
+
+        $this->actingAs($attackerUser)
+            ->post(route('agent.rooms.store'), $payload)
+            ->assertForbidden();
+
+        $this->assertDatabaseMissing('rooms', [
+            'hostel_id' => $hostel->id,
+            'number' => 'HACK-101',
+        ]);
+    }
 }
