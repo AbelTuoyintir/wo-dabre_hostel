@@ -143,6 +143,95 @@ $hostel->images()->create([
         return $query->whereRaw('1 = 0');
     }
 
+    public function createRoom(Hostel $hostel = null)
+    {
+        $agent = Auth::user()->agent;
+
+        if (!$agent) {
+            abort(403, 'Unauthorized.');
+        }
+
+        $hostels = $this->getAgentHostelQuery($agent)->get();
+
+        if ($hostel && $hostel->exists) {
+            if (!$this->getAgentHostelQuery($agent)->where('id', $hostel->id)->exists()) {
+                abort(403, 'Unauthorized access to this hostel.');
+            }
+        } else {
+            $hostel = null;
+        }
+
+        return view('agent.rooms.create', compact('hostels', 'hostel'));
+    }
+
+    public function storeRoom(Request $request)
+    {
+        $agent = Auth::user()->agent;
+
+        if (!$agent) {
+            abort(403, 'Unauthorized.');
+        }
+
+        $request->validate([
+            'hostel_id' => 'required|exists:hostels,id',
+            'room_number' => 'required|string|max:255',
+            'room_type' => 'required|string|max:255',
+            'capacity' => 'required|integer|min:1',
+            'price_per_year' => 'required|numeric|min:0',
+            'gender' => 'nullable|in:male,female,any',
+            'status' => 'nullable|in:available,unavailable,maintenance,full',
+            'description' => 'nullable|string',
+            'floor' => 'nullable|integer|min:0',
+            'size_sqm' => 'nullable|numeric|min:0',
+            'window_type' => 'nullable|in:street,courtyard,garden,none',
+            'furnished' => 'nullable|boolean',
+            'private_bathroom' => 'nullable|boolean',
+        ]);
+
+        $hostel = Hostel::findOrFail($request->hostel_id);
+
+        if (!$this->getAgentHostelQuery($agent)->where('id', $hostel->id)->exists()) {
+            abort(403, 'Unauthorized access to this hostel.');
+        }
+
+        $exists = Room::where('hostel_id', $hostel->id)
+            ->where('number', $request->room_number)
+            ->exists();
+
+        if ($exists) {
+            return back()
+                ->withInput()
+                ->with('error', 'Room number already exists in this hostel.');
+        }
+
+        $room = Room::create([
+            'hostel_id' => $hostel->id,
+            'number' => $request->room_number,
+            'room_type' => $request->room_type,
+            'capacity' => $request->capacity,
+            'room_cost' => $request->price_per_year,
+            'gender' => $request->gender ?? 'any',
+            'status' => $request->status ?? 'available',
+            'description' => $request->description,
+            'floor' => $request->floor,
+            'size_sqm' => $request->size_sqm,
+            'window_type' => $request->window_type,
+            'furnished' => $request->boolean('furnished'),
+            'private_bathroom' => $request->boolean('private_bathroom'),
+        ]);
+
+        $agent->addCommission(
+            20.00,
+            'room_added',
+            "Commission for adding room {$room->number} in {$hostel->name}",
+            $room->id
+        );
+        $agent->increment('total_rooms_added');
+
+        return redirect()->route('agent.hostels.show', $hostel->uuid)
+            ->with('success', 'Room added successfully!');
+    }
+
     public function addRoom(Request $request, Hostel $hostel)
     {
         $request->validate([
