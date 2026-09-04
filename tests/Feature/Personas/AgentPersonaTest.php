@@ -1065,4 +1065,78 @@ class AgentPersonaTest extends TestCase
             'description' => "Pending referral bonus for recruiting agent AG-10",
         ]);
     }
+
+    public function test_admin_add_commission_validates_input_bounds(): void
+    {
+        $admin = User::create([
+            'name' => 'Admin User',
+            'email' => 'admin_comm'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '08000003333',
+            'role' => 'admin',
+            'email_verified_at' => now(),
+        ]);
+
+        $agentUser = User::create([
+            'name' => 'Agent Recipient',
+            'email' => 'agent_rec'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '080'.str_pad((string)random_int(0, 9999999), 7, '0', STR_PAD_LEFT),
+            'role' => 'hostel_agent',
+            'email_verified_at' => now(),
+        ]);
+
+        $agent = HostelAgent::create([
+            'user_id' => $agentUser->id,
+            'agent_code' => 'AG-COMM-TEST',
+            'phone' => $agentUser->phone,
+            'status' => 'active',
+            'total_commission' => 0,
+            'available_balance' => 0,
+        ]);
+
+        // Invalid payload: invalid type, negative amount, and overly long description
+        $invalidPayload = [
+            'amount' => -100,
+            'type' => 'invalid_type',
+            'description' => str_repeat('a', 1001),
+        ];
+
+        $this->actingAs($admin)
+            ->post(route('admin.agents.add-commission', ['id' => $agent->id]), $invalidPayload)
+            ->assertStatus(302)
+            ->assertSessionHasErrors(['amount', 'type', 'description']);
+
+        // Excessive amount payload
+        $excessivePayload = [
+            'amount' => 500000,
+            'type' => 'signup_bonus',
+            'description' => 'Bonus',
+        ];
+
+        $this->actingAs($admin)
+            ->post(route('admin.agents.add-commission', ['id' => $agent->id]), $excessivePayload)
+            ->assertStatus(302)
+            ->assertSessionHasErrors(['amount']);
+
+        // Valid payload succeeds
+        $validPayload = [
+            'amount' => 150.50,
+            'type' => 'signup_bonus',
+            'description' => 'Manual referral bonus award',
+        ];
+
+        $this->actingAs($admin)
+            ->post(route('admin.agents.add-commission', ['id' => $agent->id]), $validPayload)
+            ->assertOk()
+            ->assertJson(['success' => true]);
+
+        $this->assertEquals(150.50, (float) $agent->fresh()->available_balance);
+        $this->assertDatabaseHas('agent_commissions', [
+            'hostel_agent_id' => $agent->id,
+            'amount' => 150.50,
+            'type' => 'signup_bonus',
+            'description' => 'Manual referral bonus award',
+        ]);
+    }
 }
