@@ -1065,4 +1065,95 @@ class AgentPersonaTest extends TestCase
             'description' => "Pending referral bonus for recruiting agent AG-10",
         ]);
     }
+
+    /**
+     * Agent withdrawal request succeeds with sufficient balance and deducts balance atomically.
+     */
+    public function test_agent_request_withdrawal_succeeds_with_sufficient_balance(): void
+    {
+        $user = User::create([
+            'name' => 'Withdrawal Agent',
+            'email' => 'ag_with_succeed'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '080'.str_pad((string)random_int(0, 9999999), 7, '0', STR_PAD_LEFT),
+            'role' => 'hostel_agent',
+            'email_verified_at' => now(),
+        ]);
+
+        $agent = HostelAgent::create([
+            'user_id' => $user->id,
+            'agent_code' => 'AG-WITH-1',
+            'phone' => $user->phone,
+            'total_commission' => 200,
+            'available_balance' => 200,
+            'withdrawn_amount' => 0,
+            'status' => 'active',
+            'approved_at' => now(),
+        ]);
+
+        $payload = [
+            'amount' => 100.00,
+            'payment_method' => 'mobile_money',
+            'account_number' => '0241234567',
+            'account_name' => 'Withdrawal Agent',
+            'bank_name' => null,
+        ];
+
+        $this->actingAs($user)
+            ->post(route('agent.withdrawals.store'), $payload)
+            ->assertRedirect(route('agent.withdrawals'))
+            ->assertSessionHas('success');
+
+        $this->assertEquals(100.00, (float) $agent->fresh()->available_balance);
+        $this->assertDatabaseHas('agent_withdrawals', [
+            'hostel_agent_id' => $agent->id,
+            'amount' => 100.00,
+            'status' => 'pending',
+        ]);
+    }
+
+    /**
+     * Agent withdrawal request fails when requesting more than available balance.
+     */
+    public function test_agent_request_withdrawal_fails_with_insufficient_balance(): void
+    {
+        $user = User::create([
+            'name' => 'Withdrawal Agent 2',
+            'email' => 'ag_with_fail'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '080'.str_pad((string)random_int(0, 9999999), 7, '0', STR_PAD_LEFT),
+            'role' => 'hostel_agent',
+            'email_verified_at' => now(),
+        ]);
+
+        $agent = HostelAgent::create([
+            'user_id' => $user->id,
+            'agent_code' => 'AG-WITH-2',
+            'phone' => $user->phone,
+            'total_commission' => 60,
+            'available_balance' => 60,
+            'withdrawn_amount' => 0,
+            'status' => 'active',
+            'approved_at' => now(),
+        ]);
+
+        $payload = [
+            'amount' => 100.00, // exceeds available balance of 60
+            'payment_method' => 'mobile_money',
+            'account_number' => '0241234567',
+            'account_name' => 'Withdrawal Agent 2',
+            'bank_name' => null,
+        ];
+
+        $this->actingAs($user)
+            ->post(route('agent.withdrawals.store'), $payload)
+            ->assertStatus(302)
+            ->assertSessionHasErrors(['amount']);
+
+        $this->assertEquals(60.00, (float) $agent->fresh()->available_balance);
+        $this->assertDatabaseMissing('agent_withdrawals', [
+            'hostel_agent_id' => $agent->id,
+            'amount' => 100.00,
+        ]);
+    }
 }

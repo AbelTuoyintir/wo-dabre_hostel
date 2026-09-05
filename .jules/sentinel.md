@@ -62,3 +62,8 @@
 **Vulnerability:** `AgentRegisterController::register` immediately called `$referrer->addCommission(...)` upon public registration with a referral code. This immediately credited `50.00` GHS to the referrer's `available_balance` and `total_commission` before the newly registered agent was vetted or approved by an administrator, enabling automated balance inflation attacks.
 **Learning:** Awarding immediate financial credits on unapproved or unverified public registrations allows attackers to script dummy signups and drain funds via referral bonus systems.
 **Prevention:** Create referral commissions with a `pending` status upon public registration without mutating financial balances. Only credit and transition the commission to `paid` when an administrator explicitly approves the newly recruited agent application.
+
+## 2026-08-24 - Unprotected Agent Withdrawal Requests & Race Condition
+**Vulnerability:** `DashboardController::requestWithdrawal` validated available balance using `$agent->available_balance` prior to calling `$agent->withdraw(...)` without row locking or wrapping operations in a database transaction. Concurrent requests submitted simultaneously could bypass validation and result in negative available balances (double-payout vulnerability).
+**Learning:** Checking balances outside of a transaction context or row-level lock (`lockForUpdate()`) leaves stateful financial deductions exposed to race condition exploits under concurrent traffic.
+**Prevention:** Always perform balance verification and deduction inside a `DB::transaction` block with explicit row locking (`lockForUpdate()`) on the target financial record.
