@@ -1065,4 +1065,60 @@ class AgentPersonaTest extends TestCase
             'description' => "Pending referral bonus for recruiting agent AG-10",
         ]);
     }
+
+    /**
+     * Admin adding manual commission updates commission status to paid and credits agent balance.
+     */
+    public function test_admin_add_commission_sets_status_paid_and_credits_balance(): void
+    {
+        $admin = User::create([
+            'name' => 'Admin Commission Tester',
+            'email' => 'admin_comm'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '08000003333',
+            'role' => 'admin',
+            'email_verified_at' => now(),
+        ]);
+
+        $agentUser = User::create([
+            'name' => 'Commission Agent',
+            'email' => 'comm_agent'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '080'.str_pad((string)random_int(0, 9999999), 7, '0', STR_PAD_LEFT),
+            'role' => 'hostel_agent',
+            'email_verified_at' => now(),
+        ]);
+
+        $agent = HostelAgent::create([
+            'user_id' => $agentUser->id,
+            'agent_code' => 'AG-COMM-MANUAL',
+            'phone' => $agentUser->phone,
+            'total_commission' => 0,
+            'available_balance' => 0,
+            'status' => 'active',
+            'approved_at' => now(),
+        ]);
+
+        $payload = [
+            'amount' => 150.00,
+            'type' => 'signup_bonus',
+            'description' => 'Manual performance bonus awarded by admin',
+        ];
+
+        $this->actingAs($admin)
+            ->post(route('admin.agents.add-commission', ['id' => $agent->id]), $payload)
+            ->assertOk()
+            ->assertJson(['success' => true]);
+
+        $this->assertDatabaseHas('agent_commissions', [
+            'hostel_agent_id' => $agent->id,
+            'amount' => 150.00,
+            'type' => 'signup_bonus',
+            'status' => 'paid',
+            'description' => 'Manual performance bonus awarded by admin',
+        ]);
+
+        $this->assertEquals(150.00, (float) $agent->fresh()->available_balance);
+        $this->assertEquals(150.00, (float) $agent->fresh()->total_commission);
+    }
 }
