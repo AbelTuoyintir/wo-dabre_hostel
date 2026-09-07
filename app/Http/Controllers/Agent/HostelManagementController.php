@@ -124,6 +124,135 @@ $hostel->images()->create([
         return view('agent.hostels.show', compact('hostel'));
     }
 
+    public function createRoom(Hostel $hostel = null)
+    {
+        $agent = Auth::user()->agent;
+        $hostels = $this->getAgentHostelQuery($agent)->get();
+
+        $selectedHostelId = null;
+        if ($hostel && $hostel->exists) {
+            if (!$this->getAgentHostelQuery($agent)->where('id', $hostel->id)->exists()) {
+                abort(403, 'Unauthorized access to this hostel.');
+            }
+            $selectedHostelId = $hostel->id;
+        }
+
+        return view('agent.rooms.create', compact('hostels', 'selectedHostelId'));
+    }
+
+    public function storeRoom(Request $request)
+    {
+        $roomCostKey = $request->has('price_per_month') ? 'price_per_month' : ($request->has('room_cost') ? 'room_cost' : 'price_per_year');
+
+        $request->validate([
+            'hostel_id' => 'required|exists:hostels,id',
+            'number' => 'required_without:room_number|nullable|string|max:255',
+            'room_number' => 'required_without:number|nullable|string|max:255',
+            'room_type' => 'required|string|max:255',
+            'capacity' => 'required|integer|min:1',
+            $roomCostKey => 'required|numeric|min:0',
+            'floor' => 'nullable|integer|min:0',
+            'size_sqm' => 'nullable|numeric|min:0',
+            'gender' => 'nullable|string|in:any,male,female',
+            'window_type' => 'nullable|string|max:255',
+            'furnished' => 'sometimes|boolean',
+            'private_bathroom' => 'sometimes|boolean',
+            'status' => 'nullable|string|in:available,maintenance,unavailable,occupied',
+            'description' => 'nullable|string|max:1000',
+            'cover_image' => 'nullable|image|max:10240',
+            'gallery_images.*' => 'nullable|image|max:10240',
+            'room_video' => 'nullable|mimetypes:video/mp4,video/webm|max:51200'
+        ]);
+
+        $agent = Auth::user()->agent;
+
+        $hostel = Hostel::findOrFail($request->hostel_id);
+
+        if (!$this->getAgentHostelQuery($agent)->where('id', $hostel->id)->exists()) {
+            abort(403, 'Unauthorized access to this hostel.');
+        }
+
+        $roomNumber = $request->number ?? $request->room_number;
+
+        $exists = Room::where('hostel_id', $hostel->id)
+            ->where('number', $roomNumber)
+            ->exists();
+
+        if ($exists) {
+            return back()
+                ->withInput()
+                ->with('error', 'Room number already exists in this hostel.');
+        }
+
+        $cost = $request->input($roomCostKey);
+
+        $roomStatus = $request->status ?? ($request->has('is_available') ? 'available' : 'available');
+
+        $room = Room::create([
+            'hostel_id' => $hostel->id,
+            'number' => $roomNumber,
+            'floor' => $request->floor,
+            'room_type' => $request->room_type,
+            'capacity' => $request->capacity,
+            'room_cost' => $cost,
+            'size_sqm' => $request->size_sqm,
+            'gender' => $request->gender ?? 'any',
+            'window_type' => $request->window_type,
+            'furnished' => $request->has('furnished') ? (bool)$request->furnished : false,
+            'private_bathroom' => $request->has('private_bathroom') ? (bool)$request->private_bathroom : false,
+            'status' => $roomStatus,
+            'description' => $request->description,
+        ]);
+
+        if ($request->hasFile('cover_image')) {
+            $coverPath = $request->file('cover_image')->store('rooms/covers', 'public');
+            $room->images()->create([
+                'image_path' => $coverPath,
+                'media_kind' => 'image',
+                'is_primary' => true,
+                'order' => 0,
+                'type' => 'room'
+            ]);
+        }
+
+        if ($request->hasFile('gallery_images')) {
+            foreach ($request->file('gallery_images') as $file) {
+                if ($file->isValid()) {
+                    $path = $file->store('rooms/gallery', 'public');
+                    $room->images()->create([
+                        'image_path' => $path,
+                        'media_kind' => 'image',
+                        'is_primary' => false,
+                        'order' => 0,
+                        'type' => 'room'
+                    ]);
+                }
+            }
+        }
+
+        if ($request->hasFile('room_video')) {
+            $videoPath = $request->file('room_video')->store('rooms/videos', 'public');
+            $room->images()->create([
+                'image_path' => $videoPath,
+                'media_kind' => 'video',
+                'is_primary' => false,
+                'order' => 0,
+                'type' => 'room'
+            ]);
+        }
+
+        $agent->addCommission(
+            20.00,
+            'room_added',
+            "Commission for adding room {$room->number} in {$hostel->name}",
+            $room->id
+        );
+        $agent->increment('total_rooms_added');
+
+        return redirect()->route('agent.hostels.show', $hostel)
+            ->with('success', "Room {$room->number} created successfully!");
+    }
+
     private function getAgentHostelQuery($agent)
     {
         $query = Hostel::query();
