@@ -29,8 +29,11 @@ class PaymentController extends Controller
      */
     public function show(Payment $payment)
     {
-        $hasAccess = ($payment->user_id === auth()->id()) ||
-            ($payment->booking && $payment->booking->user_id === auth()->id());
+        // Security check: require authenticated user to prevent unauthenticated null-comparison bypass
+        $hasAccess = auth()->check() && (
+            ($payment->user_id === auth()->id()) ||
+            ($payment->booking && $payment->booking->user_id === auth()->id())
+        );
 
         if (!$hasAccess) {
             abort(403);
