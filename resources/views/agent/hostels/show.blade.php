@@ -17,6 +17,12 @@
                 </svg>
                 Back
             </a>
+            <a href="{{ route('agent.hostels.rooms.create', $hostel->uuid) }}" class="inline-flex items-center px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium rounded-lg transition-colors duration-200">
+                <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Add Room
+            </a>
             <a href="{{ route('agent.hostels.edit', $hostel->id) }}" class="inline-flex items-center px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg transition-colors duration-200">
                 <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
@@ -390,14 +396,14 @@
                     @forelse($hostel->rooms as $room)
                         <tr class="hover:bg-gray-50 transition-colors duration-150">
                             <td class="px-4 py-3 text-xs text-gray-500">{{ $loop->iteration }}</td>
-                            <td class="px-4 py-3 text-xs text-gray-900 font-medium">{{ $room->room_number }}</td>
+                            <td class="px-4 py-3 text-xs text-gray-900 font-medium">{{ $room->number }}</td>
                             <td class="px-4 py-3 text-xs text-gray-600">{{ ucfirst($room->room_type) }}</td>
                             <td class="px-4 py-3 text-xs text-gray-600">{{ $room->capacity }}</td>
-                            <td class="px-4 py-3 text-xs text-gray-600">${{ number_format($room->price_per_year, 2) }}</td>
+                            <td class="px-4 py-3 text-xs text-gray-600">GHS {{ number_format($room->room_cost, 2) }}</td>
                             <td class="px-4 py-3">
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                    {{ $room->is_available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                    {{ $room->is_available ? 'Available' : 'Occupied' }}
+                                    {{ ($room->status === 'available' || $room->is_available) ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                    {{ ($room->status === 'available' || $room->is_available) ? 'Available' : 'Unavailable' }}
                                 </span>
                             </td>
                             <td class="px-4 py-3 text-right">
