@@ -71,4 +71,26 @@ class AdminSecurityTest extends TestCase
 
         $this->assertEquals(0, $otherUser->fresh()->is_active);
     }
+
+    public function test_admin_cannot_delete_own_account_via_profile_destroy(): void
+    {
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'is_active' => true,
+            'password' => bcrypt('password'),
+            'gender' => 'male',
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->delete(route('profile.destroy'), [
+                'password' => 'password',
+            ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('error', 'You cannot delete an administrative account directly.');
+
+        $this->assertDatabaseHas('users', [
+            'id' => $admin->id,
+        ]);
+    }
 }

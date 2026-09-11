@@ -48,6 +48,11 @@ class ProfileController extends Controller
 
         $user = $request->user();
 
+        // Security check: Prevent administrators from deleting their own administrative account
+        if ($user->role === 'admin') {
+            return Redirect::back()->with('error', 'You cannot delete an administrative account directly.');
+        }
+
         Auth::logout();
 
         $user->delete();
