@@ -58,6 +58,10 @@ Route::prefix('agent')->name('agent.')->middleware(['auth', 'hostel.agent'])->gr
         // Single source of truth: use resource routes so named routes like agent.hostels.index exist.
         Route::resource('hostels', HostelManagementController::class);
 
+        // Room Management
+        Route::get('/rooms/create', [HostelManagementController::class, 'createRoom'])->name('rooms.create');
+        Route::get('/hostels/{hostel}/rooms/create', [HostelManagementController::class, 'createRoom'])->name('hostels.rooms.create');
+        Route::post('/rooms', [HostelManagementController::class, 'storeRoom'])->name('rooms.store');
         Route::post('/hostels/{hostel}/rooms', [HostelManagementController::class, 'addRoom'])->name('hostels.add-room');
         Route::delete('/hostels/{hostel}/rooms/{room}', [HostelManagementController::class, 'deleteRoom'])->name('hostels.delete-room');
 

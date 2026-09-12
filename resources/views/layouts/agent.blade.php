@@ -202,9 +202,14 @@
                         <span>My Hostels</span>
                     </a>
                     
-                    <a href="{{ route('agent.hostels.create') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all hover:bg-white/10">
+                    <a href="{{ route('agent.hostels.create') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all hover:bg-white/10 {{ request()->routeIs('agent.hostels.create') ? 'bg-white/20' : '' }}">
                         <i class="fas fa-plus-circle w-5"></i>
                         <span>Add Hostel</span>
+                    </a>
+
+                    <a href="{{ route('agent.rooms.create') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all hover:bg-white/10 {{ request()->routeIs('agent.rooms.*') ? 'bg-white/20' : '' }}">
+                        <i class="fas fa-bed w-5"></i>
+                        <span>Add Room</span>
                     </a>
                     
                     <hr class="border-white/20 my-2">
