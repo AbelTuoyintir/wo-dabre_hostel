@@ -907,6 +907,40 @@ public function viewHostel(Hostel $hostel)
     }
 
     /**
+     * Update an existing complaint with IDOR and state protection.
+     */
+    public function updateComplaint(Request $request, Complaint $complaint)
+    {
+        // Security check: IDOR protection - ensure student owns this complaint
+        if ($complaint->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        // Security check: State tampering protection - only allow updating pending or in_progress complaints
+        if (!in_array($complaint->status, ['pending', 'in_progress'])) {
+            return redirect()->route('student.complaints')
+                ->with('error', 'Cannot update complaint once resolved or processed.');
+        }
+
+        $validated = $request->validate([
+            'subject' => 'required|string|max:255',
+            'category' => 'required|string|in:maintenance,payment,behavior,other',
+            'priority' => 'nullable|in:low,medium,high,urgent',
+            'description' => 'required|string|min:20|max:2000',
+        ]);
+
+        $complaint->update([
+            'title' => $validated['subject'],
+            'category' => $validated['category'],
+            'priority' => $validated['priority'] ?? 'medium',
+            'description' => $validated['description'],
+        ]);
+
+        return redirect()->route('student.complaints')
+            ->with('success', 'Your complaint has been updated successfully.');
+    }
+
+    /**
      * List user's payments (amounts in GHS)
      */
     public function payments(Request $request)
