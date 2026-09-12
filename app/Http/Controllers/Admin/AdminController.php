@@ -381,19 +381,31 @@ class AdminController extends Controller
         $logFile = storage_path('logs/laravel.log');
         $lines = [];
 
-        if (file_exists($logFile)) {
-            $content = file_get_contents($logFile);
-            // Get last ~1000 lines to keep memory small
-            $allLines = preg_split("/\r\n|\n|\r/", $content);
-            $tail = array_slice($allLines, -1000);
+        if (file_exists($logFile) && is_readable($logFile)) {
+            $fileSize = filesize($logFile);
+            $maxRead = 512 * 1024; // Read at most the last 512KB to avoid memory exhaustion DoS
+            $fp = fopen($logFile, 'rb');
 
-            foreach ($tail as $line) {
-                if (stripos($line, 'Image proxy') !== false || stripos($line, '[image.php]') !== false) {
-                    $lines[] = $line;
+            if ($fp) {
+                if ($fileSize > $maxRead) {
+                    fseek($fp, -$maxRead, SEEK_END);
+                }
+
+                $content = stream_get_contents($fp);
+                fclose($fp);
+
+                if ($content !== false) {
+                    $allLines = preg_split("/\r\n|\n|\r/", $content);
+                    $tail = array_slice($allLines, -1000);
+
+                    foreach ($tail as $line) {
+                        if (stripos($line, 'Image proxy') !== false || stripos($line, '[image.php]') !== false) {
+                            $lines[] = $line;
+                        }
+                    }
+                    $lines = array_reverse($lines);
                 }
             }
-            // Reverse to show newest first
-            $lines = array_reverse($lines);
         }
 
         return view('admin.image-proxy-logs', compact('lines'));
