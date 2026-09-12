@@ -151,13 +151,13 @@
                     <div class="flex justify-between items-center py-1.5 border-b border-gray-100">
                         <span class="text-xs text-gray-600">Available Rooms</span>
                         <span class="inline-flex items-center justify-center px-2.5 py-0.5 bg-green-100 text-green-800 text-xs font-medium rounded-full">
-                            {{ $hostel->rooms->where('is_available', true)->count() }}
+                            {{ $hostel->rooms->where('status', 'available')->count() }}
                         </span>
                     </div>
                     <div class="flex justify-between items-center py-1.5">
                         <span class="text-xs text-gray-600">Occupied Rooms</span>
                         <span class="inline-flex items-center justify-center px-2.5 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">
-                            {{ $hostel->rooms->where('is_available', false)->count() }}
+                            {{ $hostel->rooms->where('status', '!=', 'available')->count() }}
                         </span>
                     </div>
                 </div>
@@ -390,14 +390,14 @@
                     @forelse($hostel->rooms as $room)
                         <tr class="hover:bg-gray-50 transition-colors duration-150">
                             <td class="px-4 py-3 text-xs text-gray-500">{{ $loop->iteration }}</td>
-                            <td class="px-4 py-3 text-xs text-gray-900 font-medium">{{ $room->room_number }}</td>
+                            <td class="px-4 py-3 text-xs text-gray-900 font-medium">{{ $room->number }}</td>
                             <td class="px-4 py-3 text-xs text-gray-600">{{ ucfirst($room->room_type) }}</td>
                             <td class="px-4 py-3 text-xs text-gray-600">{{ $room->capacity }}</td>
-                            <td class="px-4 py-3 text-xs text-gray-600">${{ number_format($room->price_per_year, 2) }}</td>
+                            <td class="px-4 py-3 text-xs text-gray-600">${{ number_format($room->price_per_year ?? $room->room_cost, 2) }}</td>
                             <td class="px-4 py-3">
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                    {{ $room->is_available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                    {{ $room->is_available ? 'Available' : 'Occupied' }}
+                                    {{ $room->status === 'available' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                    {{ $room->status === 'available' ? 'Available' : 'Occupied' }}
                                 </span>
                             </td>
                             <td class="px-4 py-3 text-right">
