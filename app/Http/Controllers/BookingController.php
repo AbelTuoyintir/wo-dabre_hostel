@@ -984,19 +984,22 @@ class BookingController extends Controller
     }
 
     /**
-     * Check room availability
+     * Check room availability for date range to prevent double-booking.
      */
     private function checkRoomAvailability($roomId, $checkIn, $checkOut)
     {
+        $checkInDate = Carbon::parse($checkIn)->startOfDay();
+        $checkOutDate = Carbon::parse($checkOut)->startOfDay();
+
         return Booking::where('room_id', $roomId)
-            ->where('booking_status', 'confirmed')
-            ->where(function ($query) use ($checkIn, $checkOut) {
-                $query->whereBetween('check_in_date', [$checkIn, $checkOut])
-                    ->orWhereBetween('check_out_date', [$checkIn, $checkOut])
-                    ->orWhere(function ($q) use ($checkIn, $checkOut) {
-                        $q->where('check_in_date', '<=', $checkIn)
-                            ->where('check_out_date', '>=', $checkOut);
-                    });
+            ->where(function ($query) {
+                $query->whereIn('booking_status', ['confirmed', 'checked_in', 'pending'])
+                    ->orWhereIn('status', ['confirmed', 'checked_in', 'pending']);
+            })
+            ->where(function ($query) use ($checkInDate, $checkOutDate) {
+                // Two date intervals overlap if and only if check_in < requested_check_out AND check_out > requested_check_in
+                $query->where('check_in_date', '<', $checkOutDate)
+                    ->where('check_out_date', '>', $checkInDate);
             })
             ->doesntExist();
     }
