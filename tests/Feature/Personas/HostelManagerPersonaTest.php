@@ -182,4 +182,112 @@ class HostelManagerPersonaTest extends TestCase
             ->get(route('hostel-manager.complaints'))
             ->assertOk();
     }
+
+    public function test_export_occupants_prevents_cross_tenant_booking_data_leak(): void
+    {
+        $manager1 = User::create([
+            'name' => 'Manager One',
+            'email' => 'm1_'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'role' => 'hostel_manager',
+            'email_verified_at' => now(),
+        ]);
+
+        $manager2 = User::create([
+            'name' => 'Manager Two',
+            'email' => 'm2_'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'role' => 'hostel_manager',
+            'email_verified_at' => now(),
+        ]);
+
+        $hostelAlpha = Hostel::create([
+            'name' => 'Alpha Hostel',
+            'location' => 'amamoma',
+            'address' => '123 Alpha St',
+            'email' => 'alpha@example.com',
+            'manager_id' => $manager1->id,
+        ]);
+
+        $hostelBeta = Hostel::create([
+            'name' => 'Beta Hostel',
+            'location' => 'amamoma',
+            'address' => '456 Beta St',
+            'email' => 'beta@example.com',
+            'manager_id' => $manager2->id,
+        ]);
+
+        $roomAlpha = Room::create([
+            'number' => '101',
+            'capacity' => 2,
+            'hostel_id' => $hostelAlpha->id,
+            'gender' => 'any',
+            'status' => 'available',
+            'room_type' => 'single_room',
+            'room_cost' => 200.00,
+            'current_occupancy' => 1,
+        ]);
+
+        $roomBeta = Room::create([
+            'number' => '999',
+            'capacity' => 2,
+            'hostel_id' => $hostelBeta->id,
+            'gender' => 'any',
+            'status' => 'available',
+            'room_type' => 'single_room',
+            'room_cost' => 250.00,
+            'current_occupancy' => 1,
+        ]);
+
+        $student = User::create([
+            'name' => 'Multi Hostel Student',
+            'email' => 'multistudent_'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'role' => 'student',
+            'email_verified_at' => now(),
+        ]);
+
+        // Student's earlier booking in Manager 2's hostel (Beta Hostel)
+        \App\Models\Booking::create([
+            'user_id' => $student->id,
+            'hostel_id' => $hostelBeta->id,
+            'room_id' => $roomBeta->id,
+            'check_in_date' => now()->subYear()->toDateString(),
+            'check_out_date' => now()->subYear()->addDays(30)->toDateString(),
+            'total_amount' => 250.00,
+            'booking_status' => 'confirmed',
+            'payment_status' => 'paid',
+            'booking_number' => 'BKREF_BETA_' . uniqid(),
+            'created_at' => now()->subYear(),
+        ]);
+
+        // Student's active booking in Manager 1's hostel (Alpha Hostel)
+        \App\Models\Booking::create([
+            'user_id' => $student->id,
+            'hostel_id' => $hostelAlpha->id,
+            'room_id' => $roomAlpha->id,
+            'check_in_date' => now()->toDateString(),
+            'check_out_date' => now()->addDays(30)->toDateString(),
+            'total_amount' => 200.00,
+            'booking_status' => 'confirmed',
+            'payment_status' => 'paid',
+            'booking_number' => 'BKREF_ALPHA_' . uniqid(),
+            'created_at' => now(),
+        ]);
+
+        // Manager 1 exports occupants
+        $response = $this->actingAs($manager1)
+            ->get(route('hostel-manager.occupants.export', ['format' => 'csv']));
+
+        $response->assertOk();
+        $content = $response->streamedContent();
+
+        // Verify CSV output contains Manager 1's hostel and room details
+        $this->assertStringContainsString('Alpha Hostel', $content);
+        $this->assertStringContainsString('101', $content);
+
+        // Verify CSV output DOES NOT leak Manager 2's hostel name or room number
+        $this->assertStringNotContainsString('Beta Hostel', $content);
+        $this->assertStringNotContainsString('999', $content);
+    }
 }
