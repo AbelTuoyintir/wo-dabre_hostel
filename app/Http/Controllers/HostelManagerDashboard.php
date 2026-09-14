@@ -722,20 +722,26 @@ class HostelManagerDashboard extends Controller
                 'Content-Disposition' => 'attachment; filename="occupants.csv"',
             ];
 
-            $callback = function() use ($occupants) {
+            $callback = function() use ($occupants, $hostelIds) {
                 $file = fopen('php://output', 'w');
                 fputcsv($file, ['Name', 'Email', 'Student ID', 'Gender', 'Phone', 'Room', 'Hostel']);
 
                 foreach ($occupants as $occupant) {
-                    $booking = $occupant->bookings()->first();
+                    // Security check: Scope booking retrieval strictly to hostels managed by this manager to prevent cross-tenant data leaks
+                    $booking = $occupant->bookings()
+                        ->whereIn('hostel_id', $hostelIds)
+                        ->whereIn('booking_status', ['confirmed', 'pending'])
+                        ->with(['room', 'hostel'])
+                        ->first();
+
                     fputcsv($file, [
                         $occupant->name,
                         $occupant->email,
                         $occupant->student_id ?? 'N/A',
-                        ucfirst($occupant->gender),
+                        ucfirst($occupant->gender ?? 'N/A'),
                         $occupant->phone ?? 'N/A',
-                        $booking->room->number ?? 'N/A',
-                        $booking->hostel->name ?? 'N/A',
+                        $booking?->room?->number ?? 'N/A',
+                        $booking?->hostel?->name ?? 'N/A',
                     ]);
                 }
 
