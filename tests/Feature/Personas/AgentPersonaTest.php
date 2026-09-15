@@ -1229,4 +1229,114 @@ class AgentPersonaTest extends TestCase
         $this->assertEquals(1, $agent->fresh()->total_rooms_added);
         $this->assertEquals(20.00, (float) $agent->fresh()->available_balance);
     }
+
+    /**
+     * Admin can manually add commission to agent with valid payload.
+     */
+    public function test_admin_can_manually_add_commission_to_agent(): void
+    {
+        $admin = User::create([
+            'name' => 'Admin User Comm',
+            'email' => 'admin_comm'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '08000003333',
+            'role' => 'admin',
+            'email_verified_at' => now(),
+        ]);
+
+        $agentUser = User::create([
+            'name' => 'Agent Recipient',
+            'email' => 'agent_rec'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '080'.str_pad((string)random_int(0, 9999999), 7, '0', STR_PAD_LEFT),
+            'role' => 'hostel_agent',
+            'email_verified_at' => now(),
+        ]);
+
+        $agent = HostelAgent::create([
+            'user_id' => $agentUser->id,
+            'agent_code' => 'AG-COMM-MAN',
+            'phone' => $agentUser->phone,
+            'total_commission' => 0,
+            'available_balance' => 0,
+            'status' => 'active',
+            'approved_at' => now(),
+        ]);
+
+        $payload = [
+            'amount' => 150.50,
+            'type' => 'signup_bonus',
+            'description' => 'Manual bonus for excellent performance',
+        ];
+
+        $this->actingAs($admin)
+            ->post(route('admin.agents.add-commission', ['id' => $agent->id]), $payload)
+            ->assertOk()
+            ->assertJson(['success' => true]);
+
+        $this->assertEquals(150.50, (float) $agent->fresh()->available_balance);
+        $this->assertEquals(150.50, (float) $agent->fresh()->total_commission);
+
+        $this->assertDatabaseHas('agent_commissions', [
+            'hostel_agent_id' => $agent->id,
+            'amount' => 150.50,
+            'type' => 'signup_bonus',
+            'status' => 'paid',
+            'description' => 'Manual bonus for excellent performance',
+        ]);
+    }
+
+    /**
+     * Admin adding commission validates amount bounds and ENUM type constraints.
+     */
+    public function test_admin_add_commission_validates_payload_and_enum_types(): void
+    {
+        $admin = User::create([
+            'name' => 'Admin User Comm Val',
+            'email' => 'admin_comm_val'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '08000004444',
+            'role' => 'admin',
+            'email_verified_at' => now(),
+        ]);
+
+        $agentUser = User::create([
+            'name' => 'Agent Recipient Val',
+            'email' => 'agent_rec_val'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '080'.str_pad((string)random_int(0, 9999999), 7, '0', STR_PAD_LEFT),
+            'role' => 'hostel_agent',
+            'email_verified_at' => now(),
+        ]);
+
+        $agent = HostelAgent::create([
+            'user_id' => $agentUser->id,
+            'agent_code' => 'AG-COMM-VAL',
+            'phone' => $agentUser->phone,
+            'total_commission' => 0,
+            'available_balance' => 0,
+            'status' => 'active',
+            'approved_at' => now(),
+        ]);
+
+        // Invalid type (e.g. 'bonus' or 'adjustment' not in database ENUM)
+        $this->actingAs($admin)
+            ->postJson(route('admin.agents.add-commission', ['id' => $agent->id]), [
+                'amount' => 50,
+                'type' => 'invalid_enum_type',
+                'description' => 'Test description',
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['type']);
+
+        // Invalid negative amount
+        $this->actingAs($admin)
+            ->postJson(route('admin.agents.add-commission', ['id' => $agent->id]), [
+                'amount' => -10,
+                'type' => 'booking_commission',
+                'description' => 'Negative test',
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['amount']);
+    }
 }

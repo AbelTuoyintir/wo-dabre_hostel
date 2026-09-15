@@ -336,9 +336,9 @@ class AgentManagementController extends Controller
     public function addCommission(Request $request, $id)
     {
         $request->validate([
-            'amount' => 'required|numeric|min:1',
-            'type' => 'required|in:bonus,adjustment,referral',
-            'description' => 'required|string'
+            'amount' => 'required|numeric|min:0.01|max:100000',
+            'type' => 'required|in:signup_bonus,hostel_added,room_added,booking_commission',
+            'description' => 'required|string|max:1000'
         ]);
 
         $agent = HostelAgent::findOrFail($id);
@@ -349,10 +349,16 @@ class AgentManagementController extends Controller
             $request->description
         );
 
+        // Update status to 'paid' as funds are credited immediately to agent balance
+        $commission->update([
+            'status' => 'paid',
+            'paid_at' => now(),
+        ]);
+
         return response()->json([
             'success' => true,
             'message' => 'Commission added successfully',
-            'commission' => $commission
+            'commission' => $commission->fresh()
         ]);
     }
 
