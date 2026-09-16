@@ -182,4 +182,64 @@ class HostelManagerPersonaTest extends TestCase
             ->get(route('hostel-manager.complaints'))
             ->assertOk();
     }
+
+    public function test_hostel_manager_cannot_delete_room_with_active_bookings(): void
+    {
+        $manager = User::create([
+            'name' => 'Room Deletion Manager',
+            'email' => 'rdm_'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '08011122277',
+            'role' => 'hostel_manager',
+            'email_verified_at' => now(),
+        ]);
+
+        $hostel = Hostel::create([
+            'name' => 'Deletion Test Hostel',
+            'location' => 'amamoma',
+            'address' => '456 Deletion St',
+            'email' => 'deletionhostel@example.com',
+            'manager_id' => $manager->id,
+        ]);
+
+        $student = User::create([
+            'name' => 'Active Booking Student',
+            'email' => 'abs_'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '08011122266',
+            'role' => 'student',
+            'email_verified_at' => now(),
+        ]);
+
+        $room = Room::create([
+            'number' => '505',
+            'capacity' => 2,
+            'hostel_id' => $hostel->id,
+            'gender' => 'any',
+            'status' => 'available',
+            'room_type' => 'single_room',
+            'room_cost' => 250.00,
+            'current_occupancy' => 1,
+        ]);
+
+        \App\Models\Booking::create([
+            'user_id' => $student->id,
+            'hostel_id' => $hostel->id,
+            'room_id' => $room->id,
+            'check_in_date' => now()->toDateString(),
+            'check_out_date' => now()->addDays(30)->toDateString(),
+            'total_amount' => 250.00,
+            'booking_status' => 'pending',
+            'payment_status' => 'pending',
+            'booking_number' => 'BKREF' . uniqid(),
+        ]);
+
+        // Attempt to delete room with pending booking should be blocked and redirected back with error
+        $response = $this->actingAs($manager)
+            ->delete(route('hostel-manager.rooms.destroy', ['room' => $room->uuid]));
+
+        $response->assertRedirect();
+        $response->assertSessionHas('error', 'Cannot delete a room with active bookings.');
+        $this->assertDatabaseHas('rooms', ['id' => $room->id]);
+    }
 }
