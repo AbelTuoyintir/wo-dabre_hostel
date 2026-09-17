@@ -416,31 +416,50 @@ class AdminController extends Controller
      */
     public function reports(): View
     {
+        $driver = DB::getDriverName();
+
         // Revenue by month (last 12 months)
-        $revenueByMonth = DB::table('bookings')
-            ->selectRaw('YEAR(created_at) as year, MONTH(created_at) as month, SUM(total_amount) as revenue')
-            ->where('payment_status', 'paid')
-            ->where('created_at', '>=', Carbon::now()->subMonths(12))
-            ->groupByRaw('YEAR(created_at), MONTH(created_at)')
-            ->orderBy('year', 'desc')
-            ->orderBy('month', 'desc')
-            ->get();
+        if ($driver === 'sqlite') {
+            $revenueByMonth = DB::table('bookings')
+                ->selectRaw("CAST(strftime('%Y', created_at) AS INTEGER) as year, CAST(strftime('%m', created_at) AS INTEGER) as month, SUM(total_amount) as revenue")
+                ->where('payment_status', 'paid')
+                ->where('created_at', '>=', Carbon::now()->subMonths(12))
+                ->groupByRaw("strftime('%Y', created_at), strftime('%m', created_at)")
+                ->orderBy('year', 'desc')
+                ->orderBy('month', 'desc')
+                ->get();
+
+            $userRegistrations = DB::table('users')
+                ->selectRaw("DATE(created_at) as date, COUNT(*) as count")
+                ->where('created_at', '>=', Carbon::now()->subDays(30))
+                ->groupByRaw("DATE(created_at)")
+                ->orderBy('date', 'desc')
+                ->get();
+        } else {
+            $revenueByMonth = DB::table('bookings')
+                ->selectRaw('YEAR(created_at) as year, MONTH(created_at) as month, SUM(total_amount) as revenue')
+                ->where('payment_status', 'paid')
+                ->where('created_at', '>=', Carbon::now()->subMonths(12))
+                ->groupByRaw('YEAR(created_at), MONTH(created_at)')
+                ->orderBy('year', 'desc')
+                ->orderBy('month', 'desc')
+                ->get();
+
+            $userRegistrations = DB::table('users')
+                ->selectRaw('DATE(created_at) as date, COUNT(*) as count')
+                ->where('created_at', '>=', Carbon::now()->subDays(30))
+                ->groupBy('date')
+                ->orderBy('date', 'desc')
+                ->get();
+        }
 
         // Top 10 hostels by bookings
         $bookingsByHostel = DB::table('bookings')
             ->join('hostels', 'bookings.hostel_id', '=', 'hostels.id')
-->selectRaw('hostels.id, hostels.name, COUNT(bookings.id) as bookings_count')
+            ->selectRaw('hostels.id, hostels.name, COUNT(bookings.id) as bookings_count')
             ->groupBy('hostels.id', 'hostels.name')
             ->orderBy('bookings_count', 'desc')
             ->limit(10)
-            ->get();
-
-        // User registrations (last 30 days)
-        $userRegistrations = DB::table('users')
-            ->selectRaw('DATE(created_at) as date, COUNT(*) as count')
-            ->where('created_at', '>=', Carbon::now()->subDays(30))
-            ->groupBy('date')
-            ->orderBy('date', 'desc')
             ->get();
 
         return view('admin.report', compact('revenueByMonth', 'bookingsByHostel', 'userRegistrations'));
