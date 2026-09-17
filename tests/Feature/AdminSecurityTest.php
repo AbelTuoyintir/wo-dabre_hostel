@@ -93,4 +93,35 @@ class AdminSecurityTest extends TestCase
             'id' => $admin->id,
         ]);
     }
+
+    public function test_admin_can_access_reports(): void
+    {
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'is_active' => true,
+            'gender' => 'male',
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->get(route('admin.reports.index'));
+
+        $response->assertOk();
+        $response->assertViewIs('admin.report');
+        $response->assertViewHasAll(['revenueByMonth', 'bookingsByHostel', 'userRegistrations']);
+    }
+
+    public function test_non_admin_cannot_access_reports(): void
+    {
+        $student = User::factory()->create([
+            'role' => 'student',
+            'is_active' => true,
+            'gender' => 'female',
+        ]);
+
+        $response = $this->actingAs($student)
+            ->get(route('admin.reports.index'));
+
+        $response->assertRedirect(route('student.dashboard'));
+        $response->assertSessionHas('error', 'Admin access only. You are a Student.');
+    }
 }
