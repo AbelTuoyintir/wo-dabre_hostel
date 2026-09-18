@@ -464,6 +464,16 @@ class HostelManagerDashboard extends Controller
             'private_bathroom' => 'boolean',
         ]);
 
+        // Check for duplicate room number in the same hostel
+        $exists = Room::where('hostel_id', $room->hostel_id)
+            ->where('number', $validated['number'])
+            ->where('id', '!=', $room->id)
+            ->exists();
+
+        if ($exists) {
+            return back()->withInput()->withErrors(['number' => 'Room number already exists in this hostel.']);
+        }
+
         $room->update($validated);
 
         return redirect()->route('hostel-manager.rooms')
