@@ -182,4 +182,62 @@ class HostelManagerPersonaTest extends TestCase
             ->get(route('hostel-manager.complaints'))
             ->assertOk();
     }
+
+    public function test_hostel_manager_cannot_update_room_to_duplicate_room_number_in_same_hostel(): void
+    {
+        $manager = User::create([
+            'name' => 'Manager Dup Check',
+            'email' => 'mgr_dup@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '08011122290',
+            'role' => 'hostel_manager',
+            'email_verified_at' => now(),
+        ]);
+
+        $hostel = Hostel::create([
+            'name' => 'Managed Hostel Dup Test',
+            'location' => 'amamoma',
+            'address' => '123 Dup St',
+            'email' => 'duphostel@example.com',
+            'manager_id' => $manager->id,
+        ]);
+
+        $roomOne = Room::create([
+            'number' => '101',
+            'capacity' => 2,
+            'hostel_id' => $hostel->id,
+            'gender' => 'any',
+            'status' => 'available',
+            'room_type' => 'single_room',
+            'room_cost' => 150.00,
+            'current_occupancy' => 0,
+        ]);
+
+        $roomTwo = Room::create([
+            'number' => '102',
+            'capacity' => 2,
+            'hostel_id' => $hostel->id,
+            'gender' => 'any',
+            'status' => 'available',
+            'room_type' => 'single_room',
+            'room_cost' => 180.00,
+            'current_occupancy' => 0,
+        ]);
+
+        $payload = [
+            'number' => '101', // Attempting to rename room 102 to 101 which already exists
+            'room_type' => 'single_room',
+            'capacity' => 2,
+            'price_per_semester' => 180.00,
+            'gender' => 'any',
+            'status' => 'available',
+        ];
+
+        $this->actingAs($manager)
+            ->put(route('hostel-manager.rooms.update', ['room' => $roomTwo->uuid]), $payload)
+            ->assertRedirect()
+            ->assertSessionHasErrors(['number']);
+
+        $this->assertEquals('102', $roomTwo->fresh()->number);
+    }
 }
