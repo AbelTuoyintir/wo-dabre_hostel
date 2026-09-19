@@ -17,6 +17,12 @@
                 </svg>
                 Back
             </a>
+            <a href="{{ route('agent.hostels.rooms.create', $hostel->uuid ?? $hostel->id) }}" class="inline-flex items-center px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium rounded-lg transition-colors duration-200">
+                <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Add Room Page
+            </a>
             <a href="{{ route('agent.hostels.edit', $hostel->id) }}" class="inline-flex items-center px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg transition-colors duration-200">
                 <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
@@ -190,6 +196,14 @@
                                 <select class="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('room_type') border-red-500 @enderror" 
                                         id="room_type" name="room_type" required>
                                     <option value="">Select Room Type</option>
+                                    <!-- Standard Room Types -->
+                                    <optgroup label="Standard Types">
+                                        <option value="single_room" {{ old('room_type') == 'single_room' ? 'selected' : '' }}>Single Room (Standard)</option>
+                                        <option value="shared_2" {{ old('room_type') == 'shared_2' ? 'selected' : '' }}>Two in a Room (Shared 2)</option>
+                                        <option value="shared_4" {{ old('room_type') == 'shared_4' ? 'selected' : '' }}>Four in a Room (Shared 4)</option>
+                                        <option value="executive" {{ old('room_type') == 'executive' ? 'selected' : '' }}>Executive Suite</option>
+                                    </optgroup>
+
                                     <!-- Single Rooms -->
                                     <optgroup label="Single Rooms">
                                         <option value="single_self_contained" {{ old('room_type') == 'single_self_contained' ? 'selected' : '' }}>Single Room - Self Contained</option>
