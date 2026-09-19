@@ -280,7 +280,7 @@ $hostel->images()->create([
         );
         $agent->increment('total_rooms_added');
 
-        return redirect()->route('agent.hostels.show', $hostel->uuid)
+        return redirect()->route('agent.hostels.show', $hostel->uuid ?? $hostel->id)
             ->with('success', 'Room added successfully!');
     }
 
@@ -311,7 +311,7 @@ $hostel->images()->create([
 
         $agent->decrement('total_rooms_added');
 
-        return redirect()->route('agent.hostels.show', $hostel->uuid)
+        return redirect()->route('agent.hostels.show', $hostel->uuid ?? $hostel->id)
             ->with('success', 'Room deleted successfully!');
     }
 }
