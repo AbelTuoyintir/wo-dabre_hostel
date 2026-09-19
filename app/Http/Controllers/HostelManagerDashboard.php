@@ -620,8 +620,8 @@ class HostelManagerDashboard extends Controller
                 $authUser = Auth::user();
                 $hostelIds = $authUser->managedHostels()->pluck('hostels.id');
 
-                // Verify the occupant has bookings in managed hostels
-                if (!$user->bookings()->whereIn('hostel_id', $hostelIds)->exists()) {
+                // Verify the occupant has non-cancelled bookings in managed hostels
+                if (!$user->bookings()->whereIn('hostel_id', $hostelIds)->whereIn('booking_status', ['confirmed', 'pending', 'checked_in', 'checked_out'])->exists()) {
                     abort(403);
                 }
 
@@ -640,7 +640,7 @@ class HostelManagerDashboard extends Controller
                 $manager = Auth::user();
                 $hostelIds = $manager->managedHostels()->pluck('hostels.id');
 
-                if (!$user->bookings()->whereIn('hostel_id', $hostelIds)->exists()) {
+                if (!$user->bookings()->whereIn('hostel_id', $hostelIds)->whereIn('booking_status', ['confirmed', 'pending', 'checked_in', 'checked_out'])->exists()) {
                     abort(403);
                 }
 
