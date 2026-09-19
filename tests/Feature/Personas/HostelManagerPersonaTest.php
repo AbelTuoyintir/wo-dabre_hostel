@@ -182,4 +182,69 @@ class HostelManagerPersonaTest extends TestCase
             ->get(route('hostel-manager.complaints'))
             ->assertOk();
     }
+
+    public function test_hostel_manager_cannot_access_or_contact_occupant_with_only_cancelled_bookings(): void
+    {
+        $manager = User::create([
+            'name' => 'Manager Beta',
+            'email' => 'mgr_beta_'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '08011122291',
+            'role' => 'hostel_manager',
+            'email_verified_at' => now(),
+        ]);
+
+        $hostel = Hostel::create([
+            'name' => 'Managed Hostel Beta',
+            'location' => 'amamoma',
+            'address' => '456 Beta St',
+            'email' => 'beta@example.com',
+            'manager_id' => $manager->id,
+        ]);
+
+        $student = User::create([
+            'name' => 'Cancelled Student',
+            'email' => 'cancelled_'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '08011122292',
+            'role' => 'student',
+            'email_verified_at' => now(),
+        ]);
+
+        $room = Room::create([
+            'number' => '505',
+            'capacity' => 2,
+            'hostel_id' => $hostel->id,
+            'gender' => 'any',
+            'status' => 'available',
+            'room_type' => 'single_room',
+            'room_cost' => 200.00,
+            'current_occupancy' => 0,
+        ]);
+
+        \App\Models\Booking::create([
+            'user_id' => $student->id,
+            'hostel_id' => $hostel->id,
+            'room_id' => $room->id,
+            'check_in_date' => now()->toDateString(),
+            'check_out_date' => now()->addDays(30)->toDateString(),
+            'total_amount' => 200.00,
+            'booking_status' => 'cancelled',
+            'payment_status' => 'failed',
+            'booking_number' => 'BKREF' . uniqid(),
+        ]);
+
+        // Attempting to show occupant details should return 403 Forbidden
+        $this->actingAs($manager)
+            ->get(route('hostel-manager.occupants.show', ['user' => $student->uuid]))
+            ->assertStatus(403);
+
+        // Attempting to contact occupant should return 403 Forbidden
+        $this->actingAs($manager)
+            ->post(route('hostel-manager.occupants.contact', ['user' => $student->uuid]), [
+                'subject' => 'Hello',
+                'message' => 'Testing message for cancelled booking user',
+            ])
+            ->assertStatus(403);
+    }
 }
