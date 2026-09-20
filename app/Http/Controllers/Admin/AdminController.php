@@ -672,8 +672,29 @@ class AdminController extends Controller
             'booking_status' => 'required|in:pending,confirmed,checked_in,checked_out,cancelled',
         ]);
 
+        $oldStatus = $booking->booking_status;
+        $newStatus = $request->booking_status;
+
+        $activeStatuses = ['confirmed', 'checked_in'];
+        $wasActive = in_array($oldStatus, $activeStatuses);
+        $isActive = in_array($newStatus, $activeStatuses);
+
+        if ($wasActive && !$isActive) {
+            $room = $booking->room;
+            if ($room) {
+                $room->current_occupancy = max(0, $room->current_occupancy - 1);
+                $room->save();
+            }
+        } elseif (!$wasActive && $isActive) {
+            $room = $booking->room;
+            if ($room) {
+                $room->current_occupancy = min($room->capacity, $room->current_occupancy + 1);
+                $room->save();
+            }
+        }
+
         $booking->update([
-            'booking_status' => $request->booking_status,
+            'booking_status' => $newStatus,
         ]);
 
         return redirect()->route('admin.bookings.show', $booking)
