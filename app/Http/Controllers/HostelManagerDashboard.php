@@ -1858,24 +1858,29 @@ public function updateBookingStatus(Request $request, Booking $booking)
     ]);
 
     $oldStatus = $booking->booking_status;
-    $booking->booking_status = $request->status;
+    $newStatus = $request->status;
+    $booking->booking_status = $newStatus;
 
-    if ($request->status == 'cancelled') {
-        $booking->cancellation_reason = $request->cancellation_reason;
-        $booking->cancelled_at = now();
+    $activeStatuses = ['confirmed', 'checked_in'];
+    $wasActive = in_array($oldStatus, $activeStatuses);
+    $isActive = in_array($newStatus, $activeStatuses);
 
-        // Free up the room space if it was confirmed
-        if ($oldStatus == 'confirmed') {
-            $room = $booking->room;
-            if ($room) {
-                $room->current_occupancy = max(0, $room->current_occupancy - 1);
-                $room->save();
-            }
+    if ($newStatus === 'cancelled') {
+        if (\Illuminate\Support\Facades\Schema::hasColumn('bookings', 'cancellation_reason')) {
+            $booking->cancellation_reason = $request->cancellation_reason;
+        }
+        if (\Illuminate\Support\Facades\Schema::hasColumn('bookings', 'cancelled_at')) {
+            $booking->cancelled_at = now();
         }
     }
 
-    if ($request->status == 'confirmed' && $oldStatus == 'pending') {
-        // Update room occupancy when booking is confirmed
+    if ($wasActive && !$isActive) {
+        $room = $booking->room;
+        if ($room) {
+            $room->current_occupancy = max(0, $room->current_occupancy - 1);
+            $room->save();
+        }
+    } elseif (!$wasActive && $isActive) {
         $room = $booking->room;
         if ($room) {
             $room->current_occupancy = min($room->capacity, $room->current_occupancy + 1);
