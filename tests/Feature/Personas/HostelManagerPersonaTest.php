@@ -182,4 +182,74 @@ class HostelManagerPersonaTest extends TestCase
             ->get(route('hostel-manager.complaints'))
             ->assertOk();
     }
+
+    public function test_hostel_manager_cannot_update_room_to_duplicate_room_number_in_same_hostel(): void
+    {
+        $manager = User::create([
+            'name' => 'Hostel Manager',
+            'email' => 'mgr_dup_'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '08011122200',
+            'role' => 'hostel_manager',
+            'email_verified_at' => now(),
+        ]);
+
+        $hostel = Hostel::create([
+            'name' => 'Hostel Duplicate Test',
+            'location' => 'amamoma',
+            'address' => '123 Test St',
+            'email' => 'dup_test@example.com',
+            'manager_id' => $manager->id,
+        ]);
+
+        $roomOne = Room::create([
+            'number' => '101',
+            'capacity' => 2,
+            'hostel_id' => $hostel->id,
+            'gender' => 'any',
+            'status' => 'available',
+            'room_type' => 'single_room',
+            'room_cost' => 150.00,
+            'current_occupancy' => 0,
+        ]);
+
+        $roomTwo = Room::create([
+            'number' => '102',
+            'capacity' => 2,
+            'hostel_id' => $hostel->id,
+            'gender' => 'any',
+            'status' => 'available',
+            'room_type' => 'single_room',
+            'room_cost' => 180.00,
+            'current_occupancy' => 0,
+        ]);
+
+        // Attempting to update roomTwo's number to '101' should fail validation
+        $response = $this->actingAs($manager)
+            ->put(route('hostel-manager.rooms.update', ['room' => $roomTwo->uuid]), [
+                'number' => '101',
+                'room_type' => 'single_room',
+                'capacity' => 2,
+                'price_per_semester' => 200.00,
+                'gender' => 'any',
+                'status' => 'available',
+            ]);
+
+        $response->assertSessionHasErrors(['number']);
+        $this->assertEquals('102', $roomTwo->fresh()->number);
+
+        // Updating roomTwo with its existing number or a new unique number should succeed
+        $responseSuccess = $this->actingAs($manager)
+            ->put(route('hostel-manager.rooms.update', ['room' => $roomTwo->uuid]), [
+                'number' => '103',
+                'room_type' => 'single_room',
+                'capacity' => 2,
+                'price_per_semester' => 200.00,
+                'gender' => 'any',
+                'status' => 'available',
+            ]);
+
+        $responseSuccess->assertRedirect(route('hostel-manager.rooms'));
+        $this->assertEquals('103', $roomTwo->fresh()->number);
+    }
 }
