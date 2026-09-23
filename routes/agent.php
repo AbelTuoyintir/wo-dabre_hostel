@@ -25,7 +25,7 @@ use App\Http\Controllers\Agent\SettingsController;
 // Agent Registration Routes (public - no auth middleware)
 Route::prefix('agent')->name('agent.')->group(function () {
     Route::get('/register', [AgentRegisterController::class, 'showRegistrationForm'])->name('register');
-    Route::post('/register', [AgentRegisterController::class, 'register']);
+    Route::post('/register', [AgentRegisterController::class, 'register'])->middleware('throttle:5,1');
 });
 
 // Protected Agent Routes (authentication required)
