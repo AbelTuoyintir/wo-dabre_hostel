@@ -57,6 +57,24 @@ class AgentPersonaTest extends TestCase
             ->assertSessionHasErrors(['name', 'email', 'phone', 'password']);
     }
 
+    public function test_agent_registration_is_rate_limited(): void
+    {
+        $payload = [
+            'name' => 'Test Agent',
+            'email' => 'agent_rate@example.com',
+            'phone' => '08012345678',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ];
+
+        for ($i = 0; $i < 5; $i++) {
+            $this->post(route('agent.register'), $payload);
+        }
+
+        $response = $this->post(route('agent.register'), $payload);
+        $response->assertStatus(429);
+    }
+
     /**
      * AgentMiddleware allows agents without a profile to access complete-profile page.
      */
