@@ -12,15 +12,15 @@
             <p class="text-sm text-gray-600 mt-1">Create a new room for one of your registered hostels.</p>
         </div>
         <a href="{{ $selectedHostel ? route('agent.hostels.show', $selectedHostel->uuid ?? $selectedHostel->id) : route('agent.hostels.index') }}"
-           class="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-xl transition-colors duration-200">
-            <i class="fas fa-arrow-left mr-2 text-xs"></i>
+           class="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-xl transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2">
+            <i class="fas fa-arrow-left mr-2 text-xs" aria-hidden="true"></i>
             Back
         </a>
     </div>
 
     <!-- Error Summary -->
     @if($errors->any())
-        <div class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-xl text-red-700 text-sm">
+        <div class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-xl text-red-700 text-sm" role="alert">
             <div class="font-semibold mb-1">Please correct the following errors:</div>
             <ul class="list-disc list-inside space-y-1">
                 @foreach($errors->all() as $error)
@@ -32,10 +32,10 @@
 
     <!-- Error Alert -->
     @if(session('error'))
-        <div class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-xl text-red-700 text-sm flex justify-between items-center">
+        <div class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-xl text-red-700 text-sm flex justify-between items-center" role="alert">
             <span>{{ session('error') }}</span>
-            <button type="button" class="text-red-700 hover:text-red-900" onclick="this.parentElement.remove()">
-                <i class="fas fa-times"></i>
+            <button type="button" class="text-red-700 hover:text-red-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 rounded" aria-label="Dismiss error" onclick="this.parentElement.remove()">
+                <i class="fas fa-times" aria-hidden="true"></i>
             </button>
         </div>
     @endif
@@ -44,15 +44,15 @@
         @if($hostels->isEmpty())
             <div class="text-center py-8">
                 <div class="w-16 h-16 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
-                    <i class="fas fa-building"></i>
+                    <i class="fas fa-building" aria-hidden="true"></i>
                 </div>
                 <h3 class="text-base font-semibold text-gray-900 mb-2">No Hostels Found</h3>
                 <p class="text-sm text-gray-500 mb-6 max-w-md mx-auto">
                     You need to create at least one hostel before adding rooms.
                 </p>
                 <a href="{{ route('agent.hostels.create') }}"
-                   class="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium text-sm rounded-xl transition-all shadow-md">
-                    <i class="fas fa-plus-circle mr-2"></i>
+                   class="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium text-sm rounded-xl transition-all shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2">
+                    <i class="fas fa-plus-circle mr-2" aria-hidden="true"></i>
                     Add Your First Hostel
                 </a>
             </div>
@@ -68,7 +68,7 @@
                     <select id="hostel_id"
                             name="hostel_id"
                             required
-                            class="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors @error('hostel_id') border-red-500 @enderror">
+                            class="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 transition-colors @error('hostel_id') border-red-500 @enderror">
                         <option value="">-- Select Hostel --</option>
                         @foreach($hostels as $h)
                             <option value="{{ $h->id }}" {{ (old('hostel_id', $selectedHostel?->id) == $h->id) ? 'selected' : '' }}>
@@ -93,7 +93,7 @@
                                value="{{ old('room_number') }}"
                                placeholder="e.g. A101, Room 204"
                                required
-                               class="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors @error('room_number') border-red-500 @enderror">
+                               class="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 transition-colors @error('room_number') border-red-500 @enderror">
                         @error('room_number')
                             <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                         @enderror
@@ -107,7 +107,7 @@
                         <select id="room_type"
                                 name="room_type"
                                 required
-                                class="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors @error('room_type') border-red-500 @enderror">
+                                class="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 transition-colors @error('room_type') border-red-500 @enderror">
                             <option value="">-- Select Room Type --</option>
 
                             <!-- Single Rooms -->
@@ -165,7 +165,7 @@
                                value="{{ old('capacity', 1) }}"
                                min="1"
                                required
-                               class="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors @error('capacity') border-red-500 @enderror">
+                               class="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 transition-colors @error('capacity') border-red-500 @enderror">
                         @error('capacity')
                             <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                         @enderror
@@ -184,7 +184,7 @@
                                placeholder="e.g. 1500.00"
                                min="0"
                                required
-                               class="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors @error('price_per_year') border-red-500 @enderror">
+                               class="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 transition-colors @error('price_per_year') border-red-500 @enderror">
                         <p class="mt-1 text-xs text-gray-500">Platform processing fees and surcharges will be pre-calculated automatically.</p>
                         @error('price_per_year')
                             <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
@@ -201,7 +201,7 @@
                               name="description"
                               rows="3"
                               placeholder="Add details about amenities inside the room (e.g. balcony, AC, wardrobe, study desk)..."
-                              class="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors @error('description') border-red-500 @enderror">{{ old('description') }}</textarea>
+                              class="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 transition-colors @error('description') border-red-500 @enderror">{{ old('description') }}</textarea>
                     @error('description')
                         <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                     @enderror
@@ -214,7 +214,7 @@
                            name="is_available"
                            value="1"
                            {{ old('is_available', '1') ? 'checked' : '' }}
-                           class="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500">
+                           class="w-4 h-4 text-purple-600 border-gray-300 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2">
                     <label for="is_available" class="text-sm font-medium text-gray-800">
                         Mark room as available for immediate booking
                     </label>
@@ -223,12 +223,12 @@
                 <!-- Submit Action -->
                 <div class="pt-4 flex items-center justify-end space-x-3">
                     <a href="{{ $selectedHostel ? route('agent.hostels.show', $selectedHostel->uuid ?? $selectedHostel->id) : route('agent.hostels.index') }}"
-                       class="px-5 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-medium rounded-xl transition-colors">
+                       class="px-5 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-medium rounded-xl transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2">
                         Cancel
                     </a>
                     <button type="submit"
-                            class="inline-flex items-center px-6 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium text-sm rounded-xl transition-all shadow-md">
-                        <i class="fas fa-plus-circle mr-2"></i>
+                            class="inline-flex items-center px-6 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium text-sm rounded-xl transition-all shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2">
+                        <i class="fas fa-plus-circle mr-2" aria-hidden="true"></i>
                         Add Room
                     </button>
                 </div>

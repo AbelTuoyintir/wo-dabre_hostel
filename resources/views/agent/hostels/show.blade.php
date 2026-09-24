@@ -177,7 +177,7 @@
                                     Room Number <span class="text-red-500">*</span>
                                 </label>
                                 <input type="text" 
-                                       class="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('room_number') border-red-500 @enderror" 
+                                       class="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 @error('room_number') border-red-500 @enderror"
                                        id="room_number" name="room_number" required>
                                 @error('room_number')
                                     <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
@@ -187,7 +187,7 @@
                                 <label for="room_type" class="block text-xs font-medium text-gray-700 mb-1">
                                     Room Type <span class="text-red-500">*</span>
                                 </label>
-                                <select class="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('room_type') border-red-500 @enderror" 
+                                <select class="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 @error('room_type') border-red-500 @enderror"
                                         id="room_type" name="room_type" required>
                                     <option value="">Select Room Type</option>
                                     <!-- Single Rooms -->
@@ -324,7 +324,7 @@
                                     Capacity <span class="text-red-500">*</span>
                                 </label>
                                 <input type="number" 
-                                       class="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('capacity') border-red-500 @enderror" 
+                                       class="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 @error('capacity') border-red-500 @enderror"
                                        id="capacity" name="capacity" min="1" required>
                                 @error('capacity')
                                     <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
@@ -335,7 +335,7 @@
                                     Price/Year <span class="text-red-500">*</span>
                                 </label>
                                 <input type="number" step="0.01" 
-                                       class="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('price_per_year') border-red-500 @enderror" 
+                                       class="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 @error('price_per_year') border-red-500 @enderror"
                                        id="price_per_year" name="price_per_year" min="0" required>
                                 @error('price_per_year')
                                     <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
@@ -343,7 +343,7 @@
                             </div>
                             <div>
                                 <label for="room_description" class="block text-xs font-medium text-gray-700 mb-1">Description</label>
-                                <textarea class="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('description') border-red-500 @enderror" 
+                                <textarea class="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 @error('description') border-red-500 @enderror"
                                           id="room_description" name="description" rows="2"></textarea>
                                 @error('description')
                                     <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
@@ -351,12 +351,12 @@
                             </div>
                             <div class="flex items-center space-x-2">
                                 <input type="checkbox" 
-                                       class="w-3.5 h-3.5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                       class="w-3.5 h-3.5 text-blue-600 border-gray-300 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                                        id="is_available" name="is_available" value="1" checked>
                                 <label class="text-xs text-gray-700" for="is_available">Available</label>
                             </div>
-                            <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg transition-colors duration-200">
-                                <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                                <svg class="w-3.5 h-3.5 mr-1.5" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                                 </svg>
                                 Add Room

@@ -73,25 +73,30 @@
             <!-- Quick Actions -->
             <div class="bg-white rounded-2xl shadow-lg p-6">
                 <h3 class="text-lg font-bold text-gray-800 mb-4">Quick Actions</h3>
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
                     <a href="{{ route('agent.hostels.create') }}" 
-                       class="bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl p-4 text-center hover:shadow-lg transition">
-                        <i class="fas fa-plus-circle text-2xl mb-2"></i>
+                       class="bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl p-4 text-center hover:shadow-lg transition focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500">
+                        <i class="fas fa-plus-circle text-2xl mb-2" aria-hidden="true"></i>
                         <p class="font-semibold text-sm">Add New Hostel</p>
                     </a>
+                    <a href="{{ route('agent.rooms.create') }}"
+                       class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl p-4 text-center hover:shadow-lg transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
+                        <i class="fas fa-bed text-2xl mb-2" aria-hidden="true"></i>
+                        <p class="font-semibold text-sm">Add New Room</p>
+                    </a>
                     <a href="{{ route('agent.hostels.index') }}" 
-                       class="bg-blue-600 text-white rounded-xl p-4 text-center hover:shadow-lg transition">
-                        <i class="fas fa-building text-2xl mb-2"></i>
+                       class="bg-blue-600 text-white rounded-xl p-4 text-center hover:shadow-lg transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+                        <i class="fas fa-building text-2xl mb-2" aria-hidden="true"></i>
                         <p class="font-semibold text-sm">Manage Hostels</p>
                     </a>
                     <a href="{{ route('agent.commissions') }}" 
-                       class="bg-green-600 text-white rounded-xl p-4 text-center hover:shadow-lg transition">
-                        <i class="fas fa-chart-bar text-2xl mb-2"></i>
+                       class="bg-green-600 text-white rounded-xl p-4 text-center hover:shadow-lg transition focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500">
+                        <i class="fas fa-chart-bar text-2xl mb-2" aria-hidden="true"></i>
                         <p class="font-semibold text-sm">Commission History</p>
                     </a>
                     <a href="{{ route('agent.withdrawals') }}" 
-                       class="bg-amber-600 text-white rounded-xl p-4 text-center hover:shadow-lg transition">
-                        <i class="fas fa-history text-2xl mb-2"></i>
+                       class="bg-amber-600 text-white rounded-xl p-4 text-center hover:shadow-lg transition focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500">
+                        <i class="fas fa-history text-2xl mb-2" aria-hidden="true"></i>
                         <p class="font-semibold text-sm">Withdrawal History</p>
                     </a>
                 </div>
