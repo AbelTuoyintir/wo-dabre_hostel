@@ -8,6 +8,7 @@ use App\Models\Hostel;
 use App\Models\Room;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class DashboardController extends Controller
@@ -133,24 +134,33 @@ class DashboardController extends Controller
 
     public function requestWithdrawal(Request $request)
     {
+        $agent = Auth::user()->agent;
+
+        if (!$agent) {
+            return back()->with('error', 'Agent profile not found.');
+        }
+
         $request->validate([
-            'amount' => 'required|numeric|min:50|max:' . Auth::user()->agent->available_balance,
+            'amount' => 'required|numeric|min:50|max:' . ($agent->available_balance ?? 0),
             'payment_method' => 'required|in:mobile_money,bank_transfer,paypal',
             'account_number' => 'required|string',
             'account_name' => 'required|string',
             'bank_name' => 'required_if:payment_method,bank_transfer|nullable|string'
         ]);
 
-        $agent = Auth::user()->agent;
-
         try {
-            $withdrawal = $agent->withdraw(
-                $request->amount,
-                $request->payment_method,
-                $request->account_number,
-                $request->account_name,
-                $request->bank_name
-            );
+            DB::transaction(function () use ($agent, $request) {
+                // Lock agent record to prevent race conditions during concurrent withdrawal requests
+                $lockedAgent = HostelAgent::where('id', $agent->id)->lockForUpdate()->firstOrFail();
+
+                $lockedAgent->withdraw(
+                    $request->amount,
+                    $request->payment_method,
+                    $request->account_number,
+                    $request->account_name,
+                    $request->bank_name
+                );
+            });
 
             return redirect()->route('agent.withdrawals')->with('success',
                 'Withdrawal request submitted successfully!'

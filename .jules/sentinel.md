@@ -58,6 +58,11 @@
 **Learning:** Accepting mass-assignable or explicit user input for role or status fields on public registration endpoints exposes privilege escalation vectors.
 **Prevention:** Hardcode default roles (e.g., `'student'`) and active states during public self-registration, ignoring user-supplied authority fields.
 
+## 2026-08-24 - Race Condition in Agent Withdrawal Processing
+**Vulnerability:** `DashboardController@requestWithdrawal` validated and processed agent balance withdrawals without database transaction locking (`lockForUpdate()`), creating a race condition window where concurrent withdrawal requests could pass validation and deduct from `available_balance` twice, driving agent balances negative and enabling financial double-withdrawal exploits.
+**Learning:** Checking model balances and processing deductions in un-isolated, unlocked requests exposes race condition vulnerabilities during concurrent API calls.
+**Prevention:** Wrap balance-checking and deduction workflows inside a `DB::transaction` block and lock the target record using `lockForUpdate()` to guarantee atomic state transitions.
+
 ## 2026-08-23 - Premature Referral Commission Payout on Pending Agent Self-Registration
 **Vulnerability:** `AgentRegisterController::register` immediately called `$referrer->addCommission(...)` upon public registration with a referral code. This immediately credited `50.00` GHS to the referrer's `available_balance` and `total_commission` before the newly registered agent was vetted or approved by an administrator, enabling automated balance inflation attacks.
 **Learning:** Awarding immediate financial credits on unapproved or unverified public registrations allows attackers to script dummy signups and drain funds via referral bonus systems.
