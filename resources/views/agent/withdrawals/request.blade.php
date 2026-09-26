@@ -1,7 +1,7 @@
 {{-- resources/views/agent/withdrawals/request.blade.php --}}
 @extends('layouts.agent')
 
-@section('title', 'Request Withdrawal - UCC SRC HOSTEL SERIVCE')
+@section('title', 'Request Withdrawal - UCC Hostels Hub')
 
 @section('content')
 <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12">

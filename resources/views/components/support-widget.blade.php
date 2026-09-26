@@ -31,7 +31,7 @@
                         <i class="fas fa-robot text-xl text-emerald-300"></i>
                     </div>
                     <div>
-                        <h3 class="font-bold text-base leading-tight">UCC SRC Hostel Support 24/7</h3>
+                        <h3 class="font-bold text-base leading-tight">UCC Hostels Hub Support 24/7</h3>
                         <p class="text-[11px] text-emerald-300 flex items-center gap-1 mt-0.5 font-medium">
                             <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
                             AI Agent & Staff Online

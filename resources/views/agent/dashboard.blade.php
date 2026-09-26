@@ -1,7 +1,7 @@
 {{-- resources/views/agent/dashboard.blade.php --}}
 @extends('layouts.agent')
 
-@section('title', 'Agent Dashboard - UCC SRC HOSTEL SERIVCE')
+@section('title', 'Agent Dashboard - UCC Hostels Hub')
 
 @section('content')
 <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">

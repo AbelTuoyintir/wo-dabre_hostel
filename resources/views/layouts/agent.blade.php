@@ -8,7 +8,7 @@
     <link rel="icon" href="{{ asset('srclogo.png') }}" type="image/x-icon">
     <link rel="shortcut icon" href="{{ asset('srclogo.png') }}" type="image/x-icon">
 
-    <title>@yield('title', 'Agent Dashboard - SRC HOSTEL SERVICE')</title>
+    <title>@yield('title', 'Agent Dashboard - UCC Hostels Hub')</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     
     <!-- Tailwind CSS -->

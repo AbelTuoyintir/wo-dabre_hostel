@@ -1,7 +1,7 @@
 {{-- resources/views/agent/complete-profile.blade.php --}}
 @extends('layouts.agent')
 
-@section('title', 'Complete Your Agent Profile - UCC SRC HOSTEL SERIVCE')
+@section('title', 'Complete Your Agent Profile - UCC Hostels Hub')
 
 @section('content')
 <div class="min-h-screen bg-gradient-to-br from-purple-900 via-indigo-900 to-pink-900 py-12">

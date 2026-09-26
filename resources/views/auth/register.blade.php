@@ -231,7 +231,7 @@
               </div>
             </form>
           </div>
-          <p class="text-xs text-center text-white/70 mt-4 lg:mt-3">🔒 Secure · encrypted · 🏠 UCC SRC Hostel Service</p>
+          <p class="text-xs text-center text-white/70 mt-4 lg:mt-3">🔒 Secure · encrypted · 🏠 UCC Hostels Hub</p>
         </div>
       </div>
     </div>

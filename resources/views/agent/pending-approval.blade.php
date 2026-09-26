@@ -1,7 +1,7 @@
 {{-- resources/views/agent/pending-approval.blade.php --}}
 @extends('layouts.agent')
 
-@section('title', 'Application Pending - UCC SRC HOSTEL SERIVCE')
+@section('title', 'Application Pending - UCC Hostels Hub')
 
 @section('content')
 <div class="min-h-screen bg-gradient-to-br from-purple-900 via-indigo-900 to-pink-900 flex items-center justify-center py-12">

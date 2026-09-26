@@ -33,7 +33,7 @@ class PaymentReceiptMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Payment Receipt - UCC SRC Hostel Service',
+            subject: 'Payment Receipt - UCC Hostels Hub',
         );
     }
 

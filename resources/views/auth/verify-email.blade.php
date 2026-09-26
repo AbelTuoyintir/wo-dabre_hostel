@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verify Email - UCC SRC HOSTEL SERVICE</title>
+    <title>Verify Email - UCC Hostels Hub</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Custom Animations */
@@ -95,7 +95,7 @@
                                 </svg>
                             </div>
                             <div>
-                                <h1 class="text-2xl font-black text-white">UCC SRC HOSTEL SERIVCE</h1>
+                                <h1 class="text-2xl font-black text-white">UCC Hostels Hub</h1>
                                 <p class="text-xs text-yellow-400/80 font-medium">Student Accommodation</p>
                             </div>
                         </div>
@@ -164,7 +164,7 @@
                     <div class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-6 sm:p-8 animate-slide-in-right">
                         <!-- Mobile Branding -->
                         <div class="lg:hidden text-center mb-6">
-                            <h1 class="text-2xl font-black text-gray-800">UCC SRC HOSTEL SERIVCE</h1>
+                            <h1 class="text-2xl font-black text-gray-800">UCC Hostels Hub</h1>
                             <p class="text-xs text-gray-500">Student Accommodation</p>
                             <h2 class="text-sm font-semibold text-gray-700 mt-2">Verify Email</h2>
                         </div>

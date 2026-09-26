@@ -258,7 +258,7 @@ class SupportController extends Controller
         SupportMessage::create([
             'support_ticket_id' => $ticket->id,
             'user_id' => null, // AI
-            'sender_name' => 'UCC SRC Hostel service AI Assistant (24/7)',
+            'sender_name' => 'UCC Hostels Hub AI Assistant (24/7)',
             'message' => $reply,
             'is_admin_reply' => true,
         ]);

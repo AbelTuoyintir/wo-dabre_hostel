@@ -42,7 +42,7 @@
                         <img src="{{ asset('srclogo.png') }}" alt="SRC Logo" class="w-12 h-12">
                     </div>
                     <div>
-                        <h1 class="text-3xl font-black tracking-tight">UCC SRC Hostel Service</h1>
+                        <h1 class="text-3xl font-black tracking-tight">UCC Hostels Hub</h1>
                         <p class="text-slate-400 text-sm font-medium uppercase tracking-widest">Student Housing Service</p>
                     </div>
                 </div>
@@ -155,7 +155,7 @@
 
             <!-- Footer Note -->
             <div class="text-center space-y-2 border-t border-slate-100 pt-8">
-                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Thank you for choosing UCC SRC hostel Service</p>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Thank you for choosing UCC Hostels Hub</p>
                 <p class="text-[10px] text-slate-400 max-w-md mx-auto">This is an electronically generated receipt. For any discrepancies, please contact support at help@srchostel.com or call +233 24 123 4567.</p>
             </div>
         </div>
