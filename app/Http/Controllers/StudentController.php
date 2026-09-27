@@ -417,14 +417,11 @@ class StudentController extends Controller
                 'refunded_at' => now(),
             ]);
 
-            // Increment available rooms in hostel
-            if ($booking->room && $booking->room->hostel) {
-                $booking->room->hostel->increment('available_rooms');
-
-                // Decrement room occupancy
-                if ($booking->room->current_occupancy > 0) {
-                    $booking->room->decrement('current_occupancy');
-                }
+            // Decrement room occupancy safely using atomic DB query
+            if ($booking->room) {
+                Room::where('id', $booking->room->id)
+                    ->where('current_occupancy', '>', 0)
+                    ->decrement('current_occupancy');
             }
 
             DB::commit();

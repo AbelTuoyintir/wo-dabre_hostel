@@ -63,6 +63,11 @@
 **Learning:** Checking model balances and processing deductions in un-isolated, unlocked requests exposes race condition vulnerabilities during concurrent API calls.
 **Prevention:** Wrap balance-checking and deduction workflows inside a `DB::transaction` block and lock the target record using `lockForUpdate()` to guarantee atomic state transitions.
 
+## 2026-09-27 - Unsynchronized Room Occupancy and Capacity Lock Vulnerability
+**Vulnerability:** Booking cancellations and administrative status updates failed to consistently adjust or safely decrement/increment `Room::$current_occupancy` with atomic boundary guards (`where('current_occupancy', '>', 0)` and `whereColumn('current_occupancy', '<', 'capacity')`). Non-atomic in-memory mutations under concurrent requests exposed race conditions, room capacity locking (DoS on room availability), or negative occupancy states.
+**Learning:** Performing room occupancy increments or decrements via non-atomic model updates (`$room->current_occupancy = ...; $room->save();`) without atomic conditional queries allows race conditions under concurrent booking modifications, leading to corrupted room capacity state.
+**Prevention:** Always update shared numerical resources like room occupancy using atomic SQL queries (`Room::where(...)->decrement('current_occupancy')` and `Room::where(...)->increment('current_occupancy')`) with explicit boundary conditions.
+
 ## 2026-08-23 - Premature Referral Commission Payout on Pending Agent Self-Registration
 **Vulnerability:** `AgentRegisterController::register` immediately called `$referrer->addCommission(...)` upon public registration with a referral code. This immediately credited `50.00` GHS to the referrer's `available_balance` and `total_commission` before the newly registered agent was vetted or approved by an administrator, enabling automated balance inflation attacks.
 **Learning:** Awarding immediate financial credits on unapproved or unverified public registrations allows attackers to script dummy signups and drain funds via referral bonus systems.
