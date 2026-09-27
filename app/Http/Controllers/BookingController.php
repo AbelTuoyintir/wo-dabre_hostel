@@ -29,7 +29,10 @@ class BookingController extends Controller
             ->where('status', 'active')
             ->with(['rooms' => function ($q) {
                 $q->where('status', 'available')
-                    ->whereColumn('current_occupancy', '<', 'capacity');
+                    ->where(function ($query) {
+                        $query->whereNull('current_occupancy')
+                            ->orWhereColumn('current_occupancy', '<', 'capacity');
+                    });
             }])
             ->get();
 
@@ -47,7 +50,10 @@ class BookingController extends Controller
 
         $rooms = $hostel->rooms()
             ->where('status', 'available')
-            ->whereColumn('current_occupancy', '<', 'capacity')
+            ->where(function ($query) {
+                $query->whereNull('current_occupancy')
+                    ->orWhereColumn('current_occupancy', '<', 'capacity');
+            })
             ->get();
 
         return view('bookings.select-room', compact('hostel', 'rooms'));
