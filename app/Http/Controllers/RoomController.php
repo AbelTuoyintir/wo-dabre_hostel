@@ -68,7 +68,7 @@ public function store(Request $request)
                 'description' => 'nullable|string|max:1000',
                 'floor' => 'nullable|integer|min:0',
                 'size_sqm' => 'nullable|numeric|min:1',
-                'window_type' => 'nullable|in:street,courtyard,garden,none',
+                'window_type' => 'nullable|in:street,roadside,courtyard,garden,none',
                 'furnished' => 'sometimes|boolean',
                 'private_bathroom' => 'sometimes|boolean',
                 // Image validation rules
