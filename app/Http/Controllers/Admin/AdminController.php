@@ -672,9 +672,38 @@ class AdminController extends Controller
             'booking_status' => 'required|in:pending,confirmed,checked_in,checked_out,cancelled',
         ]);
 
+        $oldStatus = $booking->booking_status;
+        $newStatus = $request->booking_status;
+
+        $activeStatuses = ['confirmed', 'checked_in'];
+        $wasActive = in_array($oldStatus, $activeStatuses);
+        $willBeActive = in_array($newStatus, $activeStatuses);
+
         $booking->update([
-            'booking_status' => $request->booking_status,
+            'booking_status' => $newStatus,
         ]);
+
+        $room = $booking->room;
+        if ($room) {
+            // Ensure current_occupancy is not null before atomic operations
+            if ($room->current_occupancy === null) {
+                $room->current_occupancy = 0;
+                $room->save();
+            }
+
+            if ($wasActive && !$willBeActive) {
+                \App\Models\Room::where('id', $room->id)
+                    ->where('current_occupancy', '>', 0)
+                    ->decrement('current_occupancy');
+            } elseif (!$wasActive && $willBeActive) {
+                \App\Models\Room::where('id', $room->id)
+                    ->where(function ($q) {
+                        $q->whereColumn('current_occupancy', '<', 'capacity')
+                          ->orWhereNull('current_occupancy');
+                    })
+                    ->increment('current_occupancy');
+            }
+        }
 
         return redirect()->route('admin.bookings.show', $booking)
             ->with('success', 'Booking status updated successfully.');

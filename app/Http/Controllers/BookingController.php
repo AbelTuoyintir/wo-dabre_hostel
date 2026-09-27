@@ -901,7 +901,9 @@ class BookingController extends Controller
 
             $room = $booking->room;
             if ($room) {
-                $room->decrement('current_occupancy');
+                Room::where('id', $room->id)
+                    ->where('current_occupancy', '>', 0)
+                    ->decrement('current_occupancy');
             }
         });
 

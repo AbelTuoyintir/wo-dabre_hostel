@@ -1879,8 +1879,9 @@ public function updateBookingStatus(Request $request, Booking $booking)
         if ($oldStatus == 'confirmed') {
             $room = $booking->room;
             if ($room) {
-                $room->current_occupancy = max(0, $room->current_occupancy - 1);
-                $room->save();
+                Room::where('id', $room->id)
+                    ->where('current_occupancy', '>', 0)
+                    ->decrement('current_occupancy');
             }
         }
     }
@@ -1889,8 +1890,9 @@ public function updateBookingStatus(Request $request, Booking $booking)
         // Update room occupancy when booking is confirmed
         $room = $booking->room;
         if ($room) {
-            $room->current_occupancy = min($room->capacity, $room->current_occupancy + 1);
-            $room->save();
+            Room::where('id', $room->id)
+                ->whereColumn('current_occupancy', '<', 'capacity')
+                ->increment('current_occupancy');
         }
     }
 
@@ -1911,8 +1913,9 @@ public function destroyBooking(Booking $booking)
     if ($booking->booking_status == 'confirmed') {
         $room = $booking->room;
         if ($room) {
-            $room->current_occupancy = max(0, $room->current_occupancy - 1);
-            $room->save();
+            Room::where('id', $room->id)
+                ->where('current_occupancy', '>', 0)
+                ->decrement('current_occupancy');
         }
     }
 
