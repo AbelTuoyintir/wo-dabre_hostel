@@ -1864,39 +1864,46 @@ public function updateBookingStatus(Request $request, Booking $booking)
     }
 
     $request->validate([
-        'status' => 'required|in:pending,confirmed,completed,cancelled',
+        'status' => 'required|in:pending,confirmed,completed,checked_in,checked_out,cancelled',
         'cancellation_reason' => 'required_if:status,cancelled|nullable|string|max:500'
     ]);
 
     $oldStatus = $booking->booking_status;
-    $booking->booking_status = $request->status;
+    $newStatus = $request->status;
 
-    if ($request->status == 'cancelled') {
+    $activeStatuses = ['confirmed', 'checked_in'];
+    $wasActive = in_array($oldStatus, $activeStatuses);
+    $willBeActive = in_array($newStatus, $activeStatuses);
+
+    $booking->booking_status = $newStatus;
+
+    if ($newStatus === 'cancelled') {
         $booking->cancellation_reason = $request->cancellation_reason;
         $booking->cancelled_at = now();
-
-        // Free up the room space if it was confirmed
-        if ($oldStatus == 'confirmed') {
-            $room = $booking->room;
-            if ($room) {
-                Room::where('id', $room->id)
-                    ->where('current_occupancy', '>', 0)
-                    ->decrement('current_occupancy');
-            }
-        }
-    }
-
-    if ($request->status == 'confirmed' && $oldStatus == 'pending') {
-        // Update room occupancy when booking is confirmed
-        $room = $booking->room;
-        if ($room) {
-            Room::where('id', $room->id)
-                ->whereColumn('current_occupancy', '<', 'capacity')
-                ->increment('current_occupancy');
-        }
     }
 
     $booking->save();
+
+    $room = $booking->room;
+    if ($room) {
+        if ($room->current_occupancy === null) {
+            $room->current_occupancy = 0;
+            $room->save();
+        }
+
+        if ($wasActive && !$willBeActive) {
+            Room::where('id', $room->id)
+                ->where('current_occupancy', '>', 0)
+                ->decrement('current_occupancy');
+        } elseif (!$wasActive && $willBeActive) {
+            Room::where('id', $room->id)
+                ->where(function ($q) {
+                    $q->whereColumn('current_occupancy', '<', 'capacity')
+                      ->orWhereNull('current_occupancy');
+                })
+                ->increment('current_occupancy');
+        }
+    }
 
     return redirect()->back()->with('success', 'Booking status updated successfully.');
 }
