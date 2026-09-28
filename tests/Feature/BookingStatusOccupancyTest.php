@@ -180,4 +180,57 @@ class BookingStatusOccupancyTest extends TestCase
 
         $this->assertEquals(0, $room->fresh()->current_occupancy);
     }
+
+    public function test_hostel_manager_updating_booking_status_synchronizes_occupancy()
+    {
+        $manager = User::factory()->create([
+            'role' => 'hostel_manager',
+        ]);
+
+        $hostel = Hostel::create([
+            'name' => 'Hostel Manager Synchronized Hostel',
+            'location' => 'amamoma',
+            'address' => '321 Manager Lane',
+            'manager_id' => $manager->id,
+            'is_approved' => true,
+            'status' => 'active',
+        ]);
+
+        $room = Room::create([
+            'hostel_id' => $hostel->id,
+            'number' => 'HM101',
+            'capacity' => 2,
+            'current_occupancy' => 0,
+            'gender' => 'any',
+            'status' => 'available',
+            'room_type' => 'shared_2',
+            'room_cost' => 800,
+        ]);
+
+        $student = User::factory()->create(['role' => 'student']);
+
+        $booking = Booking::create([
+            'booking_number' => 'BN-' . Str::random(8),
+            'user_id' => $student->id,
+            'hostel_id' => $hostel->id,
+            'room_id' => $room->id,
+            'check_in_date' => now()->addDays(2)->format('Y-m-d'),
+            'check_out_date' => now()->addDays(8)->format('Y-m-d'),
+            'total_amount' => 800,
+            'amount_paid' => 800,
+            'payment_status' => 'paid',
+            'booking_status' => 'confirmed',
+        ]);
+
+        // Room occupancy was set to 1 initially upon confirmation
+        $room->update(['current_occupancy' => 1]);
+
+        // Hostel manager marks confirmed booking as checked_out -> occupancy decrements
+        $response = $this->actingAs($manager)->patch(route('hostel-manager.bookings.status', $booking->uuid), [
+            'status' => 'checked_out',
+        ]);
+
+        $this->assertEquals(0, $room->fresh()->current_occupancy);
+        $this->assertEquals('checked_out', $booking->fresh()->booking_status);
+    }
 }
