@@ -992,6 +992,28 @@ public function viewHostel(Hostel $hostel)
     }
 
     /**
+     * Download PDF receipt with strict authorization check
+     */
+    public function downloadReceipt(Payment $payment)
+    {
+        $hasAccess = auth()->check() && (
+            ($payment->user_id === Auth::id()) ||
+            ($payment->booking && $payment->booking->user_id === Auth::id())
+        );
+
+        if (!$hasAccess) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $payment->load(['booking.hostel', 'booking.room', 'booking.user', 'user']);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('student.payments.receipt', compact('payment'));
+        $filename = 'receipt-' . ($payment->reference ?? $payment->id) . '.pdf';
+
+        return $pdf->download($filename);
+    }
+
+    /**
      * View user profile
      */
     public function profile()
