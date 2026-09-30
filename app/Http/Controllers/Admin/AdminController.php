@@ -84,10 +84,14 @@ class AdminController extends Controller
             'is_active' => 'nullable|boolean',
         ]);
 
-        // Security check: Prevent administrators from deactivating their own active account
+        // Security check: Prevent administrators from deactivating their own active account or demoting their own role
         $isActive = $request->has('is_active');
         if ($user->id === auth()->id() && !$isActive) {
             return redirect()->back()->with('error', 'You cannot deactivate your own administrative account.');
+        }
+
+        if ($user->id === auth()->id() && $request->role !== 'admin') {
+            return redirect()->back()->with('error', 'You cannot demote or change the role of your own administrative account.');
         }
 
         $user->update([
