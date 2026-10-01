@@ -301,4 +301,80 @@ class HostelManagerPersonaTest extends TestCase
             ])
             ->assertStatus(403);
     }
+
+    public function test_hostel_manager_can_export_bookings_and_payments_csv(): void
+    {
+        $manager = User::create([
+            'name' => 'Export Manager',
+            'email' => 'export_mgr_'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '08011122296',
+            'role' => 'hostel_manager',
+            'email_verified_at' => now(),
+        ]);
+
+        $hostel = Hostel::create([
+            'name' => 'Managed Hostel Export Test',
+            'location' => 'amamoma',
+            'address' => '123 Export St',
+            'email' => 'export@example.com',
+            'manager_id' => $manager->id,
+        ]);
+
+        $student = User::create([
+            'name' => '=SUM(1,1) Student',
+            'email' => 'export_student_'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '08011122286',
+            'role' => 'student',
+            'gender' => 'male',
+            'email_verified_at' => now(),
+        ]);
+
+        $room = Room::create([
+            'number' => '606',
+            'capacity' => 2,
+            'hostel_id' => $hostel->id,
+            'gender' => 'any',
+            'status' => 'available',
+            'room_type' => 'single_room',
+            'room_cost' => 250.00,
+            'current_occupancy' => 1,
+        ]);
+
+        $booking = \App\Models\Booking::create([
+            'user_id' => $student->id,
+            'hostel_id' => $hostel->id,
+            'room_id' => $room->id,
+            'check_in_date' => now()->toDateString(),
+            'check_out_date' => now()->addDays(30)->toDateString(),
+            'total_amount' => 250.00,
+            'amount_paid' => 250.00,
+            'booking_status' => 'confirmed',
+            'payment_status' => 'paid',
+            'booking_number' => 'BKEXP' . uniqid(),
+        ]);
+
+        \App\Models\Payment::create([
+            'booking_id' => $booking->id,
+            'amount' => 250.00,
+            'payment_method' => 'card',
+            'status' => 'completed',
+            'transaction_id' => 'TXN' . uniqid(),
+        ]);
+
+        $responseBookings = $this->actingAs($manager)
+            ->get(route('hostel-manager.bookings.export'));
+
+        $responseBookings->assertOk();
+        $responseBookings->assertHeader('content-type', 'text/csv; charset=UTF-8');
+        $this->assertStringContainsString("'=SUM(1,1) Student", $responseBookings->streamedContent());
+
+        $responsePayments = $this->actingAs($manager)
+            ->get(route('hostel-manager.payments.export'));
+
+        $responsePayments->assertOk();
+        $responsePayments->assertHeader('content-type', 'text/csv; charset=UTF-8');
+        $this->assertStringContainsString("'=SUM(1,1) Student", $responsePayments->streamedContent());
+    }
 }
