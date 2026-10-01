@@ -72,3 +72,8 @@
 **Vulnerability:** `AgentRegisterController::register` immediately called `$referrer->addCommission(...)` upon public registration with a referral code. This immediately credited `50.00` GHS to the referrer's `available_balance` and `total_commission` before the newly registered agent was vetted or approved by an administrator, enabling automated balance inflation attacks.
 **Learning:** Awarding immediate financial credits on unapproved or unverified public registrations allows attackers to script dummy signups and drain funds via referral bonus systems.
 **Prevention:** Create referral commissions with a `pending` status upon public registration without mutating financial balances. Only credit and transition the commission to `paid` when an administrator explicitly approves the newly recruited agent application.
+
+## 2026-10-01 - CSV Formula Injection in Administrative Exports
+**Vulnerability:** CSV export endpoints in `HostelManagerDashboard` wrote user-controllable student profile fields (names, emails, transaction IDs) directly to CSV outputs without sanitizing leading formula triggers (`=`, `+`, `-`, `@`, `\t`, `\r`), exposing administrators opening CSV exports in Excel to formula injection attacks.
+**Learning:** Exporting raw database fields to CSV without escaping leading formula characters allows malicious payload execution inside spreadsheet software when opened by administrative staff.
+**Prevention:** Sanitize all cell strings in CSV exports by prepending a single quote (`'`) to any string beginning with `=`, `+`, `-`, `@`, `\t`, or `\r`.
