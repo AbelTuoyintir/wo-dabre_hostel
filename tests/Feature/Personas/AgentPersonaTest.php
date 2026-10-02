@@ -1445,4 +1445,36 @@ class AgentPersonaTest extends TestCase
         $this->assertEquals(50.00, (float) $agent->fresh()->available_balance);
         $this->assertEquals(0, $agent->withdrawals()->count());
     }
+
+    public function test_admin_agent_export_sanitizes_csv_formula_injection(): void
+    {
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
+
+        $agentUser = User::factory()->create([
+            'name' => '=1+2',
+            'email' => '-agent@example.com',
+            'role' => 'student',
+            'phone' => '+233240000000',
+        ]);
+
+        HostelAgent::create([
+            'user_id' => $agentUser->id,
+            'agent_code' => '@AG-FORMULA',
+            'phone' => $agentUser->phone,
+            'status' => 'active',
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('admin.agents.export'));
+
+        $response->assertOk();
+        $content = $response->streamedContent();
+
+        $this->assertStringContainsString("'\x40AG-FORMULA", $content);
+        $this->assertStringContainsString("'=1+2", $content);
+        $this->assertStringContainsString("'-agent@example.com", $content);
+        $this->assertStringContainsString("'+233240000000", $content);
+    }
 }

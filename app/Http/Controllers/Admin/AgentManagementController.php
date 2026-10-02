@@ -388,7 +388,7 @@ class AgentManagementController extends Controller
 
             // Add data
             foreach ($agents as $agent) {
-                fputcsv($file, [
+                fputcsv($file, $this->sanitizeCsvRow([
                     $agent->id,
                     $agent->agent_code,
                     $agent->user->name,
@@ -402,13 +402,26 @@ class AgentManagementController extends Controller
                     $agent->total_rooms_added,
                     $agent->created_at,
                     $agent->approved_at
-                ]);
+                ]));
             }
 
             fclose($file);
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Sanitize array elements against CSV Formula Injection (=, +, -, @, tab, CR).
+     */
+    private function sanitizeCsvRow(array $row): array
+    {
+        return array_map(function ($value) {
+            if (is_string($value) && preg_match('/^[=\+\-@\t\r]/', $value)) {
+                return "'" . $value;
+            }
+            return $value;
+        }, $row);
     }
 
     /**
