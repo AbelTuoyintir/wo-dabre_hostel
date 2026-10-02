@@ -93,4 +93,26 @@ class AdminSecurityTest extends TestCase
             'id' => $admin->id,
         ]);
     }
+
+    public function test_admin_cannot_demote_own_account_role_via_update_user(): void
+    {
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'is_active' => true,
+            'gender' => 'male',
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->put(route('admin.users.update', $admin), [
+                'name' => $admin->name,
+                'email' => $admin->email,
+                'role' => 'student',
+                'is_active' => 1,
+            ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('error', 'You cannot demote or change the role of your own administrative account.');
+
+        $this->assertEquals('admin', $admin->fresh()->role);
+    }
 }

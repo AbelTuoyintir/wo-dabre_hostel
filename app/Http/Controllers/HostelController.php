@@ -36,7 +36,10 @@ class HostelController extends Controller
             ->where('status', 'active')
             ->with(['primaryImage', 'images', 'rooms' => function($q) {
                 $q->where('status', 'available')
-                  ->whereColumn('current_occupancy', '<', 'capacity');
+                ->where(function ($query) {
+                    $query->whereNull('current_occupancy')
+                        ->orWhereColumn('current_occupancy', '<', 'capacity');
+                });
             }]);
 
         // Filter by location

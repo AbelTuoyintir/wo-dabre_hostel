@@ -68,7 +68,7 @@ public function store(Request $request)
                 'description' => 'nullable|string|max:1000',
                 'floor' => 'nullable|integer|min:0',
                 'size_sqm' => 'nullable|numeric|min:1',
-                'window_type' => 'nullable|in:street,courtyard,garden,none',
+                'window_type' => 'nullable|in:street,roadside,courtyard,garden,none',
                 'furnished' => 'sometimes|boolean',
                 'private_bathroom' => 'sometimes|boolean',
                 // Image validation rules
@@ -352,7 +352,7 @@ public function store(Request $request)
                 'capacity' => 'required|integer|min:1',
                 'hostel_id' => 'required|exists:hostels,id',
                 'gender' => 'required|in:male,female,any',
-                'room_type' => 'required|in:single_room,shared_2,shared_4,executive',
+                'room_type' => 'nullable|string|max:255',
                 'status' => 'required|in:available,full,maintenance,inactive',
                 'room_cost' => 'nullable|numeric|min:0',
                 'description' => 'nullable|string|max:1000',

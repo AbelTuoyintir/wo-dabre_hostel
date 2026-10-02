@@ -739,15 +739,15 @@ class HostelManagerDashboard extends Controller
 
                 foreach ($occupants as $occupant) {
                     $booking = $occupant->bookings()->first();
-                    fputcsv($file, [
+                    fputcsv($file, $this->sanitizeCsvRow([
                         $occupant->name,
                         $occupant->email,
                         $occupant->student_id ?? 'N/A',
-                        ucfirst($occupant->gender),
+                        ucfirst($occupant->gender ?? 'N/A'),
                         $occupant->phone ?? 'N/A',
                         $booking->room->number ?? 'N/A',
                         $booking->hostel->name ?? 'N/A',
-                    ]);
+                    ]));
                 }
 
                 fclose($file);
@@ -1560,7 +1560,7 @@ $q->whereIn('hostel_id', $hostelIds)
 
                 foreach ($students as $student) {
                     foreach ($student->bookings as $booking) {
-                        fputcsv($file, [
+                        fputcsv($file, $this->sanitizeCsvRow([
                             $student->name,
                             $student->student_id ?? 'N/A',
                             $student->email,
@@ -1568,9 +1568,9 @@ $q->whereIn('hostel_id', $hostelIds)
                             $student->gender ?? 'N/A',
                             $booking->hostel->name ?? 'N/A',
                             $booking->room->number ?? 'N/A',
-                            $booking->check_in->format('Y-m-d'),
-                            $booking->check_out->format('Y-m-d')
-                        ]);
+                            $booking->check_in_date?->format('Y-m-d') ?? 'N/A',
+                            $booking->check_out_date?->format('Y-m-d') ?? 'N/A'
+                        ]));
                     }
                 }
                 break;
@@ -1864,7 +1864,7 @@ public function updateBookingStatus(Request $request, Booking $booking)
     }
 
     $request->validate([
-        'status' => 'required|in:pending,confirmed,completed,cancelled',
+        'status' => 'required|in:pending,confirmed,completed,checked_in,checked_out,cancelled',
         'cancellation_reason' => 'required_if:status,cancelled|nullable|string|max:500'
     ]);
 
@@ -1873,34 +1873,37 @@ public function updateBookingStatus(Request $request, Booking $booking)
 
     $activeStatuses = ['confirmed', 'checked_in'];
     $wasActive = in_array($oldStatus, $activeStatuses);
-    $isActive = in_array($newStatus, $activeStatuses);
-
-    if (!$wasActive && $isActive) {
-        $room = $booking->room;
-        if ($room) {
-            $room->current_occupancy = min($room->capacity, $room->current_occupancy + 1);
-            $room->save();
-        }
-    } elseif ($wasActive && !$isActive) {
-        $room = $booking->room;
-        if ($room) {
-            $room->current_occupancy = max(0, $room->current_occupancy - 1);
-            $room->save();
-        }
-    }
+    $willBeActive = in_array($newStatus, $activeStatuses);
 
     $booking->booking_status = $newStatus;
 
-    if ($newStatus == 'cancelled') {
-        if (\Illuminate\Support\Facades\Schema::hasColumn('bookings', 'cancellation_reason')) {
-            $booking->cancellation_reason = $request->cancellation_reason;
-        }
-        if (\Illuminate\Support\Facades\Schema::hasColumn('bookings', 'cancelled_at')) {
-            $booking->cancelled_at = now();
-        }
+    if ($newStatus === 'cancelled') {
+        $booking->cancellation_reason = $request->cancellation_reason;
+        $booking->cancelled_at = now();
     }
 
     $booking->save();
+
+    $room = $booking->room;
+    if ($room) {
+        if ($room->current_occupancy === null) {
+            $room->current_occupancy = 0;
+            $room->save();
+        }
+
+        if ($wasActive && !$willBeActive) {
+            Room::where('id', $room->id)
+                ->where('current_occupancy', '>', 0)
+                ->decrement('current_occupancy');
+        } elseif (!$wasActive && $willBeActive) {
+            Room::where('id', $room->id)
+                ->where(function ($q) {
+                    $q->whereColumn('current_occupancy', '<', 'capacity')
+                      ->orWhereNull('current_occupancy');
+                })
+                ->increment('current_occupancy');
+        }
+    }
 
     return redirect()->back()->with('success', 'Booking status updated successfully.');
 }
@@ -1917,13 +1920,119 @@ public function destroyBooking(Booking $booking)
     if (in_array($booking->booking_status, ['confirmed', 'checked_in'])) {
         $room = $booking->room;
         if ($room) {
-            $room->current_occupancy = max(0, $room->current_occupancy - 1);
-            $room->save();
+            Room::where('id', $room->id)
+                ->where('current_occupancy', '>', 0)
+                ->decrement('current_occupancy');
         }
     }
 
     $booking->delete();
 
     return redirect()->route('hostel-manager.bookings')->with('success', 'Booking deleted successfully.');
+}
+
+public function exportBookings(Request $request)
+{
+    $user = Auth::user();
+    $hostelIds = $user->managedHostels()->pluck('hostels.id');
+
+    $query = Booking::whereIn('hostel_id', $hostelIds)
+        ->with(['user', 'room', 'hostel']);
+
+    if ($request->filled('status')) {
+        $query->where('booking_status', $request->status);
+    }
+
+    if ($request->filled('hostel_id')) {
+        $query->where('hostel_id', $request->hostel_id);
+    }
+
+    $bookings = $query->latest()->get();
+
+    $headers = [
+        'Content-Type' => 'text/csv; charset=UTF-8',
+        'Content-Disposition' => 'attachment; filename="bookings-export-' . now()->format('Y-m-d') . '.csv"',
+    ];
+
+    $callback = function() use ($bookings) {
+        $file = fopen('php://output', 'w');
+        fputcsv($file, ['Booking Number', 'Student Name', 'Student Email', 'Hostel', 'Room', 'Status', 'Check In', 'Check Out', 'Total Amount', 'Amount Paid']);
+
+        foreach ($bookings as $booking) {
+            fputcsv($file, $this->sanitizeCsvRow([
+                $booking->booking_number ?? $booking->uuid,
+                $booking->user->name ?? 'Guest',
+                $booking->user->email ?? 'N/A',
+                $booking->hostel->name ?? 'N/A',
+                $booking->room->number ?? 'N/A',
+                $booking->booking_status,
+                $booking->check_in_date?->format('Y-m-d') ?? 'N/A',
+                $booking->check_out_date?->format('Y-m-d') ?? 'N/A',
+                $booking->total_amount,
+                $booking->amount_paid,
+            ]));
+        }
+
+        fclose($file);
+    };
+
+    return response()->stream($callback, 200, $headers);
+}
+
+public function exportPayments(Request $request)
+{
+    $user = Auth::user();
+    $hostelIds = $user->managedHostels()->pluck('hostels.id');
+
+    $query = Payment::whereHas('booking', function($q) use ($hostelIds) {
+        $q->whereIn('hostel_id', $hostelIds);
+    })->with(['booking.user', 'booking.room', 'booking.hostel']);
+
+    if ($request->filled('status')) {
+        $query->where('status', $request->status);
+    }
+
+    $payments = $query->latest()->get();
+
+    $headers = [
+        'Content-Type' => 'text/csv; charset=UTF-8',
+        'Content-Disposition' => 'attachment; filename="payments-export-' . now()->format('Y-m-d') . '.csv"',
+    ];
+
+    $callback = function() use ($payments) {
+        $file = fopen('php://output', 'w');
+        fputcsv($file, ['Transaction ID', 'Student Name', 'Student Email', 'Hostel', 'Room', 'Amount', 'Payment Method', 'Status', 'Date']);
+
+        foreach ($payments as $payment) {
+            fputcsv($file, $this->sanitizeCsvRow([
+                $payment->transaction_id ?? $payment->uuid,
+                $payment->booking->user->name ?? 'Guest',
+                $payment->booking->user->email ?? 'N/A',
+                $payment->booking->hostel->name ?? 'N/A',
+                $payment->booking->room->number ?? 'N/A',
+                $payment->amount,
+                $payment->payment_method ?? 'N/A',
+                $payment->status,
+                $payment->created_at?->format('Y-m-d H:i:s') ?? 'N/A',
+            ]));
+        }
+
+        fclose($file);
+    };
+
+    return response()->stream($callback, 200, $headers);
+}
+
+/**
+ * Sanitize array elements against CSV Formula Injection (=, +, -, @, tab, CR).
+ */
+private function sanitizeCsvRow(array $row): array
+{
+    return array_map(function ($value) {
+        if (is_string($value) && preg_match('/^[=\+\-@\t\r]/', $value)) {
+            return "'" . $value;
+        }
+        return $value;
+    }, $row);
 }
 }

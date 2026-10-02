@@ -84,10 +84,14 @@ class AdminController extends Controller
             'is_active' => 'nullable|boolean',
         ]);
 
-        // Security check: Prevent administrators from deactivating their own active account
+        // Security check: Prevent administrators from deactivating their own active account or demoting their own role
         $isActive = $request->has('is_active');
         if ($user->id === auth()->id() && !$isActive) {
             return redirect()->back()->with('error', 'You cannot deactivate your own administrative account.');
+        }
+
+        if ($user->id === auth()->id() && $request->role !== 'admin') {
+            return redirect()->back()->with('error', 'You cannot demote or change the role of your own administrative account.');
         }
 
         $user->update([
@@ -677,25 +681,33 @@ class AdminController extends Controller
 
         $activeStatuses = ['confirmed', 'checked_in'];
         $wasActive = in_array($oldStatus, $activeStatuses);
-        $isActive = in_array($newStatus, $activeStatuses);
-
-        if (!$wasActive && $isActive) {
-            $room = $booking->room;
-            if ($room) {
-                $room->current_occupancy = min($room->capacity, $room->current_occupancy + 1);
-                $room->save();
-            }
-        } elseif ($wasActive && !$isActive) {
-            $room = $booking->room;
-            if ($room) {
-                $room->current_occupancy = max(0, $room->current_occupancy - 1);
-                $room->save();
-            }
-        }
+        $willBeActive = in_array($newStatus, $activeStatuses);
 
         $booking->update([
             'booking_status' => $newStatus,
         ]);
+
+        $room = $booking->room;
+        if ($room) {
+            // Ensure current_occupancy is not null before atomic operations
+            if ($room->current_occupancy === null) {
+                $room->current_occupancy = 0;
+                $room->save();
+            }
+
+            if ($wasActive && !$willBeActive) {
+                \App\Models\Room::where('id', $room->id)
+                    ->where('current_occupancy', '>', 0)
+                    ->decrement('current_occupancy');
+            } elseif (!$wasActive && $willBeActive) {
+                \App\Models\Room::where('id', $room->id)
+                    ->where(function ($q) {
+                        $q->whereColumn('current_occupancy', '<', 'capacity')
+                          ->orWhereNull('current_occupancy');
+                    })
+                    ->increment('current_occupancy');
+            }
+        }
 
         return redirect()->route('admin.bookings.show', $booking)
             ->with('success', 'Booking status updated successfully.');

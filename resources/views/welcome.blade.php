@@ -1,6 +1,6 @@
 @extends('layouts.home')
 
-@section('title', 'UCC SRC HOSTEL SERIVCE - Find your next student home')
+@section('title', 'UCC Hostels Hub - Find your next student home')
 
 @section('content')
     <!-- SEARCH & FILTER SECTION -->

@@ -125,7 +125,7 @@
                             <img src="{{ asset('srclogo.png') }}" alt="Wo-dabre Logo" class="w-6 h-6 object-contain">
                         </div>
                         <div>
-                            <h1 class="logo-text text-xl text-gray-800 tracking-tight">UCC SRC<span class="text-blue-600">hostel Service</span></h1>
+                            <h1 class="logo-text text-xl text-gray-800 tracking-tight">UCC <span class="text-blue-600">hostel Service</span></h1>
                             <p class="text-[10px] text-gray-400 font-medium tracking-wider uppercase" style="letter-spacing: 0.05em;">Find Your Home Away</p>
                         </div>
                     </a>
@@ -441,7 +441,7 @@
                         <div class="bg-white p-2 rounded-full">
                             <img src="{{ asset('wodabre-logo.png') }}" alt="Wo-dabre Logo" class="w-10 h-10 object-contain">
                         </div>
-                        <h3 class="text-xl font-bold" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">UCC SRC Hostel Booking</h3>
+                        <h3 class="text-xl font-bold" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">UCC Hostel Booking</h3>
                     </div>
                     <p class="text-gray-400" style="font-family: 'Inter', 'Lucida Sans', sans-serif;">The official hostel booking platform for University of Cape Coast students.</p>
                 </div>

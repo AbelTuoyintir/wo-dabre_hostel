@@ -130,7 +130,10 @@ class Hostel extends Model
     {
         $minPrice = $this->rooms()
             ->where('status', 'available')
-            ->whereColumn('current_occupancy', '<', 'capacity')
+            ->where(function ($query) {
+                $query->whereNull('current_occupancy')
+                    ->orWhereColumn('current_occupancy', '<', 'capacity');
+            })
             ->min('room_cost');
 
         // Convert to float or return null
@@ -141,7 +144,10 @@ class Hostel extends Model
     {
         return $this->rooms()
             ->where('status', 'available')
-            ->whereColumn('current_occupancy', '<', 'capacity')
+            ->where(function ($query) {
+                $query->whereNull('current_occupancy')
+                    ->orWhereColumn('current_occupancy', '<', 'capacity');
+            })
             ->count();
     }
 
