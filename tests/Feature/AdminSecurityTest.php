@@ -2,6 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\Booking;
+use App\Models\Hostel;
+use App\Models\Room;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -114,5 +117,92 @@ class AdminSecurityTest extends TestCase
         $response->assertSessionHas('error', 'You cannot demote or change the role of your own administrative account.');
 
         $this->assertEquals('admin', $admin->fresh()->role);
+    }
+
+    public function test_admin_booking_export_sanitizes_csv_formula_injection(): void
+    {
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
+
+        $student = User::factory()->create([
+            'name' => '=CMD|\' /C calc\'!A0',
+            'email' => '-student@example.com',
+            'role' => 'student',
+        ]);
+
+        $hostel = Hostel::forceCreate([
+            'name' => '@HostelFormula',
+            'location' => 'amamoma',
+            'address' => 'test address',
+            'is_approved' => true,
+        ]);
+
+        $room = Room::create([
+            'hostel_id' => $hostel->id,
+            'number' => '+Room101',
+            'room_type' => 'single_room',
+            'capacity' => 2,
+            'room_cost' => 500,
+            'gender' => 'any',
+            'status' => 'available',
+        ]);
+
+        Booking::create([
+            'booking_number' => '=1+2',
+            'user_id' => $student->id,
+            'room_id' => $room->id,
+            'hostel_id' => $hostel->id,
+            'check_in_date' => now()->toDateString(),
+            'check_out_date' => now()->addYear()->toDateString(),
+            'booking_status' => 'confirmed',
+            'payment_status' => 'paid',
+            'total_amount' => 500,
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('admin.bookings.export'));
+
+        $response->assertOk();
+        $content = $response->streamedContent();
+
+        $this->assertStringContainsString("'\x3DCMD|' /C calc'!A0", $content);
+        $this->assertStringContainsString("'-student@example.com", $content);
+        $this->assertStringContainsString("'\x40HostelFormula", $content);
+        $this->assertStringContainsString("'+Room101", $content);
+        $this->assertStringContainsString("'\x3D1+2", $content);
+    }
+
+    public function test_admin_rooms_export_sanitizes_csv_formula_injection(): void
+    {
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
+
+        $hostel = Hostel::forceCreate([
+            'name' => '=HostelName',
+            'location' => 'amamoma',
+            'address' => 'test address',
+            'is_approved' => true,
+        ]);
+
+        Room::create([
+            'hostel_id' => $hostel->id,
+            'number' => '+12345',
+            'room_type' => 'single_room',
+            'capacity' => 1,
+            'room_cost' => 300,
+            'gender' => 'any',
+            'status' => 'available',
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('admin.rooms.export'));
+
+        $response->assertOk();
+        $content = $response->streamedContent();
+
+        $this->assertStringContainsString("'\x3DHostelName", $content);
+        $this->assertStringContainsString("'+12345", $content);
     }
 }
