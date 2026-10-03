@@ -887,7 +887,7 @@ $path = $image->store('rooms/gallery', 'public');
             ]);
 
             foreach ($rooms as $room) {
-                fputcsv($file, [
+                fputcsv($file, $this->sanitizeCsvRow([
                     $room->id,
                     $room->number,
                     $room->hostel?->name ?? 'N/A',
@@ -902,13 +902,26 @@ $path = $image->store('rooms/gallery', 'public');
                     $room->private_bathroom ? 'Yes' : 'No',
                     $room->window_type ?? 'N/A',
                     optional($room->created_at)->format('Y-m-d H:i:s'),
-                ]);
+                ]));
             }
 
             fclose($file);
         }, $filename, [
             'Content-Type' => 'text/csv; charset=UTF-8',
         ]);
+    }
+
+    /**
+     * Sanitize array elements against CSV Formula Injection (=, +, -, @, tab, CR).
+     */
+    private function sanitizeCsvRow(array $row): array
+    {
+        return array_map(function ($value) {
+            if (is_string($value) && preg_match('/^[=\+\-@\t\r]/', $value)) {
+                return "'" . $value;
+            }
+            return $value;
+        }, $row);
     }
 
     private function downloadRoomsPdf(Collection $rooms): Response

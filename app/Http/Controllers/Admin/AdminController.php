@@ -513,7 +513,7 @@ class AdminController extends Controller
             ]);
 
             foreach ($bookings as $booking) {
-                fputcsv($file, [
+                fputcsv($file, $this->sanitizeCsvRow([
                     $booking->booking_number,
                     $booking->user?->name ?? 'N/A',
                     $booking->user?->email ?? 'N/A',
@@ -528,13 +528,26 @@ class AdminController extends Controller
                     $booking->payment_status,
                     $booking->payment_method ?? 'N/A',
                     optional($booking->created_at)->format('Y-m-d H:i:s'),
-                ]);
+                ]));
             }
 
             fclose($file);
         }, $filename, [
             'Content-Type' => 'text/csv; charset=UTF-8',
         ]);
+    }
+
+    /**
+     * Sanitize array elements against CSV Formula Injection (=, +, -, @, tab, CR).
+     */
+    private function sanitizeCsvRow(array $row): array
+    {
+        return array_map(function ($value) {
+            if (is_string($value) && preg_match('/^[=\+\-@\t\r]/', $value)) {
+                return "'" . $value;
+            }
+            return $value;
+        }, $row);
     }
 
     private function downloadBookingsPdf(Collection $bookings): Response
