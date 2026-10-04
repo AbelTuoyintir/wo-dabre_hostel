@@ -377,4 +377,78 @@ class HostelManagerPersonaTest extends TestCase
         $responsePayments->assertHeader('content-type', 'text/csv; charset=UTF-8');
         $this->assertStringContainsString("'=SUM(1,1) Student", $responsePayments->streamedContent());
     }
+
+    public function test_contact_occupant_endpoint_is_rate_limited(): void
+    {
+        $manager = User::create([
+            'name' => 'Rate Limit Manager',
+            'email' => 'rl_mgr_'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '08011122297',
+            'role' => 'hostel_manager',
+            'email_verified_at' => now(),
+        ]);
+
+        $hostel = Hostel::create([
+            'name' => 'Managed Hostel Rate Limit Test',
+            'location' => 'amamoma',
+            'address' => '123 RL St',
+            'email' => 'rl@example.com',
+            'manager_id' => $manager->id,
+        ]);
+
+        $student = User::create([
+            'name' => 'RL Student',
+            'email' => 'rl_student_'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '08011122287',
+            'role' => 'student',
+            'gender' => 'male',
+            'email_verified_at' => now(),
+        ]);
+
+        $room = Room::create([
+            'number' => '707',
+            'capacity' => 2,
+            'hostel_id' => $hostel->id,
+            'gender' => 'any',
+            'status' => 'available',
+            'room_type' => 'single_room',
+            'room_cost' => 250.00,
+            'current_occupancy' => 1,
+        ]);
+
+        \App\Models\Booking::create([
+            'user_id' => $student->id,
+            'hostel_id' => $hostel->id,
+            'room_id' => $room->id,
+            'check_in_date' => now()->toDateString(),
+            'check_out_date' => now()->addDays(30)->toDateString(),
+            'total_amount' => 250.00,
+            'amount_paid' => 250.00,
+            'booking_status' => 'confirmed',
+            'payment_status' => 'paid',
+            'booking_number' => 'BKRL' . uniqid(),
+        ]);
+
+        // First 10 requests within a minute should pass rate limiting validation
+        for ($i = 0; $i < 10; $i++) {
+            $response = $this->actingAs($manager)
+                ->post(route('hostel-manager.occupants.contact', ['user' => $student->uuid]), [
+                    'subject' => 'Rate Limit Test ' . $i,
+                    'message' => 'This is test message number ' . $i,
+                ]);
+
+            $this->assertNotEquals(429, $response->getStatusCode());
+        }
+
+        // 11th request should trigger 429 Too Many Requests
+        $response11 = $this->actingAs($manager)
+            ->post(route('hostel-manager.occupants.contact', ['user' => $student->uuid]), [
+                'subject' => 'Rate Limit Test 11',
+                'message' => 'This is test message number 11',
+            ]);
+
+        $response11->assertStatus(429);
+    }
 }
