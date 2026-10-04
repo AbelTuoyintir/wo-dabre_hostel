@@ -31,7 +31,7 @@ Route::middleware(['auth', 'hostel.manager'])->prefix('hostel-manager')->name('h
     // Occupants (Students) Management
     Route::get('/occupants', [HostelManagerDashboard::class, 'occupants'])->name('occupants');
     Route::get('/occupants/export', [HostelManagerDashboard::class, 'exportOccupants'])->name('occupants.export');
-    Route::post('/occupants/{user:uuid}/contact', [HostelManagerDashboard::class, 'contactOccupant'])->name('occupants.contact');
+    Route::post('/occupants/{user:uuid}/contact', [HostelManagerDashboard::class, 'contactOccupant'])->middleware('throttle:10,1')->name('occupants.contact');
     Route::get('/occupants/{user:uuid}', [HostelManagerDashboard::class, 'showOccupant'])->name('occupants.show');
 
     // Complaints Management
