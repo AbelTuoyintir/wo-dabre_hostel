@@ -548,7 +548,7 @@ class HostelManagerDashboard extends Controller
                 fputcsv($file, ['Room Number', 'Hostel', 'Status', 'Capacity', 'Current Occupancy', 'Price/Month', 'Gender']);
 
                 foreach ($rooms as $room) {
-                    fputcsv($file, [
+                    fputcsv($file, $this->sanitizeCsvRow([
                         $room->number,
                         $room->hostel->name,
                         $room->status,
@@ -556,7 +556,7 @@ class HostelManagerDashboard extends Controller
                         $room->current_occupancy,
                         $room->price_per_month,
                         $room->gender,
-                    ]);
+                    ]));
                 }
 
                 fclose($file);
@@ -1476,14 +1476,14 @@ public function exportReport(Request $request, $type)
                     $totalCapacity = $rooms->sum('capacity');
                     $currentOccupancy = $rooms->sum('current_occupancy');
 
-                    fputcsv($file, [
+                    fputcsv($file, $this->sanitizeCsvRow([
                         $hostel->name,
                         $rooms->count(),
                         $totalCapacity,
                         $currentOccupancy,
                         $totalCapacity > 0 ? round(($currentOccupancy / $totalCapacity) * 100, 2) . '%' : '0%',
                         $totalCapacity - $currentOccupancy
-                    ]);
+                    ]));
                 }
                 break;
 
@@ -1503,11 +1503,11 @@ public function exportReport(Request $request, $type)
                         ->where('status', 'completed')
                         ->count();
 
-                    fputcsv($file, [
+                    fputcsv($file, $this->sanitizeCsvRow([
                         date('F', mktime(0, 0, 0, $month, 1)),
                         number_format($revenue, 2),
                         $count
-                    ]);
+                    ]));
                 }
                 break;
 
@@ -1517,7 +1517,7 @@ public function exportReport(Request $request, $type)
                 for ($i = 29; $i >= 0; $i--) {
                     $date = now()->subDays($i);
 
-$checkins = Booking::whereIn('hostel_id', $hostelIds)
+                    $checkins = Booking::whereIn('hostel_id', $hostelIds)
                         ->whereDate('check_in_date', $date)
                         ->where('booking_status', 'confirmed')
                         ->count();
@@ -1533,12 +1533,12 @@ $checkins = Booking::whereIn('hostel_id', $hostelIds)
                         ->where('check_out_date', '>=', $date)
                         ->count();
 
-                    fputcsv($file, [
+                    fputcsv($file, $this->sanitizeCsvRow([
                         $date->format('Y-m-d'),
                         $checkins,
                         $checkouts,
                         $active
-                    ]);
+                    ]));
                 }
                 break;
 

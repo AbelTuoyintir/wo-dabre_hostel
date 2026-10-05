@@ -378,6 +378,54 @@ class HostelManagerPersonaTest extends TestCase
         $this->assertStringContainsString("'=SUM(1,1) Student", $responsePayments->streamedContent());
     }
 
+    public function test_hostel_manager_rooms_and_reports_export_sanitizes_csv_formula_injection(): void
+    {
+        $manager = User::create([
+            'name' => 'Formula Export Manager',
+            'email' => 'formula_mgr_'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '08011122298',
+            'role' => 'hostel_manager',
+            'email_verified_at' => now(),
+        ]);
+
+        $hostel = Hostel::create([
+            'name' => '=CMD() Hostel',
+            'location' => 'amamoma',
+            'address' => '123 Formula St',
+            'email' => 'formula@example.com',
+            'manager_id' => $manager->id,
+        ]);
+
+        $room = Room::create([
+            'number' => '=1+1 Room',
+            'capacity' => 2,
+            'hostel_id' => $hostel->id,
+            'gender' => 'any',
+            'status' => 'available',
+            'room_type' => 'single_room',
+            'room_cost' => 300.00,
+            'current_occupancy' => 0,
+        ]);
+
+        // 1. Verify rooms export sanitizes formula injection on room number and hostel name
+        $responseRooms = $this->actingAs($manager)
+            ->get(route('hostel-manager.rooms.export'));
+
+        $responseRooms->assertOk();
+        $responseRooms->assertHeader('content-type', 'text/csv; charset=UTF-8');
+        $this->assertStringContainsString("'=1+1 Room", $responseRooms->streamedContent());
+        $this->assertStringContainsString("'=CMD() Hostel", $responseRooms->streamedContent());
+
+        // 2. Verify report occupancy export sanitizes formula injection on hostel name
+        $responseReport = $this->actingAs($manager)
+            ->get(route('hostel-manager.reports.export', ['type' => 'occupancy']));
+
+        $responseReport->assertOk();
+        $responseReport->assertHeader('content-type', 'text/csv; charset=UTF-8');
+        $this->assertStringContainsString("'=CMD() Hostel", $responseReport->streamedContent());
+    }
+
     public function test_contact_occupant_endpoint_is_rate_limited(): void
     {
         $manager = User::create([
