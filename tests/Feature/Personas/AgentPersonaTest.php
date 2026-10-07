@@ -1446,6 +1446,30 @@ class AgentPersonaTest extends TestCase
         $this->assertEquals(0, $agent->withdrawals()->count());
     }
 
+    public function test_agent_without_profile_is_safely_redirected_from_dashboard_history_routes(): void
+    {
+        $user = User::create([
+            'name' => 'Agent Without Profile',
+            'email' => 'noprofile_'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '080'.str_pad((string)random_int(0, 9999999), 7, '0', STR_PAD_LEFT),
+            'role' => 'hostel_agent',
+            'email_verified_at' => now(),
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('agent.commissions'))
+            ->assertRedirect(route('agent.complete-profile'));
+
+        $this->actingAs($user)
+            ->get(route('agent.withdrawals'))
+            ->assertRedirect(route('agent.complete-profile'));
+
+        $this->actingAs($user)
+            ->get(route('agent.withdrawals.request'))
+            ->assertRedirect(route('agent.complete-profile'));
+    }
+
     public function test_admin_agent_export_sanitizes_csv_formula_injection(): void
     {
         $admin = User::factory()->create([
