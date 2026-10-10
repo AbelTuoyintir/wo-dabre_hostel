@@ -128,4 +128,23 @@ class PaymentSecurityTest extends TestCase
         $response->assertStatus(200);
         $response->assertHeader('content-type', 'application/pdf');
     }
+
+    public function test_student_fee_payment_initialization_is_rate_limited(): void
+    {
+        $user = User::factory()->create(['gender' => 'male', 'role' => 'student']);
+
+        // Mock Paystack facade to prevent real API calls or exception handling redirects
+        \Unicodeveloper\Paystack\Facades\Paystack::shouldReceive('getAuthorizationUrl->redirectNow')
+            ->andReturn(redirect('https://checkout.paystack.com/test'));
+
+        // Send 5 requests within rate limit (throttle:5,1)
+        for ($i = 0; $i < 5; $i++) {
+            $response = $this->actingAs($user)->post(route('student.payment.initialize'));
+            $this->assertNotEquals(429, $response->status());
+        }
+
+        // 6th request should be throttled
+        $response = $this->actingAs($user)->post(route('student.payment.initialize'));
+        $response->assertStatus(429);
+    }
 }

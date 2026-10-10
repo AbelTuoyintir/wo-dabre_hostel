@@ -13,7 +13,7 @@ Route::middleware(['auth', 'student'])->prefix('student')->name('student.')->gro
 
     // Fee Payment
     Route::get('/payment', [StudentController::class, 'showPaymentForm'])->name('payment');
-    Route::post('/payment/initialize', [StudentController::class, 'initializeFeePayment'])->name('payment.initialize');
+    Route::post('/payment/initialize', [StudentController::class, 'initializeFeePayment'])->middleware('throttle:5,1')->name('payment.initialize');
     Route::get('/payment/callback', [StudentController::class, 'handlePaymentCallback'])->name('payment.callback');
 
     // Booking Payment — initialize or retry payment for an existing pending booking
