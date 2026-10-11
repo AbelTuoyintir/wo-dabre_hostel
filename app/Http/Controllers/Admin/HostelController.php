@@ -349,9 +349,9 @@ class HostelController extends Controller
      */
     public function destroy(Hostel $hostel)
     {
-        // Check for active bookings
+        // Check for active bookings using booking_status column
         $hasActiveBookings = $hostel->bookings()
-            ->whereIn('status', ['pending', 'confirmed'])
+            ->whereIn('booking_status', ['pending', 'confirmed', 'checked_in'])
             ->exists();
 
         if ($hasActiveBookings) {

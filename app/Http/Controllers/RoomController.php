@@ -710,9 +710,9 @@ $path = $image->store('rooms/gallery', 'public');
      */
     public function destroy(Room $room)
     {
-        // Check for active bookings
+        // Check for active bookings using booking_status column
         $hasActiveBookings = $room->bookings()
-            ->whereIn('status', ['pending', 'confirmed'])
+            ->whereIn('booking_status', ['pending', 'confirmed', 'checked_in'])
             ->exists();
 
         if ($hasActiveBookings) {

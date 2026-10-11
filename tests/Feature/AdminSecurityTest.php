@@ -205,4 +205,57 @@ class AdminSecurityTest extends TestCase
         $this->assertStringContainsString("'\x3DHostelName", $content);
         $this->assertStringContainsString("'+12345", $content);
     }
+
+    public function test_admin_cannot_delete_room_or_hostel_with_active_bookings(): void
+    {
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
+
+        $student = User::factory()->create([
+            'role' => 'student',
+        ]);
+
+        $hostel = Hostel::forceCreate([
+            'name' => 'Active Hostel',
+            'location' => 'amamoma',
+            'address' => '123 Main St',
+            'is_approved' => true,
+        ]);
+
+        $room = Room::create([
+            'hostel_id' => $hostel->id,
+            'number' => '101',
+            'room_type' => 'single_room',
+            'capacity' => 2,
+            'room_cost' => 500,
+            'gender' => 'any',
+            'status' => 'available',
+        ]);
+
+        Booking::create([
+            'booking_number' => 'BK-TEST-101',
+            'user_id' => $student->id,
+            'room_id' => $room->id,
+            'hostel_id' => $hostel->id,
+            'check_in_date' => now()->toDateString(),
+            'check_out_date' => now()->addYear()->toDateString(),
+            'booking_status' => 'confirmed',
+            'payment_status' => 'paid',
+            'total_amount' => 500,
+        ]);
+
+        // Attempting to delete room with active booking should be rejected
+        $responseRoom = $this->actingAs($admin)->delete(route('admin.rooms.destroy', $room));
+        $responseRoom->assertRedirect();
+        $responseRoom->assertSessionHas('error', 'Cannot delete room with active bookings.');
+        $this->assertDatabaseHas('rooms', ['id' => $room->id]);
+
+        // Attempting to delete hostel with active booking should be rejected
+        $responseHostel = $this->actingAs($admin)->delete(route('admin.hostels.destroy', $hostel));
+        $responseHostel->assertRedirect();
+        $responseHostel->assertSessionHas('error', 'Cannot delete hostel with active bookings.');
+        $this->assertDatabaseHas('hostels', ['id' => $hostel->id]);
+    }
 }
