@@ -147,4 +147,58 @@ class PaymentSecurityTest extends TestCase
         $response = $this->actingAs($user)->post(route('student.payment.initialize'));
         $response->assertStatus(429);
     }
+
+    public function test_student_booking_payment_initialization_is_rate_limited(): void
+    {
+        $user = User::factory()->create(['gender' => 'male', 'role' => 'student']);
+        $hostel = Hostel::create([
+            'name' => 'Rate Limit Hostel',
+            'slug' => 'rate-limit-hostel',
+            'description' => 'Test Hostel Description',
+            'address' => '123 Campus Way',
+            'location' => 'amamoma',
+            'phone' => '0240000000',
+            'email' => 'hostel@example.com',
+            'is_approved' => true,
+            'status' => 'active',
+        ]);
+        $room = Room::create([
+            'hostel_id' => $hostel->id,
+            'number' => '101',
+            'capacity' => 2,
+            'current_occupancy' => 0,
+            'room_type' => 'single_room',
+            'room_cost' => 500,
+            'gender' => 'male',
+            'status' => 'available',
+        ]);
+
+        $booking = Booking::create([
+            'booking_number' => 'BN-TEST-001',
+            'user_id' => $user->id,
+            'hostel_id' => $hostel->id,
+            'room_id' => $room->id,
+            'check_in_date' => now()->addDays(1)->format('Y-m-d'),
+            'check_out_date' => now()->addDays(5)->format('Y-m-d'),
+            'total_amount' => 500,
+            'amount_paid' => 0,
+            'payment_status' => 'pending',
+            'booking_status' => 'pending',
+        ]);
+
+        // Mock Paystack facade to prevent real API calls or exception handling redirects
+        \Unicodeveloper\Paystack\Facades\Paystack::shouldReceive('genTranxRef')->andReturn('REF-1234');
+        \Unicodeveloper\Paystack\Facades\Paystack::shouldReceive('getAuthorizationUrl->redirectNow')
+            ->andReturn(redirect('https://checkout.paystack.com/test'));
+
+        // Send 5 requests within rate limit (throttle:5,1)
+        for ($i = 0; $i < 5; $i++) {
+            $response = $this->actingAs($user)->get(route('student.bookings.pay', $booking));
+            $this->assertNotEquals(429, $response->status());
+        }
+
+        // 6th request should be throttled
+        $response = $this->actingAs($user)->get(route('student.bookings.pay', $booking));
+        $response->assertStatus(429);
+    }
 }
