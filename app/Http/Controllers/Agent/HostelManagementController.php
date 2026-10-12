@@ -298,9 +298,12 @@ $hostel->images()->create([
             abort(404, 'Room not found in this hostel.');
         }
 
-        // Check for active/confirmed/pending bookings on this room
+        // Check for active bookings across both booking_status and status columns
         $hasActiveBookings = $room->bookings()
-            ->whereIn('booking_status', ['confirmed', 'pending', 'checked_in'])
+            ->where(function ($q) {
+                $q->whereIn('booking_status', ['pending', 'confirmed', 'checked_in'])
+                  ->orWhereIn('status', ['pending', 'confirmed', 'checked_in']);
+            })
             ->exists();
 
         if ($hasActiveBookings) {
