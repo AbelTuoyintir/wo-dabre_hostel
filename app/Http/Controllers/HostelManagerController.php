@@ -549,9 +549,12 @@ class HostelManagementController extends Controller
             abort(403);
         }
 
-        // Check for active bookings
+        // Check for active bookings across both booking_status and status columns
         $hasActiveBookings = $room->bookings()
-            ->whereIn('status', ['pending', 'confirmed'])
+            ->where(function ($q) {
+                $q->whereIn('booking_status', ['pending', 'confirmed', 'checked_in'])
+                  ->orWhereIn('status', ['pending', 'confirmed', 'checked_in']);
+            })
             ->exists();
 
         if ($hasActiveBookings) {
