@@ -218,9 +218,9 @@ class AdminSecurityTest extends TestCase
         ]);
 
         $hostel = Hostel::forceCreate([
-            'name' => 'Active Hostel',
+            'name' => 'Protected Hostel',
             'location' => 'amamoma',
-            'address' => '123 Main St',
+            'address' => 'test address',
             'is_approved' => true,
         ]);
 
@@ -235,7 +235,7 @@ class AdminSecurityTest extends TestCase
         ]);
 
         Booking::create([
-            'booking_number' => 'BK-TEST-101',
+            'booking_number' => 'BK-1001',
             'user_id' => $student->id,
             'room_id' => $room->id,
             'hostel_id' => $hostel->id,
@@ -246,14 +246,18 @@ class AdminSecurityTest extends TestCase
             'total_amount' => 500,
         ]);
 
-        // Attempting to delete room with active booking should be rejected
-        $responseRoom = $this->actingAs($admin)->delete(route('admin.rooms.destroy', $room));
+        // Attempt room deletion
+        $responseRoom = $this->actingAs($admin)
+            ->delete(route('admin.rooms.destroy', $room));
+
         $responseRoom->assertRedirect();
         $responseRoom->assertSessionHas('error', 'Cannot delete room with active bookings.');
         $this->assertDatabaseHas('rooms', ['id' => $room->id]);
 
-        // Attempting to delete hostel with active booking should be rejected
-        $responseHostel = $this->actingAs($admin)->delete(route('admin.hostels.destroy', $hostel));
+        // Attempt hostel deletion
+        $responseHostel = $this->actingAs($admin)
+            ->delete(route('admin.hostels.destroy', $hostel));
+
         $responseHostel->assertRedirect();
         $responseHostel->assertSessionHas('error', 'Cannot delete hostel with active bookings.');
         $this->assertDatabaseHas('hostels', ['id' => $hostel->id]);

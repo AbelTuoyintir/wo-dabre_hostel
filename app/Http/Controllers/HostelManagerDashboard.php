@@ -863,8 +863,15 @@ class HostelManagerDashboard extends Controller
             abort(403);
         }
 
-        // Check if room has active bookings
-        if ($room->bookings()->where('booking_status', 'confirmed')->exists()) {
+        // Check for active bookings across both booking_status and status columns
+        $hasActiveBookings = $room->bookings()
+            ->where(function ($q) {
+                $q->whereIn('booking_status', ['pending', 'confirmed', 'checked_in'])
+                  ->orWhereIn('status', ['pending', 'confirmed', 'checked_in']);
+            })
+            ->exists();
+
+        if ($hasActiveBookings) {
             return redirect()->back()->with('error', 'Cannot delete a room with active bookings.');
         }
 

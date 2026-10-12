@@ -18,11 +18,12 @@ class SettingsController extends Controller
     public function updateSettings(Request $request)
     {
         $user = Auth::user();
+        $agentId = $user->agent?->id;
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'phone' => 'nullable|string',
-            'notification_email' => 'nullable|email',
+            'phone' => 'nullable|string|max:20' . ($agentId ? '|unique:hostel_agents,phone,' . $agentId : ''),
+            'notification_email' => 'nullable|email|max:255',
         ]);
 
         $user->update(['name' => $request->name]);

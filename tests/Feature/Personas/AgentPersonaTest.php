@@ -159,6 +159,55 @@ class AgentPersonaTest extends TestCase
         ]);
     }
 
+    public function test_agent_settings_update_rejects_duplicate_phone_number(): void
+    {
+        $agent1User = User::create([
+            'name' => 'Agent One',
+            'email' => 'agent1'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '08011111111',
+            'role' => 'hostel_agent',
+            'email_verified_at' => now(),
+        ]);
+
+        HostelAgent::create([
+            'user_id' => $agent1User->id,
+            'agent_code' => 'AG-DUP1'.uniqid(),
+            'phone' => $agent1User->phone,
+            'status' => 'active',
+            'approved_at' => now(),
+        ]);
+
+        $agent2User = User::create([
+            'name' => 'Agent Two',
+            'email' => 'agent2'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '08022222222',
+            'role' => 'hostel_agent',
+            'email_verified_at' => now(),
+        ]);
+
+        $agent2 = HostelAgent::create([
+            'user_id' => $agent2User->id,
+            'agent_code' => 'AG-DUP2'.uniqid(),
+            'phone' => $agent2User->phone,
+            'status' => 'active',
+            'approved_at' => now(),
+        ]);
+
+        // Attempting to update Agent 2's phone to Agent 1's phone should fail validation
+        $this->actingAs($agent2User)
+            ->put(route('agent.settings.update'), [
+                'name' => 'Agent Two',
+                'phone' => '08011111111', // duplicate phone
+                'notification_email' => null,
+            ])
+            ->assertStatus(302)
+            ->assertSessionHasErrors(['phone']);
+
+        $this->assertEquals('08022222222', $agent2->fresh()->phone);
+    }
+
     public function test_agent_password_update_requires_correct_current_password(): void
     {
         $user = User::create([
@@ -1444,6 +1493,30 @@ class AgentPersonaTest extends TestCase
 
         $this->assertEquals(50.00, (float) $agent->fresh()->available_balance);
         $this->assertEquals(0, $agent->withdrawals()->count());
+    }
+
+    public function test_agent_without_profile_is_safely_redirected_from_dashboard_history_routes(): void
+    {
+        $user = User::create([
+            'name' => 'Agent Without Profile',
+            'email' => 'noprofile_'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'phone' => '080'.str_pad((string)random_int(0, 9999999), 7, '0', STR_PAD_LEFT),
+            'role' => 'hostel_agent',
+            'email_verified_at' => now(),
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('agent.commissions'))
+            ->assertRedirect(route('agent.complete-profile'));
+
+        $this->actingAs($user)
+            ->get(route('agent.withdrawals'))
+            ->assertRedirect(route('agent.complete-profile'));
+
+        $this->actingAs($user)
+            ->get(route('agent.withdrawals.request'))
+            ->assertRedirect(route('agent.complete-profile'));
     }
 
     public function test_admin_agent_export_sanitizes_csv_formula_injection(): void

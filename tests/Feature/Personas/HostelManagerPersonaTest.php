@@ -499,4 +499,63 @@ class HostelManagerPersonaTest extends TestCase
 
         $response11->assertStatus(429);
     }
+
+    public function test_hostel_manager_cannot_delete_room_with_active_bookings(): void
+    {
+        $manager = User::create([
+            'name' => 'Manager Room Del',
+            'email' => 'mrd_' . uniqid() . '@example.com',
+            'password' => Hash::make('password123'),
+            'role' => 'hostel_manager',
+            'is_active' => true,
+        ]);
+
+        $hostel = Hostel::create([
+            'name' => 'Safety Hostel',
+            'slug' => 'safety-hostel-' . uniqid(),
+            'description' => 'Test Hostel',
+            'address' => '123 Safety St',
+            'location' => 'amamoma',
+            'status' => 'active',
+            'manager_id' => $manager->id,
+            'is_verified' => true,
+        ]);
+
+        $room = Room::create([
+            'number' => '501',
+            'capacity' => 2,
+            'hostel_id' => $hostel->id,
+            'gender' => 'any',
+            'status' => 'available',
+            'room_type' => 'single_room',
+            'room_cost' => 300.00,
+            'current_occupancy' => 1,
+        ]);
+
+        $student = User::create([
+            'name' => 'Active Tenant',
+            'email' => 'tenant_' . uniqid() . '@example.com',
+            'password' => Hash::make('password123'),
+            'role' => 'student',
+            'is_active' => true,
+        ]);
+
+        \App\Models\Booking::create([
+            'user_id' => $student->id,
+            'hostel_id' => $hostel->id,
+            'room_id' => $room->id,
+            'check_in_date' => now()->toDateString(),
+            'check_out_date' => now()->addDays(30)->toDateString(),
+            'total_amount' => 300.00,
+            'booking_status' => 'checked_in',
+            'payment_status' => 'paid',
+            'booking_number' => 'BKDEL' . uniqid(),
+        ]);
+
+        $response = $this->actingAs($manager)
+            ->delete(route('hostel-manager.rooms.destroy', ['room' => $room->uuid]));
+
+        $response->assertSessionHas('error', 'Cannot delete a room with active bookings.');
+        $this->assertDatabaseHas('rooms', ['id' => $room->id]);
+    }
 }

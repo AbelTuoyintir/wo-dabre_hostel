@@ -81,6 +81,10 @@ class DashboardController extends Controller
     {
         $agent = Auth::user()->agent;
 
+        if (!$agent) {
+            return redirect()->route('agent.complete-profile')->with('error', 'Agent profile not found.');
+        }
+
         $commissions = $agent->commissions()
             ->with(['hostel', 'booking'])
             ->when($request->type, function($query, $type) {
@@ -110,6 +114,10 @@ class DashboardController extends Controller
     {
         $agent = Auth::user()->agent;
 
+        if (!$agent) {
+            return redirect()->route('agent.complete-profile')->with('error', 'Agent profile not found.');
+        }
+
         $withdrawals = $agent->withdrawals()
             ->when($request->status, function($query, $status) {
                 return $query->where('status', $status);
@@ -127,6 +135,10 @@ class DashboardController extends Controller
     public function showWithdrawalForm()
     {
         $agent = Auth::user()->agent;
+
+        if (!$agent) {
+            return redirect()->route('agent.complete-profile')->with('error', 'Agent profile not found.');
+        }
 
         return view('agent.withdrawals.request', compact('agent'));
     }

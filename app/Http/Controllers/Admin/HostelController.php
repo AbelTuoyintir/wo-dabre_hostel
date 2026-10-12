@@ -349,9 +349,12 @@ class HostelController extends Controller
      */
     public function destroy(Hostel $hostel)
     {
-        // Check for active bookings using booking_status column
+        // Check for active bookings across both booking_status and status columns
         $hasActiveBookings = $hostel->bookings()
-            ->whereIn('booking_status', ['pending', 'confirmed', 'checked_in'])
+            ->where(function ($q) {
+                $q->whereIn('booking_status', ['pending', 'confirmed', 'checked_in'])
+                  ->orWhereIn('status', ['pending', 'confirmed', 'checked_in']);
+            })
             ->exists();
 
         if ($hasActiveBookings) {
