@@ -262,4 +262,34 @@ class AdminSecurityTest extends TestCase
         $responseHostel->assertSessionHas('error', 'Cannot delete hostel with active bookings.');
         $this->assertDatabaseHas('hostels', ['id' => $hostel->id]);
     }
+
+    public function test_admin_can_assign_manager_to_hostel(): void
+    {
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
+
+        $manager = User::factory()->create([
+            'role' => 'hostel_manager',
+            'is_active' => true,
+        ]);
+
+        $hostel = Hostel::forceCreate([
+            'name' => 'Unassigned Hostel',
+            'location' => 'amamoma',
+            'address' => 'test address',
+            'is_approved' => true,
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->patch(route('admin.hostels.assign-manager', $hostel->uuid), [
+                'manager_id' => $manager->id,
+            ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success', 'Hostel manager assigned successfully.');
+
+        $this->assertEquals($manager->id, $hostel->fresh()->manager_id);
+    }
 }

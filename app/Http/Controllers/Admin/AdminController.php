@@ -347,6 +347,25 @@ class AdminController extends Controller
         return redirect()->route('user.index')->with('success', 'Hostel assigned successfully.');
     }
 
+    /**
+     * Assign a manager to a specified hostel with strict role and active status validation.
+     */
+    public function assignManager(Request $request, Hostel $hostel): RedirectResponse
+    {
+        $request->validate([
+            'manager_id' => [
+                'nullable',
+                \Illuminate\Validation\Rule::exists('users', 'id')->where(function ($query) {
+                    $query->where('role', 'hostel_manager')->where('is_active', true);
+                }),
+            ],
+        ]);
+
+        $hostel->update(['manager_id' => $request->manager_id]);
+
+        return redirect()->back()->with('success', 'Hostel manager assigned successfully.');
+    }
+
     public function bookings(): View
     {
         $bookings = $this->bookingsQuery(request())
