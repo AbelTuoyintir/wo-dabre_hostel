@@ -83,4 +83,27 @@ class PasswordResetTest extends TestCase
         $response = $this->post('/forgot-password', ['email' => $user->email]);
         $response->assertStatus(429);
     }
+
+    public function test_reset_password_is_rate_limited(): void
+    {
+        $user = User::factory()->create();
+
+        for ($i = 0; $i < 5; $i++) {
+            $this->post('/reset-password', [
+                'token' => 'invalid-token',
+                'email' => $user->email,
+                'password' => 'new-password',
+                'password_confirmation' => 'new-password',
+            ]);
+        }
+
+        $response = $this->post('/reset-password', [
+            'token' => 'invalid-token',
+            'email' => $user->email,
+            'password' => 'new-password',
+            'password_confirmation' => 'new-password',
+        ]);
+
+        $response->assertStatus(429);
+    }
 }
