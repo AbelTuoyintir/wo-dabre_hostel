@@ -920,7 +920,7 @@ class HostelManagementController extends Controller
 
             foreach ($occupants as $occupant) {
                 foreach ($occupant->bookings as $booking) {
-                    fputcsv($file, [
+                    fputcsv($file, $this->sanitizeCsvRow([
                         $occupant->name,
                         $occupant->student_id ?? 'N/A',
                         $occupant->email,
@@ -931,7 +931,7 @@ class HostelManagementController extends Controller
                         $booking->check_in->format('Y-m-d'),
                         $booking->check_out->format('Y-m-d'),
                         $booking->status
-                    ]);
+                    ]));
                 }
             }
 
@@ -1404,12 +1404,12 @@ class HostelManagementController extends Controller
                         $total = Room::whereIn('hostel_id', $hostelIds)->count();
                         $rate = $total > 0 ? round(($occupied / $total) * 100, 2) : 0;
 
-                        fputcsv($file, [
+                        fputcsv($file, $this->sanitizeCsvRow([
                             $date->format('Y-m-d'),
                             $occupied,
                             $total - $occupied,
                             $rate . '%'
-                        ]);
+                        ]));
                     }
                     break;
 
@@ -1435,11 +1435,11 @@ class HostelManagementController extends Controller
                             ->where('status', 'completed')
                             ->count();
 
-                        fputcsv($file, [
+                        fputcsv($file, $this->sanitizeCsvRow([
                             date('F', mktime(0, 0, 0, $month, 1)),
                             $revenue,
                             $count
-                        ]);
+                        ]));
                     }
                     break;
             }
@@ -1560,5 +1560,18 @@ class HostelManagementController extends Controller
             'urgent_complaints' => Complaint::whereIn('hostel_id', $hostelIds)->where('priority', 'urgent')->whereIn('status', ['pending', 'in_progress'])->count(),
             'maintenance_requests' => MaintenanceRequest::whereIn('hostel_id', $hostelIds)->where('status', 'pending')->count(),
         ];
+    }
+
+    /**
+     * Sanitize array elements against CSV Formula Injection (=, +, -, @, tab, CR).
+     */
+    private function sanitizeCsvRow(array $row): array
+    {
+        return array_map(function ($value) {
+            if (is_string($value) && preg_match('/^[=\+\-@\t\r]/', $value)) {
+                return "'" . $value;
+            }
+            return $value;
+        }, $row);
     }
 }

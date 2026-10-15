@@ -424,6 +424,36 @@ class HostelManagerPersonaTest extends TestCase
         $responseReport->assertOk();
         $responseReport->assertHeader('content-type', 'text/csv; charset=UTF-8');
         $this->assertStringContainsString("'=CMD() Hostel", $responseReport->streamedContent());
+
+        // 3. Verify occupants export sanitizes formula injection
+        $student = User::create([
+            'name' => '=SUM(2,2) Occupant',
+            'email' => 'formula_occ_'.uniqid().'@example.com',
+            'password' => Hash::make('password123'),
+            'role' => 'student',
+            'gender' => 'male',
+            'email_verified_at' => now(),
+        ]);
+
+        \App\Models\Booking::create([
+            'user_id' => $student->id,
+            'hostel_id' => $hostel->id,
+            'room_id' => $room->id,
+            'check_in_date' => now()->toDateString(),
+            'check_out_date' => now()->addDays(30)->toDateString(),
+            'total_amount' => 300.00,
+            'amount_paid' => 300.00,
+            'booking_status' => 'confirmed',
+            'payment_status' => 'paid',
+            'booking_number' => 'BKFORM' . uniqid(),
+        ]);
+
+        $responseOccupants = $this->actingAs($manager)
+            ->get(route('hostel-manager.occupants.export'));
+
+        $responseOccupants->assertOk();
+        $responseOccupants->assertHeader('content-type', 'text/csv; charset=UTF-8');
+        $this->assertStringContainsString("'=SUM(2,2) Occupant", $responseOccupants->streamedContent());
     }
 
     public function test_contact_occupant_endpoint_is_rate_limited(): void
