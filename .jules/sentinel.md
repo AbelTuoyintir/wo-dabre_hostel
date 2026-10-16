@@ -77,3 +77,8 @@
 **Vulnerability:** CSV export endpoints in `HostelManagerDashboard` wrote user-controllable student profile fields (names, emails, transaction IDs) directly to CSV outputs without sanitizing leading formula triggers (`=`, `+`, `-`, `@`, `\t`, `\r`), exposing administrators opening CSV exports in Excel to formula injection attacks.
 **Learning:** Exporting raw database fields to CSV without escaping leading formula characters allows malicious payload execution inside spreadsheet software when opened by administrative staff.
 **Prevention:** Sanitize all cell strings in CSV exports by prepending a single quote (`'`) to any string beginning with `=`, `+`, `-`, `@`, `\t`, or `\r`.
+
+## 2026-10-16 - Unapproved/Inactive Hostel Information Leak via SQL Operator Precedence
+**Vulnerability:** `HostelController::compare` used un-grouped OR conditions (`Hostel::whereIn('uuid', $ids)->orWhereIn('id', $ids)->where('is_approved', true)->where('status', 'active')`), resulting in SQL precedence evaluation where queries by `uuid` bypassed approval and active status checks, disclosing unapproved or inactive hostels to unauthenticated users.
+**Learning:** Chaining `orWhere` calls alongside subsequent `where` filters without wrapping the OR clauses in a nested query callback (`where(function ($q) ...)` causes SQL operator precedence to evaluate `OR` before `AND`, inadvertently bypassing security filters.
+**Prevention:** Always group disjunctive conditions (`OR`) inside a closure parameter passed to `where(function ($query) { ... })` whenever combining them with mandatory security or scoping constraints (`AND`).

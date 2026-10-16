@@ -513,8 +513,10 @@ class HostelController extends Controller
             return redirect()->route('hostels.index')->with('warning', 'Please select hostels to compare.');
         }
 
-        $hostels = Hostel::whereIn('uuid', $ids)
-            ->orWhereIn('id', $ids)
+        $hostels = Hostel::where(function ($q) use ($ids) {
+                $q->whereIn('uuid', $ids)
+                  ->orWhereIn('id', $ids);
+            })
             ->where('is_approved', true)
             ->where('status', 'active')
             ->with(['primaryImage', 'rooms'])
