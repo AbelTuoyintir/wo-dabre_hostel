@@ -292,4 +292,68 @@ class AdminSecurityTest extends TestCase
 
         $this->assertEquals($manager->id, $hostel->fresh()->manager_id);
     }
+
+    public function test_admin_cannot_assign_inactive_or_non_manager_user_when_creating_or_updating_hostel(): void
+    {
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
+
+        $student = User::factory()->create([
+            'role' => 'student',
+            'is_active' => true,
+        ]);
+
+        $inactiveManager = User::factory()->create([
+            'role' => 'hostel_manager',
+            'is_active' => false,
+        ]);
+
+        $activeManager = User::factory()->create([
+            'role' => 'hostel_manager',
+            'is_active' => true,
+        ]);
+
+        $hostel = Hostel::forceCreate([
+            'name' => 'Existing Hostel',
+            'location' => 'amamoma',
+            'address' => 'test address',
+            'is_approved' => true,
+        ]);
+
+        // Attempt update with student as manager
+        $response1 = $this->actingAs($admin)
+            ->put(route('admin.hostels.update', $hostel), [
+                'name' => 'Updated Name',
+                'location' => 'amamoma',
+                'address' => 'test address',
+                'manager_id' => $student->id,
+            ]);
+
+        $response1->assertSessionHasErrors(['manager_id']);
+
+        // Attempt update with inactive manager
+        $response2 = $this->actingAs($admin)
+            ->put(route('admin.hostels.update', $hostel), [
+                'name' => 'Updated Name',
+                'location' => 'amamoma',
+                'address' => 'test address',
+                'manager_id' => $inactiveManager->id,
+            ]);
+
+        $response2->assertSessionHasErrors(['manager_id']);
+
+        // Attempt update with active manager succeeds
+        $response3 = $this->actingAs($admin)
+            ->put(route('admin.hostels.update', $hostel), [
+                'name' => 'Updated Name',
+                'location' => 'amamoma',
+                'address' => 'test address',
+                'manager_id' => $activeManager->id,
+            ]);
+
+        $response3->assertSessionHasNoErrors();
+        $this->assertEquals($activeManager->id, $hostel->fresh()->manager_id);
+    }
 }

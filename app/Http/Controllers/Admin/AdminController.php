@@ -149,7 +149,12 @@ class AdminController extends Controller
             'address' => 'required|string',
             'contact_phone' => 'nullable|string|max:20',
             'contact_email' => 'nullable|email|max:255',
-            'manager_id' => 'nullable|exists:users,id',
+            'manager_id' => [
+                'nullable',
+                \Illuminate\Validation\Rule::exists('users', 'id')->where(function ($query) {
+                    $query->where('role', 'hostel_manager')->where('is_active', true);
+                }),
+            ],
             'description' => 'nullable|string',
             'cover_image' => 'required|image|mimes:jpeg,png,jpg,gif|max:10240', // 10MB max
             'gallery_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240', // 10MB max per image
@@ -303,7 +308,12 @@ class AdminController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'location' => 'required|string',
-            'manager_id' => 'nullable|exists:users,id',
+            'manager_id' => [
+                'nullable',
+                \Illuminate\Validation\Rule::exists('users', 'id')->where(function ($query) {
+                    $query->where('role', 'hostel_manager')->where('is_active', true);
+                }),
+            ],
             'is_approved' => 'required|boolean',
             'description' => 'nullable|string',
         ]);
@@ -344,7 +354,7 @@ class AdminController extends Controller
 
         $user->update(['hostel_id' => $request->hostel_id]);
 
-        return redirect()->route('user.index')->with('success', 'Hostel assigned successfully.');
+        return redirect()->route('admin.users.index')->with('success', 'Hostel assigned successfully.');
     }
 
     /**
