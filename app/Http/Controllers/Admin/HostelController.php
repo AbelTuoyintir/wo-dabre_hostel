@@ -111,7 +111,12 @@ class HostelController extends Controller
             'address' => 'required|string',
             'contact_phone' => 'nullable|string|max:20',
             'contact_email' => 'nullable|email|max:255',
-            'manager_id' => 'nullable|exists:users,id',
+            'manager_id' => [
+                'nullable',
+                \Illuminate\Validation\Rule::exists('users', 'id')->where(function ($query) {
+                    $query->where('role', 'hostel_manager')->where('is_active', true);
+                }),
+            ],
             'amenities' => 'nullable|array',
             'amenities.*' => 'exists:amenities,id',
             'description' => 'nullable|string',
@@ -234,7 +239,12 @@ class HostelController extends Controller
             'description' => 'nullable|string',
             'contact_phone' => 'nullable|string|max:20',
             'contact_email' => 'nullable|email|max:255',
-            'manager_id' => 'nullable|exists:users,id',
+            'manager_id' => [
+                'nullable',
+                \Illuminate\Validation\Rule::exists('users', 'id')->where(function ($query) {
+                    $query->where('role', 'hostel_manager')->where('is_active', true);
+                }),
+            ],
             'amenities' => 'nullable|array',
             'amenities.*' => 'exists:amenities,id',
             'is_featured' => 'sometimes|boolean',
