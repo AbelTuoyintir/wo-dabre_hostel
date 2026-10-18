@@ -46,4 +46,28 @@ class RegistrationTest extends TestCase
         $this->assertNotNull($user);
         $this->assertEquals('student', $user->role);
     }
+
+    public function test_registration_is_rate_limited(): void
+    {
+        for ($i = 0; $i < 10; $i++) {
+            $this->post('/register', [
+                'name' => "User {$i}",
+                'email' => "user{$i}@example.com",
+                'password' => 'password',
+                'password_confirmation' => 'password',
+                'gender' => 'male',
+            ]);
+            \Illuminate\Support\Facades\Auth::logout();
+        }
+
+        $response = $this->post('/register', [
+            'name' => 'Excess User',
+            'email' => 'excess@example.com',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+            'gender' => 'male',
+        ]);
+
+        $response->assertStatus(429);
+    }
 }
