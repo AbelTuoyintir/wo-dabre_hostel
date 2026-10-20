@@ -48,4 +48,27 @@ class PasswordUpdateTest extends TestCase
             ->assertSessionHasErrorsIn('updatePassword', 'current_password')
             ->assertRedirect('/profile');
     }
+
+    public function test_password_update_is_rate_limited(): void
+    {
+        $user = User::factory()->create();
+
+        for ($i = 0; $i < 5; $i++) {
+            $this->actingAs($user)
+                ->put('/password', [
+                    'current_password' => 'wrong-password',
+                    'password' => 'new-password',
+                    'password_confirmation' => 'new-password',
+                ]);
+        }
+
+        $response = $this->actingAs($user)
+            ->put('/password', [
+                'current_password' => 'wrong-password',
+                'password' => 'new-password',
+                'password_confirmation' => 'new-password',
+            ]);
+
+        $response->assertStatus(429);
+    }
 }

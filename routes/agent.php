@@ -47,7 +47,7 @@ Route::prefix('agent')->name('agent.')->middleware(['auth', 'hostel.agent'])->gr
     // Settings routes
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
     Route::put('/settings', [SettingsController::class, 'updateSettings'])->name('settings.update');
-    Route::put('/settings/password', [SettingsController::class, 'updatePassword'])->name('settings.password');
+    Route::put('/settings/password', [SettingsController::class, 'updatePassword'])->middleware('throttle:5,1')->name('settings.password');
     Route::put('/settings/notifications', [SettingsController::class, 'updateNotifications'])->name('settings.notifications');
 
     // Routes that require approved agent status
