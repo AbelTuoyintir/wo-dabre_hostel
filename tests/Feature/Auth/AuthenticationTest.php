@@ -102,4 +102,26 @@ class AuthenticationTest extends TestCase
         $response->assertRedirect('/');
         $this->assertGuest();
     }
+
+    public function test_login_is_rate_limited(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'login_rate_test@example.com',
+            'role' => 'student',
+        ]);
+
+        for ($i = 0; $i < 5; $i++) {
+            $this->post('/login', [
+                'email' => $user->email,
+                'password' => 'wrong-password',
+            ]);
+        }
+
+        $response = $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'wrong-password',
+        ]);
+
+        $response->assertStatus(429);
+    }
 }
