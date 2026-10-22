@@ -753,11 +753,20 @@ $path = $image->store('rooms/gallery', 'public');
      */
     public function bulkUpdate(Request $request)
     {
+        $valueRules = match ($request->input('action')) {
+            'status' => 'required|string|in:available,full,maintenance,inactive',
+            'gender' => 'required|string|in:male,female,any',
+            'hostel' => 'required|exists:hostels,id',
+            'capacity' => 'required|integer|min:1',
+            'price' => 'required|numeric|min:0',
+            default => 'required',
+        };
+
         $request->validate([
             'room_ids' => 'required|array',
             'room_ids.*' => 'exists:rooms,id',
             'action' => 'required|in:status,gender,hostel,capacity,price',
-            'value' => 'required'
+            'value' => $valueRules,
         ]);
 
         $rooms = Room::whereIn('id', $request->room_ids)->get();
