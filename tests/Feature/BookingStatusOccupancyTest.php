@@ -281,4 +281,51 @@ class BookingStatusOccupancyTest extends TestCase
         $this->assertEquals(0, $room->fresh()->current_occupancy);
         $this->assertEquals('checked_out', $booking->fresh()->booking_status);
     }
+
+    public function test_cancelling_pending_booking_does_not_decrement_occupancy()
+    {
+        $student = User::factory()->create([
+            'role' => 'student',
+            'gender' => 'male',
+        ]);
+
+        $hostel = Hostel::create([
+            'name' => 'Pending Cancellation Hostel',
+            'location' => 'amamoma',
+            'address' => '123 University Way',
+            'is_approved' => true,
+            'status' => 'active',
+        ]);
+
+        $room = Room::create([
+            'hostel_id' => $hostel->id,
+            'number' => 'R202',
+            'capacity' => 2,
+            'gender' => 'male',
+            'status' => 'available',
+            'room_type' => 'shared_2',
+            'room_cost' => 500,
+        ]);
+        Room::where('id', $room->id)->update(['current_occupancy' => 1]);
+
+        $booking = Booking::create([
+            'booking_number' => 'BN-' . Str::random(8),
+            'user_id' => $student->id,
+            'hostel_id' => $hostel->id,
+            'room_id' => $room->id,
+            'check_in_date' => now()->addDays(5)->format('Y-m-d'),
+            'check_out_date' => now()->addDays(10)->format('Y-m-d'),
+            'total_amount' => 500,
+            'amount_paid' => 0,
+            'payment_status' => 'pending',
+            'booking_status' => 'pending',
+        ]);
+
+        $response = $this->actingAs($student)->patch(route('student.bookings.cancel', $booking->uuid), [
+            'cancellation_reason' => 'Need to cancel my pending reservation due to changes.',
+        ]);
+
+        $this->assertEquals(1, $room->fresh()->current_occupancy);
+        $this->assertEquals('cancelled', $booking->fresh()->booking_status);
+    }
 }

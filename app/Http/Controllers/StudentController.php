@@ -370,29 +370,36 @@ class StudentController extends Controller
             return back()->with('error', 'Cannot cancel booking at this stage.');
         }
 
-        // Check if booking has a payment
-        if (!$booking->payment || $booking->payment->status !== 'completed') {
-            return back()->with('error', 'No payment found for this booking.');
-        }
-
         DB::beginTransaction();
 
         try {
-            // Calculate refund amount in GHS
-            $refundAmount = $booking->total_amount;
+            $refundAmount = 0;
 
-            // Apply cancellation policy (10% fee for confirmed bookings)
-            if ($currentStatus == 'confirmed') {
-                $refundAmount = $booking->total_amount * 0.9; // 90% refund, 10% fee
+            if ($booking->payment && $booking->payment->status === 'completed') {
+                // Calculate refund amount in GHS
+                $refundAmount = $booking->total_amount;
+
+                // Apply cancellation policy (10% fee for confirmed bookings)
+                if ($currentStatus == 'confirmed') {
+                    $refundAmount = $booking->total_amount * 0.9; // 90% refund, 10% fee
+                }
+
+                // Process refund through Paystack (amount in pesewas)
+                $refund = Paystack::refund([
+                    'transaction' => $booking->payment->transaction_id,
+                    'amount' => round($refundAmount * 100), // Convert GHS to pesewas
+                    'currency' => 'GHS',
+                    'reason' => $request->cancellation_reason
+                ]);
+
+                // Update payment record
+                $booking->payment->update([
+                    'status' => 'refunded',
+                    'refund_amount' => $refundAmount,
+                    'refund_reference' => $refund['data']['reference'] ?? null,
+                    'refunded_at' => now(),
+                ]);
             }
-
-            // Process refund through Paystack (amount in pesewas)
-            $refund = Paystack::refund([
-                'transaction' => $booking->payment->transaction_id,
-                'amount' => round($refundAmount * 100), // Convert GHS to pesewas
-                'currency' => 'GHS',
-                'reason' => $request->cancellation_reason
-            ]);
 
             // Update booking status
             if ($booking->booking_status) {
@@ -409,16 +416,8 @@ class StudentController extends Controller
                 ]);
             }
 
-            // Update payment record
-            $booking->payment->update([
-                'status' => 'refunded',
-                'refund_amount' => $refundAmount,
-                'refund_reference' => $refund['data']['reference'] ?? null,
-                'refunded_at' => now(),
-            ]);
-
-            // Decrement room occupancy safely using atomic DB query
-            if ($booking->room) {
+            // Decrement room occupancy safely using atomic DB query only if booking was active
+            if ($booking->room && in_array($currentStatus, ['confirmed', 'checked_in'], true)) {
                 Room::where('id', $booking->room->id)
                     ->where('current_occupancy', '>', 0)
                     ->decrement('current_occupancy');
@@ -426,10 +425,11 @@ class StudentController extends Controller
 
             DB::commit();
 
-            return back()->with('success',
-                "Booking cancelled successfully. ₵" . number_format($refundAmount, 2) .
-                " will be refunded to your original payment method within 3-5 business days."
-            );
+            $message = $refundAmount > 0
+                ? "Booking cancelled successfully. ₵" . number_format($refundAmount, 2) . " will be refunded to your original payment method within 3-5 business days."
+                : "Booking cancelled successfully.";
+
+            return back()->with('success', $message);
 
         } catch (\Exception $e) {
             DB::rollBack();
