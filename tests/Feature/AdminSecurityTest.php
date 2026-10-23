@@ -356,4 +356,79 @@ class AdminSecurityTest extends TestCase
         $response3->assertSessionHasNoErrors();
         $this->assertEquals($activeManager->id, $hostel->fresh()->manager_id);
     }
+
+    public function test_admin_rooms_bulk_update_validates_action_specific_values(): void
+    {
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
+
+        $hostel = Hostel::forceCreate([
+            'name' => 'Test Hostel',
+            'location' => 'amamoma',
+            'address' => 'test address',
+            'is_approved' => true,
+        ]);
+
+        $room = Room::create([
+            'hostel_id' => $hostel->id,
+            'number' => '101',
+            'room_type' => 'single_room',
+            'capacity' => 2,
+            'room_cost' => 500,
+            'gender' => 'any',
+            'status' => 'available',
+        ]);
+
+        // Test invalid status value
+        $resInvalidStatus = $this->actingAs($admin)
+            ->postJson(route('admin.rooms.bulk-update'), [
+                'room_ids' => [$room->id],
+                'action' => 'status',
+                'value' => 'invalid_status_type',
+            ]);
+        $resInvalidStatus->assertStatus(422);
+        $resInvalidStatus->assertJsonValidationErrors(['value']);
+
+        // Test invalid hostel ID value
+        $resInvalidHostel = $this->actingAs($admin)
+            ->postJson(route('admin.rooms.bulk-update'), [
+                'room_ids' => [$room->id],
+                'action' => 'hostel',
+                'value' => 999999,
+            ]);
+        $resInvalidHostel->assertStatus(422);
+        $resInvalidHostel->assertJsonValidationErrors(['value']);
+
+        // Test negative capacity
+        $resInvalidCapacity = $this->actingAs($admin)
+            ->postJson(route('admin.rooms.bulk-update'), [
+                'room_ids' => [$room->id],
+                'action' => 'capacity',
+                'value' => -5,
+            ]);
+        $resInvalidCapacity->assertStatus(422);
+        $resInvalidCapacity->assertJsonValidationErrors(['value']);
+
+        // Test negative price
+        $resInvalidPrice = $this->actingAs($admin)
+            ->postJson(route('admin.rooms.bulk-update'), [
+                'room_ids' => [$room->id],
+                'action' => 'price',
+                'value' => -100,
+            ]);
+        $resInvalidPrice->assertStatus(422);
+        $resInvalidPrice->assertJsonValidationErrors(['value']);
+
+        // Test valid capacity bulk update succeeds
+        $resValidCapacity = $this->actingAs($admin)
+            ->postJson(route('admin.rooms.bulk-update'), [
+                'room_ids' => [$room->id],
+                'action' => 'capacity',
+                'value' => 4,
+            ]);
+        $resValidCapacity->assertOk();
+        $this->assertEquals(4, $room->fresh()->capacity);
+    }
 }
