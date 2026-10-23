@@ -126,6 +126,54 @@ class BookingStatusOccupancyTest extends TestCase
         $this->assertDatabaseMissing('bookings', ['id' => $booking->id]);
     }
 
+    public function test_hostel_manager_destroy_booking_decrements_occupancy_when_status_column_used()
+    {
+        $manager = User::factory()->create([
+            'role' => 'hostel_manager',
+        ]);
+
+        $hostel = Hostel::create([
+            'name' => 'Legacy Status Hostel',
+            'location' => 'kwaprow',
+            'address' => '789 Legacy Way',
+            'manager_id' => $manager->id,
+            'is_approved' => true,
+            'status' => 'active',
+        ]);
+
+        $room = Room::create([
+            'hostel_id' => $hostel->id,
+            'number' => 'M301',
+            'capacity' => 2,
+            'current_occupancy' => 1,
+            'gender' => 'any',
+            'status' => 'available',
+            'room_type' => 'shared_2',
+            'room_cost' => 600,
+        ]);
+
+        $student = User::factory()->create(['role' => 'student']);
+
+        $booking = Booking::create([
+            'booking_number' => 'BN-' . Str::random(8),
+            'user_id' => $student->id,
+            'hostel_id' => $hostel->id,
+            'room_id' => $room->id,
+            'check_in_date' => now()->addDays(1)->format('Y-m-d'),
+            'check_out_date' => now()->addDays(5)->format('Y-m-d'),
+            'total_amount' => 600,
+            'amount_paid' => 600,
+            'payment_status' => 'paid',
+            'status' => 'confirmed',
+            'booking_status' => 'pending',
+        ]);
+
+        $response = $this->actingAs($manager)->delete(route('hostel-manager.bookings.destroy', $booking->uuid));
+
+        $this->assertEquals(0, $room->fresh()->current_occupancy);
+        $this->assertDatabaseMissing('bookings', ['id' => $booking->id]);
+    }
+
     public function test_admin_updating_booking_status_synchronizes_occupancy()
     {
         $admin = User::factory()->create([

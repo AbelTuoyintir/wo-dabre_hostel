@@ -1924,7 +1924,9 @@ public function destroyBooking(Booking $booking)
     }
 
     // Free up room space if booking was active
-    if (in_array($booking->booking_status, ['confirmed', 'checked_in'])) {
+    $activeStatuses = ['confirmed', 'checked_in'];
+    $isActive = in_array($booking->booking_status, $activeStatuses) || in_array($booking->status, $activeStatuses);
+    if ($isActive) {
         $room = $booking->room;
         if ($room) {
             Room::where('id', $room->id)
