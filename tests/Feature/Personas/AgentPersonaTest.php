@@ -1550,4 +1550,35 @@ class AgentPersonaTest extends TestCase
         $this->assertStringContainsString("'-agent@example.com", $content);
         $this->assertStringContainsString("'+233240000000", $content);
     }
+
+    public function test_admin_agent_index_sort_whitelisting_prevents_sql_injection(): void
+    {
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
+
+        $agentUser = User::factory()->create([
+            'name' => 'Sort Agent',
+            'email' => 'sortagent@example.com',
+            'role' => 'hostel_agent',
+            'phone' => '0240000001',
+        ]);
+
+        HostelAgent::create([
+            'user_id' => $agentUser->id,
+            'agent_code' => 'AG-SORT',
+            'phone' => $agentUser->phone,
+            'status' => 'active',
+        ]);
+
+        // Attempting malicious sort parameters should safely fall back without SQL exception
+        $response = $this->actingAs($admin)->get(route('admin.agents.index', [
+            'sort_by' => "id; DROP TABLE users;--",
+            'sort_order' => "invalid_direction' OR '1'='1",
+        ]));
+
+        $response->assertOk();
+        $response->assertViewHas('agents');
+    }
 }
