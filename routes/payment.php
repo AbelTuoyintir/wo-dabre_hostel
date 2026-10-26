@@ -18,8 +18,9 @@ Route::prefix('bookings')->name('bookings.')->middleware('throttle:bookings')->g
     Route::get('/hostel/{hostel}/room/{room}/book', [BookingController::class, 'createBooking'])
         ->name('create');
 
-    // Guest booking store
+    // Guest booking store with rate limiting protection to prevent automated booking submission spam and DoS
     Route::post('/booking/public', [BookingController::class, 'store'])
+        ->middleware('throttle:10,1')
         ->name('store');
 
     // ===== STUDENT ROUTES (Authentication required) =====
@@ -28,8 +29,9 @@ Route::prefix('bookings')->name('bookings.')->middleware('throttle:bookings')->g
         Route::get('/student/hostel/{hostel}/room/{room}/book', [BookingController::class, 'StudentCreateBooking'])
             ->name('create.student');
 
-        // Student booking store
+        // Student booking store with rate limiting protection to prevent automated booking submission spam and DoS
         Route::post('/student', [BookingController::class, 'StudentStore'])
+            ->middleware('throttle:10,1')
             ->name('store.student');
 
         // AJAX price calculation used on the booking form
