@@ -976,14 +976,11 @@ public function viewHostel(Hostel $hostel)
      */
     public function viewReceipt(Payment $payment)
     {
-        // Check if payment belongs to user
-        $hasAccess = false;
-
-        if ($payment->booking && $payment->booking->user_id === Auth::id()) {
-            $hasAccess = true;
-        } elseif ($payment->user_id === Auth::id()) {
-            $hasAccess = true;
-        }
+        // Require authenticated user to prevent unauthenticated null-comparison authorization bypass
+        $hasAccess = Auth::check() && (
+            ($payment->user_id === Auth::id()) ||
+            ($payment->booking && $payment->booking->user_id === Auth::id())
+        );
 
         abort_if(!$hasAccess, 403);
 
