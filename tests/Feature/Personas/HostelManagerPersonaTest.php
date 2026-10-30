@@ -588,4 +588,77 @@ class HostelManagerPersonaTest extends TestCase
         $response->assertSessionHas('error', 'Cannot delete a room with active bookings.');
         $this->assertDatabaseHas('rooms', ['id' => $room->id]);
     }
+
+    public function test_hostel_manager_payment_views_contain_valid_booking_uuid_links(): void
+    {
+        $manager = User::create([
+            'name' => 'Payment Link Manager',
+            'email' => 'plm_' . uniqid() . '@example.com',
+            'password' => Hash::make('password123'),
+            'role' => 'hostel_manager',
+            'is_active' => true,
+        ]);
+
+        $hostel = Hostel::create([
+            'name' => 'Payment Test Hostel',
+            'slug' => 'payment-test-hostel-' . uniqid(),
+            'description' => 'Test Hostel',
+            'address' => '123 Payment St',
+            'location' => 'amamoma',
+            'status' => 'active',
+            'manager_id' => $manager->id,
+            'is_verified' => true,
+        ]);
+
+        $room = Room::create([
+            'number' => '808',
+            'capacity' => 2,
+            'hostel_id' => $hostel->id,
+            'gender' => 'any',
+            'status' => 'available',
+            'room_type' => 'single_room',
+            'room_cost' => 300.00,
+            'current_occupancy' => 1,
+        ]);
+
+        $student = User::create([
+            'name' => 'Payer Student',
+            'email' => 'payer_' . uniqid() . '@example.com',
+            'password' => Hash::make('password123'),
+            'role' => 'student',
+            'is_active' => true,
+        ]);
+
+        $booking = \App\Models\Booking::create([
+            'user_id' => $student->id,
+            'hostel_id' => $hostel->id,
+            'room_id' => $room->id,
+            'check_in_date' => now()->toDateString(),
+            'check_out_date' => now()->addDays(30)->toDateString(),
+            'total_amount' => 300.00,
+            'booking_status' => 'confirmed',
+            'payment_status' => 'paid',
+            'booking_number' => 'BKPL' . uniqid(),
+        ]);
+
+        $payment = \App\Models\Payment::create([
+            'booking_id' => $booking->id,
+            'user_id' => $student->id,
+            'amount' => 300.00,
+            'payment_method' => 'card',
+            'status' => 'completed',
+            'transaction_id' => 'TXN' . uniqid(),
+        ]);
+
+        // 1. Payment index view contains link to booking by UUID, not integer ID
+        $expectedBookingUrl = route('hostel-manager.bookings.show', $booking->uuid);
+        $indexResponse = $this->actingAs($manager)->get(route('hostel-manager.payments'));
+        $indexResponse->assertOk();
+        $indexResponse->assertSee($expectedBookingUrl);
+
+        // 2. Payment show view contains link to booking by UUID
+        $showResponse = $this->actingAs($manager)->get(route('hostel-manager.payments.show', $payment->uuid));
+        $showResponse->assertOk();
+        $showResponse->assertSee($expectedBookingUrl);
+    }
 }
