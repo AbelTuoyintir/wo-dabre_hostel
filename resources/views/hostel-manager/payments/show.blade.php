@@ -113,10 +113,14 @@
                     <div class="flex items-center justify-between mb-3">
                         <div>
                             <span class="text-xs text-gray-500">Booking ID</span>
-                            <a href="{{ route('hostel-manager.bookings.show', $payment->booking_id) }}"
+                            @if($payment->booking)
+                            <a href="{{ route('hostel-manager.bookings.show', $payment->booking) }}"
                                class="text-sm font-medium text-blue-600 hover:text-blue-800 ml-2">
                                 #{{ $payment->booking_id }}
                             </a>
+                            @else
+                            <span class="text-sm font-medium text-gray-500 ml-2">#{{ $payment->booking_id ?? 'N/A' }}</span>
+                            @endif
                         </div>
                         @php
                             $bookingStatusClass = match($payment->booking->status) {

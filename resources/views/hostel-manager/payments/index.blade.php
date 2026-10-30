@@ -154,9 +154,13 @@
                         </div>
                     </td>
                     <td class="px-4 py-2 whitespace-nowrap">
-                        <a href="{{ route('hostel-manager.bookings.show', $payment->booking_id) }}" class="text-xs text-blue-600 hover:text-blue-800">
+                        @if($payment->booking)
+                        <a href="{{ route('hostel-manager.bookings.show', $payment->booking) }}" class="text-xs text-blue-600 hover:text-blue-800">
                             #{{ $payment->booking_id }}
                         </a>
+                        @else
+                        <span class="text-xs text-gray-500">#{{ $payment->booking_id ?? 'N/A' }}</span>
+                        @endif
                     </td>
                     <td class="px-4 py-2 whitespace-nowrap">
                         <span class="text-xs font-bold text-green-600">₵{{ number_format($payment->amount, 2) }}</span>
