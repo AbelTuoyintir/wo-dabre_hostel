@@ -894,13 +894,16 @@ class BookingController extends Controller
         }
 
         DB::transaction(function () use ($booking) {
+            $oldStatus = $booking->booking_status;
+
             $booking->update([
                 'booking_status' => 'cancelled',
                 'payment_status' => 'refund_pending',
             ]);
 
+            $activeStatuses = ['confirmed', 'checked_in'];
             $room = $booking->room;
-            if ($room) {
+            if ($room && in_array($oldStatus, $activeStatuses, true)) {
                 Room::where('id', $room->id)
                     ->where('current_occupancy', '>', 0)
                     ->decrement('current_occupancy');
