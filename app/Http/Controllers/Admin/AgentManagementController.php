@@ -38,9 +38,14 @@ class AgentManagementController extends Controller
             });
         }
 
-        // Sort by
-        $sortBy = $request->get('sort_by', 'created_at');
-        $sortOrder = $request->get('sort_order', 'desc');
+        // Sort by (with strict column and direction whitelisting to prevent SQL injection)
+        $allowedSortColumns = [
+            'created_at', 'updated_at', 'agent_code', 'phone', 'status',
+            'total_commission', 'available_balance', 'withdrawn_amount',
+            'total_hostels_added', 'total_rooms_added', 'approved_at'
+        ];
+        $sortBy = in_array($request->get('sort_by'), $allowedSortColumns, true) ? $request->get('sort_by') : 'created_at';
+        $sortOrder = strtolower((string) $request->get('sort_order')) === 'asc' ? 'asc' : 'desc';
         $query->orderBy($sortBy, $sortOrder);
 
         $agents = $query->paginate(20);
