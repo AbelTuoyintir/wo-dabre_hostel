@@ -942,10 +942,15 @@ public function viewHostel(Hostel $hostel)
      */
     public function payments(Request $request)
     {
-        $query = Payment::whereHas('booking', function($q) {
-                $q->where('user_id', Auth::id());
+        $userId = Auth::id();
+
+        // Security check: Group ownership constraints inside a closure to prevent SQL operator precedence filter bypasses
+        $query = Payment::where(function ($q) use ($userId) {
+                $q->whereHas('booking', function ($bq) use ($userId) {
+                    $bq->where('user_id', $userId);
+                })
+                ->orWhere('user_id', $userId); // For fee payments without booking
             })
-            ->orWhere('user_id', Auth::id()) // For fee payments without booking
             ->with(['booking.hostel', 'booking.room'])
             ->latest();
 
