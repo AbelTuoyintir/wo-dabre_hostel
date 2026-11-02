@@ -28,7 +28,7 @@ Route::middleware(['auth', 'student'])->prefix('student')->name('student.')->gro
     Route::get('/bookings', [StudentController::class, 'myBookings'])->name('bookings');
     Route::get('/bookings/filter', [StudentController::class, 'filterBookings'])->name('bookings.filter'); // AJAX
     Route::get('/bookings/{booking:uuid}', [StudentController::class, 'viewBooking'])->name('bookings.show');
-    Route::patch('/bookings/{booking:uuid}/cancel', [StudentController::class, 'cancelBooking'])->name('bookings.cancel');
+    Route::patch('/bookings/{booking:uuid}/cancel', [StudentController::class, 'cancelBooking'])->middleware('throttle:5,1')->name('bookings.cancel');
 
     // Complaints
     Route::get('/complaints', [StudentController::class, 'complaints'])->name('complaints');
