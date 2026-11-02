@@ -201,4 +201,65 @@ class PaymentSecurityTest extends TestCase
         $response = $this->actingAs($user)->get(route('student.bookings.pay', $booking));
         $response->assertStatus(429);
     }
+
+    public function test_student_payments_filter_respects_status_due_to_sql_grouping(): void
+    {
+        $user = User::factory()->create(['gender' => 'male', 'role' => 'student']);
+        $hostel = Hostel::create([
+            'name' => 'Payment Filter Hostel',
+            'slug' => 'payment-filter-hostel',
+            'description' => 'Test Hostel Description',
+            'address' => '123 Campus Way',
+            'location' => 'amamoma',
+            'phone' => '0240000001',
+            'email' => 'hostel_filter@example.com',
+            'is_approved' => true,
+            'status' => 'active',
+        ]);
+        $room = Room::create([
+            'hostel_id' => $hostel->id,
+            'number' => '102',
+            'capacity' => 2,
+            'current_occupancy' => 0,
+            'room_type' => 'single_room',
+            'room_cost' => 600,
+            'gender' => 'male',
+            'status' => 'available',
+        ]);
+
+        $booking = Booking::create([
+            'booking_number' => 'BN-FILTER-001',
+            'user_id' => $user->id,
+            'hostel_id' => $hostel->id,
+            'room_id' => $room->id,
+            'check_in_date' => now()->addDays(1)->format('Y-m-d'),
+            'check_out_date' => now()->addDays(5)->format('Y-m-d'),
+            'total_amount' => 600,
+            'amount_paid' => 600,
+            'payment_status' => 'paid',
+            'booking_status' => 'confirmed',
+        ]);
+
+        // Create completed payment linked to booking
+        Payment::create([
+            'user_id' => $user->id,
+            'booking_id' => $booking->id,
+            'transaction_id' => 'TXN-COMPLETED-001',
+            'reference' => 'PAY-COMPLETED-001',
+            'amount' => 600,
+            'currency' => 'GHS',
+            'payment_method' => 'card',
+            'status' => 'completed',
+        ]);
+
+        // When student filters payments by status=pending, completed payment MUST NOT appear
+        $response = $this->actingAs($user)->get(route('student.payments', ['status' => 'pending']));
+        $response->assertOk();
+        $response->assertDontSee('TXN-COMPLETED-001');
+
+        // When student filters payments by status=completed, completed payment MUST appear
+        $responseCompleted = $this->actingAs($user)->get(route('student.payments', ['status' => 'completed']));
+        $responseCompleted->assertOk();
+        $responseCompleted->assertSee('TXN-COMPLETED-001');
+    }
 }
